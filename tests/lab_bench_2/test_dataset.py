@@ -18,6 +18,7 @@ class TestRecordToSample:
         record = {
             "id": "litqa3-0001",
             "tag": "litqa3",
+            "version": "1",
             "type": "",
             "question": "What protein does the human SNCA gene encode?",
             "ideal": "Alpha-synuclein",
@@ -29,11 +30,14 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
-        assert sut.id == "litqa3-0001"
+        assert sut is not None
+        assert str(sut.id).startswith("labbench2_")
         assert sut.target == "Alpha-synuclein"
         assert "SNCA" in str(sut.input)
         assert sut.metadata is not None
+        assert sut.metadata["id"] == "litqa3-0001"
         assert sut.metadata["tag"] == "litqa3"
+        assert sut.metadata["mode"] == "inject"
         assert sut.metadata["sources"] == ["https://example.org/paper"]
 
     def test_appends_prompt_suffix(self) -> None:
@@ -41,6 +45,7 @@ class TestRecordToSample:
         record = {
             "id": "litqa3-0002",
             "tag": "litqa3",
+            "version": "1",
             "question": "What is the capital of France?",
             "ideal": "Paris",
             "prompt_suffix": "Answer concisely.",
@@ -50,12 +55,15 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
+        assert sut is not None
         assert str(sut.input).endswith("Answer concisely.")
 
     def test_defaults_when_optional_fields_missing(self) -> None:
         # given a record without optional fields
         record = {
             "id": "litqa3-0003",
+            "tag": "litqa3",
+            "version": "1",
             "question": "Q?",
             "ideal": "A",
         }
@@ -64,6 +72,7 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
+        assert sut is not None
         assert sut.metadata is not None
         assert sut.metadata["sources"] == []
         assert sut.metadata["type"] is None
