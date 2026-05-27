@@ -2,11 +2,11 @@ from lab_bench_2.dataset import (
     LAB_BENCH_2_DATASET_PATH,
     LAB_BENCH_2_DATASET_REVISION,
     LAB_BENCH_2_DATASET_SPLIT,
-    Mode,
     load_lab_bench_2_dataset,
     record_to_sample,
 )
 from lab_bench_2.lab_bench_2 import SUPPORTED_TAGS, lab_bench_2
+from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import (
     DEFAULT_GRADER_MODEL,
     parse_judge_verdict,

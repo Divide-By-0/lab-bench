@@ -10,7 +10,8 @@ from __future__ import annotations
 from inspect_ai import Task, task
 from inspect_ai.solver import Solver
 
-from lab_bench_2.dataset import Mode, load_lab_bench_2_dataset
+from lab_bench_2.dataset import load_lab_bench_2_dataset
+from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import scorer_for_tag
 from lab_bench_2.solvers import bare
 from utils.metadata import load_version_from_yaml
