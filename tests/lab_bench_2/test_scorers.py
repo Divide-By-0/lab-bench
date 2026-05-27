@@ -46,8 +46,12 @@ class TestParseJudgeVerdict:
 
 
 class TestScorerForTag:
-    def test_litqa3_returns_scorer(self) -> None:
-        assert isinstance(scorer_for_tag("litqa3"), Scorer)
+    @pytest.mark.parametrize(
+        "tag",
+        ["litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
+    )
+    def test_returns_scorer_for_supported_tag(self, tag: str) -> None:
+        assert isinstance(scorer_for_tag(tag), Scorer)
 
     def test_unsupported_tag_raises(self) -> None:
         with pytest.raises(NotImplementedError):

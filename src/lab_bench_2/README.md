@@ -62,7 +62,7 @@ See `uv run inspect eval --help` for all available options.
 
 ### `lab_bench_2`
 
-- `tag` (str): Which LAB-Bench 2 subset to run. Phase 1 supports only "litqa3". (default: `'litqa3'`)
+- `tag` (str): Which LAB-Bench 2 subset to run. Supported tags: ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``, ``trialqa``. (default: `'litqa3'`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'inject'`)
 - `shuffle` (bool): Whether to shuffle the dataset on load. Useful with ``--limit`` for a randomized sub-sample across runs. (default: `False`)
 - `solver` (Solver | None): The solver to run. Defaults to ``bare()`` (the benchmark's "bare" configuration: a plain single-turn ``generate()``) when not provided. Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI. (default: `None`)
@@ -71,6 +71,24 @@ See `uv run inspect eval --help` for all available options.
 ## Dataset
 
 This eval uses the public `EdisonScientific/labbench2` dataset on Hugging Face, pinned to a specific commit for reproducibility.
+
+### Supported tags
+
+| Tag             | Samples | File-bearing | `mode` to use          | Notes                       |
+| --------------- | ------- | ------------ | ---------------------- | --------------------------- |
+| `litqa3`        | 168     | No           | any (mode is a no-op)  | Literature reasoning.       |
+| `patentqa`      | 121     | No           | any (mode is a no-op)  | Patent comprehension.       |
+| `protocolqa2`   | 125     | Yes          | `file`                 | Lab protocols.              |
+| `sourcequality` | 150     | Yes          | `file`                 | Source quality assessment.  |
+| `trialqa`       | 120     | No           | any (mode is a no-op)  | Clinical trial QA.          |
+
+For file-bearing tags, the loader filters out questions that don't opt into
+the requested `mode` (per each question's `QuestionMode` flags in the HF
+data). At the time of writing every `protocolqa2` and `sourcequality`
+question opts into `file` only, so passing any other `mode` would load zero
+samples. The mode flags live in the dataset and may change — verify by
+running with the configuration you intend before drawing conclusions from
+sample counts.
 
 ## Scoring
 

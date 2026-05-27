@@ -310,12 +310,18 @@ def dataset_infos() -> DatasetInfosDict:
 
 @pytest.mark.huggingface
 @pytest.mark.dataset_download
-def test_litqa3_dataset_structure(dataset_infos: DatasetInfosDict) -> None:
+@pytest.mark.parametrize(
+    "tag",
+    ["litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
+)
+def test_supported_tags_have_expected_schema(
+    dataset_infos: DatasetInfosDict, tag: str
+) -> None:
     assert_huggingface_dataset_structure(
         dataset_infos,
         {
             "configs": {
-                "litqa3": {
+                tag: {
                     "splits": ["train"],
                     "features": {
                         "id": "string",

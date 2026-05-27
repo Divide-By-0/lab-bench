@@ -16,7 +16,13 @@ from lab_bench_2.scorers import scorer_for_tag
 from lab_bench_2.solvers import bare
 from utils.metadata import load_version_from_yaml
 
-SUPPORTED_TAGS = ("litqa3",)
+SUPPORTED_TAGS = (
+    "litqa3",
+    "patentqa",
+    "protocolqa2",
+    "sourcequality",
+    "trialqa",
+)
 
 EVAL_VERSION = load_version_from_yaml("lab_bench_2")
 
@@ -31,7 +37,8 @@ def lab_bench_2(
     """LAB-Bench 2 evaluation task.
 
     Args:
-        tag: Which LAB-Bench 2 subset to run. Phase 1 supports only "litqa3".
+        tag: Which LAB-Bench 2 subset to run. Supported tags: ``litqa3``,
+            ``patentqa``, ``protocolqa2``, ``sourcequality``, ``trialqa``.
         mode: How a question's data files are delivered to the model. A no-op
             for tags without files (such as litqa3). Options:
 

@@ -67,6 +67,10 @@ def semantic_judge_scorer() -> Scorer:
 
 SCORERS_BY_TAG = {
     "litqa3": semantic_judge_scorer,
+    "patentqa": semantic_judge_scorer,
+    "protocolqa2": semantic_judge_scorer,
+    "sourcequality": semantic_judge_scorer,
+    "trialqa": semantic_judge_scorer,
 }
 
 

@@ -1,7 +1,7 @@
 import pytest
 from inspect_ai import eval
 
-from lab_bench_2.lab_bench_2 import lab_bench_2
+from lab_bench_2.lab_bench_2 import Mode, lab_bench_2
 
 
 def test_unsupported_tag_raises() -> None:
@@ -16,6 +16,30 @@ def test_litqa3_bare_e2e() -> None:
     # when
     [log] = eval(
         tasks=lab_bench_2(tag="litqa3"),
+        model="mockllm/model",
+        model_roles={"grader": "mockllm/model"},
+        limit=1,
+    )
+    # then
+    assert log.status == "success"
+
+
+@pytest.mark.huggingface
+@pytest.mark.dataset_download
+@pytest.mark.parametrize(
+    "tag,mode",
+    [
+        ("patentqa", "inject"),
+        ("trialqa", "inject"),
+        ("protocolqa2", "file"),
+        ("sourcequality", "file"),
+    ],
+)
+def test_supported_tag_loads_one_sample_e2e(tag: str, mode: Mode) -> None:
+    # given a newly enabled tag in its primary mode, with a mock grader
+    # when
+    [log] = eval(
+        tasks=lab_bench_2(tag=tag, mode=mode),
         model="mockllm/model",
         model_roles={"grader": "mockllm/model"},
         limit=1,
