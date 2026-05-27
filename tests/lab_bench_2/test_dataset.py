@@ -247,6 +247,46 @@ class TestFileModeIntegration:
         assert "difficulty" not in sut.metadata
 
 
+class TestLoadDataset:
+    def test_forwards_shuffle_to_hf_dataset(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a stubbed hf_dataset that records its kwargs
+        captured: dict[str, Any] = {}
+
+        def fake_hf_dataset(**kwargs: Any) -> object:
+            captured.update(kwargs)
+            return object()
+
+        monkeypatch.setattr(dataset_module, "hf_dataset", fake_hf_dataset)
+
+        # when
+        from lab_bench_2.dataset import load_lab_bench_2_dataset
+
+        load_lab_bench_2_dataset(tag="litqa3", shuffle=True)
+
+        # then
+        assert captured["shuffle"] is True
+
+    def test_shuffle_defaults_to_false(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # given a stubbed hf_dataset that records its kwargs
+        captured: dict[str, Any] = {}
+
+        def fake_hf_dataset(**kwargs: Any) -> object:
+            captured.update(kwargs)
+            return object()
+
+        monkeypatch.setattr(dataset_module, "hf_dataset", fake_hf_dataset)
+
+        # when
+        from lab_bench_2.dataset import load_lab_bench_2_dataset
+
+        load_lab_bench_2_dataset(tag="litqa3")
+
+        # then
+        assert captured["shuffle"] is False
+
+
 def _stub_file_downloader(files_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace dataset.FileDownloader with a stub that returns ``files_dir``."""
 

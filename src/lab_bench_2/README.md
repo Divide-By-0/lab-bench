@@ -64,6 +64,7 @@ See `uv run inspect eval --help` for all available options.
 
 - `tag` (str): Which LAB-Bench 2 subset to run. Phase 1 supports only "litqa3". (default: `'litqa3'`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'inject'`)
+- `shuffle` (bool): Whether to shuffle the dataset on load. Useful with ``--limit`` for a randomized sub-sample across runs. (default: `False`)
 - `solver` (Solver | None): The solver to run. Defaults to ``bare()`` (the benchmark's "bare" configuration: a plain single-turn ``generate()``) when not provided. Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI. (default: `None`)
 <!-- /Parameters: Automatically Generated -->
 
