@@ -29,19 +29,13 @@ LAB_BENCH_2_DATASET_SPLIT = "train"
 logger = logging.getLogger(__name__)
 
 
-def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample | None:
+def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample:
     """Map a raw LAB-Bench 2 record to an Inspect Sample for the given mode.
 
-    Returns ``None`` if the question declares it does not support ``mode``
-    (e.g. a file-bearing record with ``mode.retrieve=False`` and ``mode="retrieve"``).
+    Precondition: the record's question supports ``mode``. The loader filters
+    unsupported records via ``_question_supports_mode`` before calling this.
     """
     question = LabBenchQuestion.model_validate(record)
-
-    if not _question_supports_mode(question, mode):
-        logger.info(
-            f"Removing question id {question.id} because it doesn't support the current mode {mode}"
-        )
-        return None
 
     metadata: dict[str, Any] = {
         "id": question.id,
@@ -104,16 +98,21 @@ def load_lab_bench_2_dataset(
         limit: Optional cap on the number of samples loaded.
     """
 
-    def sample_fields(record: dict[str, Any]) -> Sample | list[Sample]:
-        sample = record_to_sample(record, mode=mode)
-        return [sample] if sample is not None else []
+    def to_samples(record: dict[str, Any]) -> list[Sample]:
+        question = LabBenchQuestion.model_validate(record)
+        if not _question_supports_mode(question, mode):
+            logger.info(
+                f"Skipping question id {question.id}: does not support mode {mode!r}"
+            )
+            return []
+        return [record_to_sample(record, mode=mode)]
 
     return hf_dataset(
         path=LAB_BENCH_2_DATASET_PATH,
         name=tag,
         split=LAB_BENCH_2_DATASET_SPLIT,
         revision=LAB_BENCH_2_DATASET_REVISION,
-        sample_fields=sample_fields,
+        sample_fields=to_samples,
         limit=limit,
     )
 

@@ -2,12 +2,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from evals.models import LabBenchQuestion
 from inspect_ai.model import ChatMessageUser, ContentDocument, ContentImage, ContentText
 
 from lab_bench_2 import file_downloader
 from lab_bench_2.dataset import (
     LAB_BENCH_2_DATASET_PATH,
     LAB_BENCH_2_DATASET_REVISION,
+    _question_supports_mode,
     parse_validator_params,
     record_to_sample,
 )
@@ -98,38 +100,40 @@ def _file_bearing_record(**overrides: Any) -> dict[str, Any]:
     return record
 
 
-class TestModeGating:
-    def test_returns_none_when_question_does_not_support_mode(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+class TestQuestionSupportsMode:
+    def test_rejects_file_bearing_question_when_mode_flag_is_false(self) -> None:
         # given a file-bearing question that disables file mode
-        record = _file_bearing_record(
-            mode={"inject": True, "file": False, "retrieve": True}
+        question = LabBenchQuestion.model_validate(
+            _file_bearing_record(mode={"inject": True, "file": False, "retrieve": True})
         )
-        _stub_file_downloader(tmp_path, monkeypatch)
 
-        # when
-        sut = record_to_sample(record, mode="file")
+        # when / then
+        assert not _question_supports_mode(question, "file")
 
-        # then
-        assert sut is None
+    def test_accepts_file_bearing_question_when_mode_flag_is_true(self) -> None:
+        # given a file-bearing question that enables retrieve mode
+        question = LabBenchQuestion.model_validate(
+            _file_bearing_record(mode={"inject": True, "file": True, "retrieve": True})
+        )
+
+        # when / then
+        assert _question_supports_mode(question, "retrieve")
 
     def test_file_less_question_is_unaffected_by_mode_flags(self) -> None:
-        # given a file-less record (no files key) — mode gating only kicks in for
-        # file-bearing questions, so any mode is accepted
-        record = {
-            "id": "litqa3-x",
-            "tag": "litqa3",
-            "version": "1",
-            "question": "Q?",
-            "ideal": "A",
-        }
+        # given a file-less record (no files key) — mode gating only applies
+        # to file-bearing questions, so any mode is accepted
+        question = LabBenchQuestion.model_validate(
+            {
+                "id": "litqa3-x",
+                "tag": "litqa3",
+                "version": "1",
+                "question": "Q?",
+                "ideal": "A",
+            }
+        )
 
-        # when
-        sut = record_to_sample(record, mode="retrieve")
-
-        # then
-        assert sut is not None
+        # when / then
+        assert _question_supports_mode(question, "retrieve")
 
 
 class TestParseValidatorParams:
