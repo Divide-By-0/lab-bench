@@ -1,7 +1,8 @@
 import pytest
 from inspect_ai import eval
 
-from lab_bench_2.lab_bench_2 import Mode, lab_bench_2
+from lab_bench_2.lab_bench_2 import lab_bench_2
+from lab_bench_2.prompt_composer import Mode
 
 
 def test_unsupported_tag_raises() -> None:

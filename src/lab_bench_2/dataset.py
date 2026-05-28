@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import json
+import logging
 from pathlib import Path
 from typing import Any, cast
 
@@ -26,6 +27,8 @@ LAB_BENCH_2_DATASET_PATH = "EdisonScientific/labbench2"
 LAB_BENCH_2_DATASET_REVISION = "27d12d72af24e3f70db8a99df63e567366cbdb80"
 LAB_BENCH_2_DATASET_SPLIT = "train"
 
+logger = logging.getLogger(__name__)
+
 
 def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample | None:
     """Map a raw LAB-Bench 2 record to an Inspect Sample for the given mode.
@@ -36,6 +39,9 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample | 
     question = LabBenchQuestion.model_validate(record)
 
     if not _question_supports_mode(question, mode):
+        logger.info(
+            f"Removing question id {question.id} because it doesn't support the current mode {mode}"
+        )
         return None
 
     metadata: dict[str, Any] = {
