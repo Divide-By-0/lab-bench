@@ -89,7 +89,6 @@ def load_lab_bench_2_dataset(
     tag: str,
     mode: Mode = "inject",
     limit: int | None = None,
-    shuffle: bool = False,
 ) -> Dataset:
     """Load a single LAB-Bench 2 tag, pinned to a fixed dataset revision.
 
@@ -98,7 +97,6 @@ def load_lab_bench_2_dataset(
         mode: How to deliver question files (``inject`` / ``file`` / ``retrieve``).
             No-op for file-less tags.
         limit: Optional cap on the number of samples loaded.
-        shuffle: Whether to shuffle the dataset on load.
     """
 
     def sample_fields(record: dict[str, Any]) -> Sample | list[Sample]:
@@ -112,7 +110,6 @@ def load_lab_bench_2_dataset(
         revision=LAB_BENCH_2_DATASET_REVISION,
         sample_fields=sample_fields,
         limit=limit,
-        shuffle=shuffle,
     )
 
 
