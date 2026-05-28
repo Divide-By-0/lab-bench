@@ -5,8 +5,7 @@ import pytest
 from inspect_ai.model import ContentDocument, ContentImage
 from PIL import Image
 
-from lab_bench_2 import attachment_builder as attachment_builder_module
-from lab_bench_2.attachment_builder import AttachmentBuilder
+from lab_bench_2 import attachment_builder
 
 
 def _make_png(path: Path, size: tuple[int, int] = (10, 10)) -> Path:
@@ -39,7 +38,7 @@ class TestMimeType:
         file_path.write_bytes(b"")
 
         # when / then
-        assert AttachmentBuilder.mime_type(file_path) == expected
+        assert attachment_builder.mime_type(file_path) == expected
 
 
 class TestBuild:
@@ -49,27 +48,27 @@ class TestBuild:
         pdf_path.write_bytes(b"%PDF-1.4")
 
         # when
-        sut = AttachmentBuilder().build([pdf_path])
+        result = attachment_builder.build([pdf_path])
 
         # then
-        assert len(sut) == 1
-        assert isinstance(sut[0], ContentDocument)
-        assert sut[0].mime_type == "application/pdf"
-        assert sut[0].filename == "doc.pdf"
+        assert len(result) == 1
+        assert isinstance(result[0], ContentDocument)
+        assert result[0].mime_type == "application/pdf"
+        assert result[0].filename == "doc.pdf"
         # pdf attachments pass the path through, not base64
-        assert sut[0].document == str(pdf_path)
+        assert result[0].document == str(pdf_path)
 
     def test_emits_content_image_for_png(self, tmp_path: Path) -> None:
         # given a png file
         png_path = _make_png(tmp_path / "fig.png")
 
         # when
-        sut = AttachmentBuilder().build([png_path])
+        result = attachment_builder.build([png_path])
 
         # then
-        assert len(sut) == 1
-        assert isinstance(sut[0], ContentImage)
-        assert sut[0].image == str(png_path)
+        assert len(result) == 1
+        assert isinstance(result[0], ContentImage)
+        assert result[0].image == str(png_path)
 
     def test_emits_base64_data_url_for_text_document(self, tmp_path: Path) -> None:
         # given a plain text file
@@ -77,12 +76,12 @@ class TestBuild:
         txt_path.write_text("hello world")
 
         # when
-        sut = AttachmentBuilder().build([txt_path])
+        result = attachment_builder.build([txt_path])
 
         # then
-        assert isinstance(sut[0], ContentDocument)
+        assert isinstance(result[0], ContentDocument)
         encoded = base64.b64encode(b"hello world").decode("utf-8")
-        assert sut[0].document == f"data:text/plain;base64,{encoded}"
+        assert result[0].document == f"data:text/plain;base64,{encoded}"
 
     def test_builds_mixed_attachments_in_order(self, tmp_path: Path) -> None:
         # given a mix of file types in caller-supplied order
@@ -93,10 +92,10 @@ class TestBuild:
         txt.write_text("c")
 
         # when
-        sut = AttachmentBuilder().build([pdf, png, txt])
+        result = attachment_builder.build([pdf, png, txt])
 
         # then
-        assert [type(a).__name__ for a in sut] == [
+        assert [type(a).__name__ for a in result] == [
             "ContentDocument",
             "ContentImage",
             "ContentDocument",
@@ -109,14 +108,14 @@ class TestImageResize:
     ) -> None:
         # given an image larger than the ceiling, with resizing disabled (default)
         png_path = _make_png(tmp_path / "big.png", size=(100, 100))
-        monkeypatch.setattr(attachment_builder_module, "MAX_IMAGE_ATTACHMENT_BYTES", 1)
+        monkeypatch.setattr(attachment_builder, "MAX_IMAGE_ATTACHMENT_BYTES", 1)
 
         # when
-        sut = AttachmentBuilder().build([png_path])
+        result = attachment_builder.build([png_path])
 
         # then — image attached at the original path, unmodified
-        assert isinstance(sut[0], ContentImage)
-        assert sut[0].image == str(png_path)
+        assert isinstance(result[0], ContentImage)
+        assert result[0].image == str(png_path)
 
     def test_opt_in_resizes_oversized_image_into_cache(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -124,18 +123,16 @@ class TestImageResize:
         # given an image larger than the (tiny) ceiling with resize opt-in
         png_path = _make_png(tmp_path / "big.png", size=(100, 100))
         cache_dir = tmp_path / "cache"
-        monkeypatch.setattr(attachment_builder_module, "MAX_IMAGE_ATTACHMENT_BYTES", 1)
-        monkeypatch.setattr(
-            attachment_builder_module, "IMAGE_ATTACHMENT_CACHE_DIR", cache_dir
-        )
+        monkeypatch.setattr(attachment_builder, "MAX_IMAGE_ATTACHMENT_BYTES", 1)
+        monkeypatch.setattr(attachment_builder, "IMAGE_ATTACHMENT_CACHE_DIR", cache_dir)
 
         # when
-        sut = AttachmentBuilder(resize_oversized_images=True).build([png_path])
+        result = attachment_builder.build([png_path], resize_oversized_images=True)
 
         # then — output points at the cache, not the source
-        assert isinstance(sut[0], ContentImage)
-        assert sut[0].image != str(png_path)
-        assert str(cache_dir) in sut[0].image
+        assert isinstance(result[0], ContentImage)
+        assert result[0].image != str(png_path)
+        assert str(cache_dir) in result[0].image
 
     def test_opt_in_passes_through_when_image_is_already_small(
         self, tmp_path: Path
@@ -144,8 +141,8 @@ class TestImageResize:
         png_path = _make_png(tmp_path / "small.png")
 
         # when
-        sut = AttachmentBuilder(resize_oversized_images=True).build([png_path])
+        result = attachment_builder.build([png_path], resize_oversized_images=True)
 
         # then — no resize needed, original path returned
-        assert isinstance(sut[0], ContentImage)
-        assert sut[0].image == str(png_path)
+        assert isinstance(result[0], ContentImage)
+        assert result[0].image == str(png_path)

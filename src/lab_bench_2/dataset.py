@@ -3,7 +3,7 @@
 Questions live in a single (gated) HuggingFace dataset broken up by tags.
 File-bearing tags can be served in three modes — ``inject`` / ``file`` /
 ``retrieve`` — orchestrated here via the ``file_downloader``,
-``AttachmentBuilder``, and ``PromptComposer`` collaborators.
+``attachment_builder``, and ``PromptComposer`` collaborators.
 """
 
 from __future__ import annotations
@@ -18,8 +18,7 @@ from evals.models import LabBenchQuestion
 from inspect_ai.dataset import Dataset, Sample, hf_dataset
 from inspect_ai.model import ChatMessage, ChatMessageUser, Content, ContentText
 
-from lab_bench_2 import file_downloader
-from lab_bench_2.attachment_builder import AttachmentBuilder
+from lab_bench_2 import attachment_builder, file_downloader
 from lab_bench_2.prompt_composer import Mode, PromptComposer
 from utils.sample_ids import create_stable_id
 
@@ -64,7 +63,7 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample | 
         metadata["files_path"] = str(files_dir)
         files = file_downloader.list_files(files_dir)
         if mode == "file":
-            attachments = AttachmentBuilder().build(files)
+            attachments = attachment_builder.build(files)
         elif mode == "retrieve":
             metadata["expected_file_stems"] = [f.stem for f in files]
 
