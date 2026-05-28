@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from inspect_ai.model import ChatMessageUser, ContentDocument, ContentImage, ContentText
 
-from lab_bench_2 import dataset as dataset_module
+from lab_bench_2 import file_downloader
 from lab_bench_2.dataset import (
     LAB_BENCH_2_DATASET_PATH,
     LAB_BENCH_2_DATASET_REVISION,
@@ -248,17 +248,8 @@ class TestFileModeIntegration:
 
 
 def _stub_file_downloader(files_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Replace dataset.FileDownloader with a stub that returns ``files_dir``."""
-
-    class StubFileDownloader:
-        def fetch(self, gcs_prefix: str) -> Path:
-            return files_dir
-
-        @staticmethod
-        def list_files(directory: Path) -> list[Path]:
-            return sorted(p for p in directory.iterdir() if p.is_file())
-
-    monkeypatch.setattr(dataset_module, "FileDownloader", StubFileDownloader)
+    """Stub the file_downloader module so dataset tests don't touch GCS."""
+    monkeypatch.setattr(file_downloader, "fetch", lambda *_, **__: files_dir)
 
 
 @pytest.fixture(scope="module")

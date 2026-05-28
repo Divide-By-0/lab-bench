@@ -2,8 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lab_bench_2 import file_downloader as file_downloader_module
-from lab_bench_2.file_downloader import FileDownloader
+from lab_bench_2 import file_downloader
 
 
 class TestListFiles:
@@ -14,10 +13,10 @@ class TestListFiles:
         (tmp_path / "c.txt").write_text("c")
 
         # when
-        sut = FileDownloader.list_files(tmp_path)
+        result = file_downloader.list_files(tmp_path)
 
         # then
-        assert [p.name for p in sut] == ["a.txt", "b.txt", "c.txt"]
+        assert [p.name for p in result] == ["a.txt", "b.txt", "c.txt"]
 
     def test_skips_subdirectories(self, tmp_path: Path) -> None:
         # given a directory containing both files and a subdirectory
@@ -26,10 +25,10 @@ class TestListFiles:
         (tmp_path / "nested" / "ignored.txt").write_text("ignored")
 
         # when
-        sut = FileDownloader.list_files(tmp_path)
+        result = file_downloader.list_files(tmp_path)
 
         # then
-        assert [p.name for p in sut] == ["data.txt"]
+        assert [p.name for p in result] == ["data.txt"]
 
 
 class TestFetch:
@@ -38,12 +37,12 @@ class TestFetch:
     ) -> None:
         # given a download that returns an empty directory
         monkeypatch.setattr(
-            file_downloader_module, "download_question_files", lambda **_: tmp_path
+            file_downloader, "download_question_files", lambda **_: tmp_path
         )
 
         # when / then
         with pytest.raises(RuntimeError, match="none were downloaded"):
-            FileDownloader().fetch("some/prefix")
+            file_downloader.fetch("some/prefix")
 
     def test_returns_directory_when_populated(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -51,11 +50,30 @@ class TestFetch:
         # given a populated download
         (tmp_path / "ok.txt").write_text("ok")
         monkeypatch.setattr(
-            file_downloader_module, "download_question_files", lambda **_: tmp_path
+            file_downloader, "download_question_files", lambda **_: tmp_path
         )
 
         # when
-        sut = FileDownloader().fetch("some/prefix")
+        result = file_downloader.fetch("some/prefix")
 
         # then
-        assert sut == tmp_path
+        assert result == tmp_path
+
+    def test_forwards_bucket_name_kwarg(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a stub that records its kwargs
+        (tmp_path / "ok.txt").write_text("ok")
+        captured: dict[str, str] = {}
+
+        def stub(**kwargs: str) -> Path:
+            captured.update(kwargs)
+            return tmp_path
+
+        monkeypatch.setattr(file_downloader, "download_question_files", stub)
+
+        # when
+        file_downloader.fetch("some/prefix", bucket_name="custom-bucket")
+
+        # then
+        assert captured == {"bucket_name": "custom-bucket", "gcs_prefix": "some/prefix"}
