@@ -21,42 +21,37 @@ RETRIEVE_INSTRUCTION_TEMPLATE = (
 )
 
 
-class PromptComposer:
+def compose(
+    question_text: str,
+    mode: Mode,
+    files: list[Path],
+    prompt_suffix: str = "",
+) -> str:
     """Compose the user-visible question prompt for a given file-delivery mode."""
+    rendered = question_text
+    if files:
+        if mode == "inject":
+            rendered += _injected_files_text(files)
+        elif mode == "file":
+            rendered += FILE_REFERENCE_INSTRUCTION
+        elif mode == "retrieve":
+            rendered += _retrieval_instruction(files)
 
-    def compose(
-        self,
-        question_text: str,
-        mode: Mode,
-        files: list[Path],
-        prompt_suffix: str = "",
-    ) -> str:
-        rendered = question_text
-        if files:
-            if mode == "inject":
-                rendered += self._injected_files_text(files)
-            elif mode == "file":
-                rendered += FILE_REFERENCE_INSTRUCTION
-            elif mode == "retrieve":
-                rendered += self._retrieval_instruction(files)
+    if prompt_suffix:
+        rendered += "\n\n" + prompt_suffix
 
-        if prompt_suffix:
-            rendered += "\n\n" + prompt_suffix
+    return rendered
 
-        return rendered
 
-    @staticmethod
-    def _injected_files_text(files: list[Path]) -> str:
-        chunks = [
-            f"## {f.name}\n\n{f.read_text()}"
-            for f in files
-            if is_text_injectable_format(f)
-        ]
-        if not chunks:
-            return ""
-        return "\n\nFiles:\n\n" + "\n\n".join(chunks)
+def _injected_files_text(files: list[Path]) -> str:
+    chunks = [
+        f"## {f.name}\n\n{f.read_text()}" for f in files if is_text_injectable_format(f)
+    ]
+    if not chunks:
+        return ""
+    return "\n\nFiles:\n\n" + "\n\n".join(chunks)
 
-    @staticmethod
-    def _retrieval_instruction(files: list[Path]) -> str:
-        stems = [f.stem for f in files]
-        return RETRIEVE_INSTRUCTION_TEMPLATE.format(file_list=", ".join(stems))
+
+def _retrieval_instruction(files: list[Path]) -> str:
+    stems = [f.stem for f in files]
+    return RETRIEVE_INSTRUCTION_TEMPLATE.format(file_list=", ".join(stems))

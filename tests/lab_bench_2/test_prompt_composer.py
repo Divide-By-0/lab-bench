@@ -1,22 +1,20 @@
 from pathlib import Path
 
-from lab_bench_2.prompt_composer import (
-    FILE_REFERENCE_INSTRUCTION,
-    PromptComposer,
-)
+from lab_bench_2 import prompt_composer
+from lab_bench_2.prompt_composer import FILE_REFERENCE_INSTRUCTION
 
 
 class TestCompose:
     def test_returns_question_unchanged_when_no_files_and_no_suffix(self) -> None:
         # given a file-less question with no suffix
-        sut = PromptComposer().compose("Q?", mode="inject", files=[])
+        sut = prompt_composer.compose("Q?", mode="inject", files=[])
 
         # then
         assert sut == "Q?"
 
     def test_appends_prompt_suffix_with_blank_line(self) -> None:
         # when
-        sut = PromptComposer().compose(
+        sut = prompt_composer.compose(
             "Q?", mode="inject", files=[], prompt_suffix="Be concise."
         )
 
@@ -31,7 +29,7 @@ class TestCompose:
         b.write_text("beta")
 
         # when
-        sut = PromptComposer().compose("Q?", mode="inject", files=[a, b])
+        sut = prompt_composer.compose("Q?", mode="inject", files=[a, b])
 
         # then
         assert sut == "Q?\n\nFiles:\n\n## a.txt\n\nalpha\n\n## b.txt\n\nbeta"
@@ -44,7 +42,7 @@ class TestCompose:
         txt.write_text("just text")
 
         # when
-        sut = PromptComposer().compose("Q?", mode="inject", files=[pdf, txt])
+        sut = prompt_composer.compose("Q?", mode="inject", files=[pdf, txt])
 
         # then — only the .txt content is injected; the .pdf is omitted
         assert sut == "Q?\n\nFiles:\n\n## notes.txt\n\njust text"
@@ -57,7 +55,7 @@ class TestCompose:
         pdf.write_bytes(b"%PDF-1.4")
 
         # when
-        sut = PromptComposer().compose("Q?", mode="inject", files=[pdf])
+        sut = prompt_composer.compose("Q?", mode="inject", files=[pdf])
 
         # then — no "Files:" section added
         assert sut == "Q?"
@@ -68,7 +66,7 @@ class TestCompose:
         f.write_bytes(b"%PDF-1.4")
 
         # when
-        sut = PromptComposer().compose("Q?", mode="file", files=[f])
+        sut = prompt_composer.compose("Q?", mode="file", files=[f])
 
         # then
         assert sut == "Q?" + FILE_REFERENCE_INSTRUCTION
@@ -81,7 +79,7 @@ class TestCompose:
         seq2.write_text(">B")
 
         # when
-        sut = PromptComposer().compose("Q?", mode="retrieve", files=[seq1, seq2])
+        sut = prompt_composer.compose("Q?", mode="retrieve", files=[seq1, seq2])
 
         # then
         assert "plasmid_A, plasmid_B" in sut
@@ -95,7 +93,7 @@ class TestCompose:
         txt.write_text("payload")
 
         # when
-        sut = PromptComposer().compose(
+        sut = prompt_composer.compose(
             "Q?", mode="inject", files=[txt], prompt_suffix="Be concise."
         )
 
