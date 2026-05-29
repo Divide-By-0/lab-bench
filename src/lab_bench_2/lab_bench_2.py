@@ -18,10 +18,17 @@ from utils.metadata import load_version_from_yaml
 
 SUPPORTED_TAGS = (
     "dbqa2",
+    "figqa2",
+    "figqa2-img",
+    "figqa2-pdf",
     "litqa3",
     "patentqa",
     "protocolqa2",
     "sourcequality",
+    "suppqa2",
+    "tableqa2",
+    "tableqa2-img",
+    "tableqa2-pdf",
     "trialqa",
 )
 
@@ -38,8 +45,9 @@ def lab_bench_2(
 
     Args:
         tag: Which LAB-Bench 2 subset to run. Supported tags: ``dbqa2``,
-            ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``,
-            ``trialqa``.
+            ``figqa2`` (and ``figqa2-img`` / ``figqa2-pdf``), ``litqa3``,
+            ``patentqa``, ``protocolqa2``, ``sourcequality``, ``suppqa2``,
+            ``tableqa2`` (and ``tableqa2-img`` / ``tableqa2-pdf``), ``trialqa``.
         mode: How a question's data files are delivered to the model. A no-op
             for tags without files (such as litqa3). Options:
 

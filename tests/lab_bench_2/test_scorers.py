@@ -1,8 +1,10 @@
 import pytest
 from inspect_ai.scorer import Scorer
 
-from lab_bench_2 import parse_judge_verdict
+from lab_bench_2 import SUPPORTED_TAGS, parse_judge_verdict
 from lab_bench_2.scorers import (
+    SCORERS_BY_TAG,
+    exact_match_judge_scorer,
     recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
@@ -59,12 +61,13 @@ class TestParseJudgeVerdict:
 
 
 class TestScorerForTag:
-    @pytest.mark.parametrize(
-        "tag",
-        ["dbqa2", "litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
-    )
+    @pytest.mark.parametrize("tag", sorted(SCORERS_BY_TAG))
     def test_returns_scorer_for_supported_tag(self, tag: str) -> None:
         assert isinstance(scorer_for_tag(tag), Scorer)
+
+    def test_routing_table_matches_supported_tags(self) -> None:
+        # given/when/then — the task gate and the scorer routing list the same tags
+        assert set(SCORERS_BY_TAG) == set(SUPPORTED_TAGS)
 
     def test_unsupported_tag_raises(self) -> None:
         with pytest.raises(NotImplementedError):
@@ -77,3 +80,7 @@ def test_semantic_judge_scorer_is_scorer() -> None:
 
 def test_recall_judge_scorer_is_scorer() -> None:
     assert isinstance(recall_judge_scorer(), Scorer)
+
+
+def test_exact_match_judge_scorer_is_scorer() -> None:
+    assert isinstance(exact_match_judge_scorer(), Scorer)
