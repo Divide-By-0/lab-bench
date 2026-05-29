@@ -77,6 +77,13 @@ class TestParseJudgeVerdict:
         # when / then
         assert parse_judge_verdict(text) == "incorrect"
 
+    def test_ignores_code_assignment(self) -> None:
+        # given grader output that is code rather than a verdict — `result =
+        # "correct"` is an assignment, not a graded result
+        text = '    result = "unknown"\n        result = "correct"\n    return result'
+        # when / then
+        assert parse_judge_verdict(text) is None
+
 
 class TestScorerForTag:
     @pytest.mark.parametrize("tag", sorted(SCORERS_BY_TAG))
