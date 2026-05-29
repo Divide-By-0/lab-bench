@@ -2,7 +2,11 @@ import pytest
 from inspect_ai.scorer import Scorer
 
 from lab_bench_2 import parse_judge_verdict
-from lab_bench_2.scorers import scorer_for_tag, semantic_judge_scorer
+from lab_bench_2.scorers import (
+    recall_judge_scorer,
+    scorer_for_tag,
+    semantic_judge_scorer,
+)
 
 
 class TestParseJudgeVerdict:
@@ -44,11 +48,20 @@ class TestParseJudgeVerdict:
         # when / then
         assert parse_judge_verdict(text) == "correct"
 
+    def test_parses_recall_style_output_with_format_suffix(self) -> None:
+        # given a recall-style judgement that echoes the rubric, then closes
+        # with the verdict line that VERDICT_FORMAT_SUFFIX instructs
+        text = (
+            "Matched 5/6 expected variables. Recall = 0.83 < 0.95.\nresult: incorrect"
+        )
+        # when / then
+        assert parse_judge_verdict(text) == "incorrect"
+
 
 class TestScorerForTag:
     @pytest.mark.parametrize(
         "tag",
-        ["litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
+        ["dbqa2", "litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
     )
     def test_returns_scorer_for_supported_tag(self, tag: str) -> None:
         assert isinstance(scorer_for_tag(tag), Scorer)
@@ -60,3 +73,7 @@ class TestScorerForTag:
 
 def test_semantic_judge_scorer_is_scorer() -> None:
     assert isinstance(semantic_judge_scorer(), Scorer)
+
+
+def test_recall_judge_scorer_is_scorer() -> None:
+    assert isinstance(recall_judge_scorer(), Scorer)

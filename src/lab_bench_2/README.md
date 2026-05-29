@@ -62,7 +62,7 @@ See `uv run inspect eval --help` for all available options.
 
 ### `lab_bench_2`
 
-- `tag` (str): Which LAB-Bench 2 subset to run. Supported tags: ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``, ``trialqa``. (default: `'litqa3'`)
+- `tag` (str): Which LAB-Bench 2 subset to run. Supported tags: ``dbqa2``, ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``, ``trialqa``. (default: `'litqa3'`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'inject'`)
 - `solver` (Solver | None): The solver to run. Defaults to ``bare()`` (the benchmark's "bare" configuration: a plain single-turn ``generate()``) when not provided. Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI. (default: `None`)
 <!-- /Parameters: Automatically Generated -->
@@ -73,13 +73,14 @@ This eval uses the public `EdisonScientific/labbench2` dataset on Hugging Face, 
 
 ### Supported tags
 
-| Tag             | Samples | File-bearing | `mode` to use          | Notes                       |
-| --------------- | ------- | ------------ | ---------------------- | --------------------------- |
-| `litqa3`        | 168     | No           | any (mode is a no-op)  | Literature reasoning.       |
-| `patentqa`      | 121     | No           | any (mode is a no-op)  | Patent comprehension.       |
-| `protocolqa2`   | 125     | Yes          | `file`                 | Lab protocols.              |
-| `sourcequality` | 150     | Yes          | `file`                 | Source quality assessment.  |
-| `trialqa`       | 120     | No           | any (mode is a no-op)  | Clinical trial QA.          |
+| Tag             | Samples | File-bearing | `mode` to use          | Notes                          |
+| --------------- | ------- | ------------ | ---------------------- |--------------------------------|
+| `dbqa2`         | 86      | No           | any (mode is a no-op)  | Database access; recall judge. |
+| `litqa3`        | 168     | No           | any (mode is a no-op)  | Literature reasoning.          |
+| `patentqa`      | 121     | No           | any (mode is a no-op)  | Patent comprehension.          |
+| `protocolqa2`   | 125     | Yes          | `file`                 | Lab protocols.                 |
+| `sourcequality` | 150     | Yes          | `file`                 | Source quality assessment.     |
+| `trialqa`       | 120     | No           | any (mode is a no-op)  | Clinical trial QA.             |
 
 For file-bearing tags, the loader filters out questions that don't opt into
 the requested `mode` (per each question's `QuestionMode` flags in the HF
@@ -91,11 +92,15 @@ sample counts.
 
 ## Scoring
 
-Answers are graded by a semantic LLM judge. The judge compares the model's
-answer to the reference, accepting semantically or numerically equivalent
-answers, and returns one of `correct` / `incorrect` / `unsure`; a `correct`
-verdict scores 1.0 and everything else (including unparseable or empty
-judgements) scores 0.0. Reported metrics are `accuracy` and `stderr`.
+Answers are graded by an LLM judge. The judge compares the model's answer to
+the reference, accepting semantically or numerically equivalent answers, and
+returns one of `correct` / `incorrect` / `unsure`; a `correct` verdict scores
+1.0 and everything else (including unparseable or empty judgements) scores 0.0.
+Reported metrics are `accuracy` and `stderr`.
+
+The judge prompt varies by tag: most tags use the default semantic prompt, while
+`dbqa2` (database access) uses a recall-based variant that marks an answer
+correct when it recovers the expected reference values.
 
 The judge model is selected via the `grader` model role and defaults to
 `anthropic/claude-sonnet-4-5` at temperature 0. Override it on the command line,

@@ -10,6 +10,7 @@ from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import (
     DEFAULT_GRADER_MODEL,
     parse_judge_verdict,
+    recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "lab_bench_2",
     "load_lab_bench_2_dataset",
     "parse_judge_verdict",
+    "recall_judge_scorer",
     "record_to_sample",
     "scorer_for_tag",
     "semantic_judge_scorer",
