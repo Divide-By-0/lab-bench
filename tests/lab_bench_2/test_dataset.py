@@ -1,8 +1,16 @@
-import pytest
+from pathlib import Path
+from typing import Any
 
+import pytest
+from evals.models import LabBenchQuestion
+from inspect_ai.model import ChatMessageUser, ContentDocument, ContentImage, ContentText
+
+from lab_bench_2 import file_downloader
 from lab_bench_2.dataset import (
     LAB_BENCH_2_DATASET_PATH,
     LAB_BENCH_2_DATASET_REVISION,
+    _question_supports_mode,
+    parse_validator_params,
     record_to_sample,
 )
 from utils.huggingface import (
@@ -18,6 +26,7 @@ class TestRecordToSample:
         record = {
             "id": "litqa3-0001",
             "tag": "litqa3",
+            "version": "1",
             "type": "",
             "question": "What protein does the human SNCA gene encode?",
             "ideal": "Alpha-synuclein",
@@ -29,11 +38,14 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
-        assert sut.id == "litqa3-0001"
+        assert sut is not None
+        assert str(sut.id).startswith("labbench2_")
         assert sut.target == "Alpha-synuclein"
         assert "SNCA" in str(sut.input)
         assert sut.metadata is not None
+        assert sut.metadata["id"] == "litqa3-0001"
         assert sut.metadata["tag"] == "litqa3"
+        assert sut.metadata["mode"] == "inject"
         assert sut.metadata["sources"] == ["https://example.org/paper"]
 
     def test_appends_prompt_suffix(self) -> None:
@@ -41,6 +53,7 @@ class TestRecordToSample:
         record = {
             "id": "litqa3-0002",
             "tag": "litqa3",
+            "version": "1",
             "question": "What is the capital of France?",
             "ideal": "Paris",
             "prompt_suffix": "Answer concisely.",
@@ -50,12 +63,15 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
+        assert sut is not None
         assert str(sut.input).endswith("Answer concisely.")
 
     def test_defaults_when_optional_fields_missing(self) -> None:
         # given a record without optional fields
         record = {
             "id": "litqa3-0003",
+            "tag": "litqa3",
+            "version": "1",
             "question": "Q?",
             "ideal": "A",
         }
@@ -64,9 +80,180 @@ class TestRecordToSample:
         sut = record_to_sample(record)
 
         # then
+        assert sut is not None
         assert sut.metadata is not None
         assert sut.metadata["sources"] == []
         assert sut.metadata["type"] is None
+
+
+def _file_bearing_record(**overrides: Any) -> dict[str, Any]:
+    record = {
+        "id": "seqqa2-0001",
+        "tag": "seqqa2",
+        "version": "1",
+        "question": "Find the start codon.",
+        "ideal": "ATG",
+        "files": "seqqa2/0001",
+        "mode": {"inject": True, "file": True, "retrieve": True},
+    }
+    record.update(overrides)
+    return record
+
+
+class TestQuestionSupportsMode:
+    def test_rejects_file_bearing_question_when_mode_flag_is_false(self) -> None:
+        # given a file-bearing question that disables file mode
+        question = LabBenchQuestion.model_validate(
+            _file_bearing_record(mode={"inject": True, "file": False, "retrieve": True})
+        )
+
+        # when / then
+        assert not _question_supports_mode(question, "file")
+
+    def test_accepts_file_bearing_question_when_mode_flag_is_true(self) -> None:
+        # given a file-bearing question that enables retrieve mode
+        question = LabBenchQuestion.model_validate(
+            _file_bearing_record(mode={"inject": True, "file": True, "retrieve": True})
+        )
+
+        # when / then
+        assert _question_supports_mode(question, "retrieve")
+
+    def test_file_less_question_is_unaffected_by_mode_flags(self) -> None:
+        # given a file-less record (no files key) — mode gating only applies
+        # to file-bearing questions, so any mode is accepted
+        question = LabBenchQuestion.model_validate(
+            {
+                "id": "litqa3-x",
+                "tag": "litqa3",
+                "version": "1",
+                "question": "Q?",
+                "ideal": "A",
+            }
+        )
+
+        # when / then
+        assert _question_supports_mode(question, "retrieve")
+
+
+class TestParseValidatorParams:
+    def test_parses_json_payload(self) -> None:
+        assert parse_validator_params('{"k": 1}') == {"k": 1}
+
+    def test_falls_back_to_python_literal(self) -> None:
+        # given a single-quoted dict that's not valid JSON
+        assert parse_validator_params("{'k': 1}") == {"k": 1}
+
+    def test_empty_returns_empty_dict(self) -> None:
+        assert parse_validator_params(None) == {}
+        assert parse_validator_params("") == {}
+
+    def test_rejects_non_dict_literal(self) -> None:
+        with pytest.raises(ValueError, match="must parse to a dictionary"):
+            parse_validator_params("[1, 2, 3]")
+
+
+class TestFileModeIntegration:
+    def test_file_mode_attaches_image_and_document(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a record whose files include a PDF and an image
+        from PIL import Image  # noqa: PLC0415 -- test-local fixture image
+
+        (tmp_path / "doc.pdf").write_bytes(b"%PDF-1.4")
+        Image.new("RGB", (5, 5), color=(0, 0, 0)).save(tmp_path / "fig.png")
+        _stub_file_downloader(tmp_path, monkeypatch)
+
+        # when
+        sut = record_to_sample(_file_bearing_record(), mode="file")
+
+        # then
+        assert sut is not None
+        assert isinstance(sut.input, list)
+        message = sut.input[0]
+        assert isinstance(message, ChatMessageUser)
+        kinds = [type(c).__name__ for c in message.content]
+        assert kinds == ["ContentText", "ContentDocument", "ContentImage"]
+        text = message.content[0]
+        assert isinstance(text, ContentText)
+        assert "refer to files using only their base names" in text.text
+        document = message.content[1]
+        assert isinstance(document, ContentDocument)
+        assert document.mime_type == "application/pdf"
+        image = message.content[2]
+        assert isinstance(image, ContentImage)
+
+    def test_retrieve_mode_lists_file_stems_and_skips_attachments(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a record with two sequence files
+        (tmp_path / "plasmid_A.gb").write_text(">A")
+        (tmp_path / "plasmid_B.fasta").write_text(">B")
+        _stub_file_downloader(tmp_path, monkeypatch)
+
+        # when
+        sut = record_to_sample(_file_bearing_record(), mode="retrieve")
+
+        # then — input is a plain string (no attachments) and stems are exposed
+        assert sut is not None
+        assert isinstance(sut.input, str)
+        assert "plasmid_A, plasmid_B" in sut.input
+        assert sut.metadata is not None
+        assert sut.metadata["expected_file_stems"] == ["plasmid_A", "plasmid_B"]
+
+    def test_inject_mode_inlines_text_files_into_prompt(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a record with an injectable text file
+        (tmp_path / "notes.txt").write_text("payload")
+        _stub_file_downloader(tmp_path, monkeypatch)
+
+        # when
+        sut = record_to_sample(_file_bearing_record(), mode="inject")
+
+        # then
+        assert sut is not None
+        assert isinstance(sut.input, str)
+        assert "## notes.txt" in sut.input
+        assert "payload" in sut.input
+
+    def test_difficulty_field_propagates_to_metadata_when_present(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a record with a difficulty field
+        (tmp_path / "notes.txt").write_text("p")
+        _stub_file_downloader(tmp_path, monkeypatch)
+
+        # when
+        sut = record_to_sample(_file_bearing_record(difficulty="hard"), mode="inject")
+
+        # then
+        assert sut is not None
+        assert sut.metadata is not None
+        assert sut.metadata["difficulty"] == "hard"
+
+    def test_difficulty_omitted_from_metadata_when_absent(self) -> None:
+        # given a file-less record without difficulty
+        record = {
+            "id": "litqa3-x",
+            "tag": "litqa3",
+            "version": "1",
+            "question": "Q?",
+            "ideal": "A",
+        }
+
+        # when
+        sut = record_to_sample(record)
+
+        # then
+        assert sut is not None
+        assert sut.metadata is not None
+        assert "difficulty" not in sut.metadata
+
+
+def _stub_file_downloader(files_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stub the file_downloader module so dataset tests don't touch GCS."""
+    monkeypatch.setattr(file_downloader, "fetch", lambda *_, **__: files_dir)
 
 
 @pytest.fixture(scope="module")
@@ -78,12 +265,18 @@ def dataset_infos() -> DatasetInfosDict:
 
 @pytest.mark.huggingface
 @pytest.mark.dataset_download
-def test_litqa3_dataset_structure(dataset_infos: DatasetInfosDict) -> None:
+@pytest.mark.parametrize(
+    "tag",
+    ["litqa3", "patentqa", "protocolqa2", "sourcequality", "trialqa"],
+)
+def test_supported_tags_have_expected_schema(
+    dataset_infos: DatasetInfosDict, tag: str
+) -> None:
     assert_huggingface_dataset_structure(
         dataset_infos,
         {
             "configs": {
-                "litqa3": {
+                tag: {
                     "splits": ["train"],
                     "features": {
                         "id": "string",

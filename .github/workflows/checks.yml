@@ -76,7 +76,10 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: uv sync --frozen
+        # --all-extras: mypy walks every eval's tests, so per-eval extras
+        # (e.g. lab_bench_2's labbench2 dep, which transitively provides Pillow)
+        # must be present for import resolution.
+        run: uv sync --frozen --all-extras
       - name: Run mypy
         run: uv run mypy --version && uv run mypy src tests
 
@@ -147,7 +150,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: uv sync --frozen
+        # --all-extras: generate_readmes.py importlib-imports each eval
+        # package to introspect @task signatures; missing extras = ImportError.
+        run: uv sync --frozen --all-extras
       - name: Regenerate READMEs
         run: uv run python tools/generate_readmes.py
       - name: Fail if docs changed
