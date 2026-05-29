@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -14,6 +15,7 @@ from lab_bench_2.scorers import (
     recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
+    seqqa2_scorer,
 )
 
 
@@ -205,3 +207,114 @@ class TestCloningScorer:
         # then
         assert result.value == INCORRECT
         assert "Ground truth file not found" in (result.explanation or "")
+
+
+class TestSeqqa2Scorer:
+    async def test_dispatches_to_validator_and_scores_correct(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from labbench2.seqqa2.registry import VALIDATORS
+
+        # given a dummy validator registered for a question type
+        validator = SimpleNamespace(answer_param="answer", func=lambda answer: 1.0)
+        monkeypatch.setitem(VALIDATORS, "dummy_validator", validator)
+
+        # when
+        sut = seqqa2_scorer()
+        state = _task_state(
+            "<answer>pass</answer>",
+            {
+                "tag": "seqqa2",
+                "type": "dummy_validator",
+                "answer_regex": "(?P<answer>pass)",
+                "validator_params": {},
+            },
+        )
+        result = await sut(state, Target(""))
+
+        # then
+        assert result == Score(
+            value=CORRECT,
+            explanation="Validator 'dummy_validator' passed",
+            metadata={"validator": "dummy_validator", "validator_score": 1.0},
+        )
+
+    async def test_renames_answer_param_for_validator(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from labbench2.seqqa2.registry import VALIDATORS
+
+        captured: dict[str, Any] = {}
+
+        def validator_func(sequence: str) -> float:
+            captured["sequence"] = sequence
+            return 1.0
+
+        # given a validator whose answer param is named "sequence"
+        validator = SimpleNamespace(answer_param="sequence", func=validator_func)
+        monkeypatch.setitem(VALIDATORS, "rename_validator", validator)
+
+        # when
+        sut = seqqa2_scorer()
+        state = _task_state(
+            "<answer>ACTG</answer>",
+            {
+                "tag": "seqqa2",
+                "type": "rename_validator",
+                "answer_regex": "(?P<answer>ACTG)",
+                "validator_params": {},
+            },
+        )
+        result = await sut(state, Target(""))
+
+        # then the extracted answer is passed under the validator's param name
+        assert result.value == CORRECT
+        assert captured == {"sequence": "ACTG"}
+
+    async def test_incorrect_for_unknown_validator_type(self) -> None:
+        sut = seqqa2_scorer()
+        state = _task_state(
+            "<answer>x</answer>",
+            {
+                "tag": "seqqa2",
+                "type": "does_not_exist",
+                "answer_regex": "(?P<answer>x)",
+            },
+        )
+        result = await sut(state, Target(""))
+        assert result.value == INCORRECT
+        assert "No validator found" in (result.explanation or "")
+
+    async def test_incorrect_when_type_missing(self) -> None:
+        sut = seqqa2_scorer()
+        state = _task_state("<answer>x</answer>", {"tag": "seqqa2"})
+        result = await sut(state, Target(""))
+        assert result.value == INCORRECT
+        assert "question type" in (result.explanation or "")
+
+    async def test_fail_closed_when_path_param_unresolved(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from labbench2.seqqa2.registry import VALIDATORS
+
+        # given a validator with a _path param that cannot be resolved
+        validator = SimpleNamespace(answer_param="answer", func=lambda **kw: 1.0)
+        monkeypatch.setitem(VALIDATORS, "path_validator", validator)
+        monkeypatch.setattr("evals.utils.resolve_file_path", lambda value, _: None)
+
+        # when
+        sut = seqqa2_scorer()
+        state = _task_state(
+            "<answer>x</answer>",
+            {
+                "tag": "seqqa2",
+                "type": "path_validator",
+                "answer_regex": "(?P<answer>x)",
+                "validator_params": {"reference_path": "missing.fa"},
+            },
+        )
+        result = await sut(state, Target(""))
+
+        # then it fails closed rather than calling the validator
+        assert result.value == INCORRECT
+        assert "File not found: missing.fa" in (result.explanation or "")

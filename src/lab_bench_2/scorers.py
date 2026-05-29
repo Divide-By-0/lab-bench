@@ -19,6 +19,8 @@ from inspect_ai.scorer import (
 )
 from inspect_ai.solver import TaskState
 
+from lab_bench_2 import seqqa2_answer_parser
+
 DEFAULT_GRADER_MODEL = "anthropic/claude-sonnet-4-5"
 GRADER_ROLE = "grader"
 
@@ -153,71 +155,6 @@ def cloning_scorer() -> Scorer:
     return score
 
 
-ANSWER_BLOCK_RE = re.compile(r"<answer>(.*?)</answer>", re.IGNORECASE | re.DOTALL)
-ASCII_WHITESPACE_RE = re.compile(r"[ \t\n\r\f\v]+")
-NAMED_GROUP_RE = re.compile(r"\(\?P<[^>]+>")
-IUPAC_NUCLEOTIDE_CHARS = frozenset("ACGTRYSWKMBDHVNacgtryswkmbdhvnUu")
-REGEX_SYNTAX_CHARS = frozenset(r"[](){}?+*^$|,:\\-")
-
-
-def is_nucleotide_only_answer_regex(answer_regex: str) -> bool:
-    without_group_names = NAMED_GROUP_RE.sub("(", answer_regex)
-    remaining = "".join(
-        char
-        for char in without_group_names
-        if char not in REGEX_SYNTAX_CHARS and not char.isspace()
-    )
-    return bool(remaining) and set(remaining) <= IUPAC_NUCLEOTIDE_CHARS
-
-
-def normalized_answer_attempts(answer_text: str, answer_regex: str) -> list[str]:
-    attempts = [ASCII_WHITESPACE_RE.sub(" ", answer_text).strip()]
-    if is_nucleotide_only_answer_regex(answer_regex):
-        nucleotide_attempt = ASCII_WHITESPACE_RE.sub("", answer_text).strip()
-        if nucleotide_attempt not in attempts:
-            attempts.append(nucleotide_attempt)
-    return attempts
-
-
-def extract_seqqa2_answer(
-    completion: str, answer_regex: str | None
-) -> dict[str, str] | None:
-    """Extract seqqa2 answer params via the question's answer regex.
-
-    Delegates to upstream ``extract_answer`` first; on failure, retries against
-    whitespace-normalized variants of the ``<answer>`` block to tolerate
-    line-wrapped or spaced sequence answers.
-    """
-    from evals.evaluators import extract_answer
-
-    extracted = extract_answer(completion, answer_regex)
-    if extracted is not None:
-        return cast(dict[str, str], extracted)
-
-    if not answer_regex:
-        return None
-
-    answer_match = ANSWER_BLOCK_RE.search(completion)
-    if answer_match is None:
-        answer_text = completion
-        prefix = "<answer>"
-        suffix = "</answer>"
-    else:
-        answer_text = answer_match.group(1)
-        prefix = completion[: answer_match.start()] + "<answer>"
-        suffix = "</answer>" + completion[answer_match.end() :]
-
-    for normalized_answer in normalized_answer_attempts(answer_text, answer_regex):
-        if not normalized_answer:
-            continue
-        normalized_completion = f"{prefix}{normalized_answer}{suffix}"
-        extracted = extract_answer(normalized_completion, answer_regex)
-        if extracted is not None:
-            return cast(dict[str, str], extracted)
-
-    return None
-
-
 @scorer(metrics=[accuracy(), stderr()])
 def seqqa2_scorer() -> Scorer:
     """Score SeqQA2 answers with labbench2's deterministic per-type validators."""
@@ -229,28 +166,25 @@ def seqqa2_scorer() -> Scorer:
         question_type = cast(str | None, metadata.get("type"))
         if not question_type:
             return Score(
-                value=0.0,
+                value=INCORRECT,
                 explanation="SeqQA2 evaluation requires question type metadata.",
-                metadata={"route": "seqqa2"},
             )
 
         validator = VALIDATORS.get(question_type)
         if validator is None:
             return Score(
-                value=0.0,
+                value=INCORRECT,
                 explanation=f"No validator found for type: {question_type}",
-                metadata={"route": "seqqa2"},
             )
 
-        extracted = extract_seqqa2_answer(
+        extracted = seqqa2_answer_parser.extract(
             state.output.completion,
             cast(str | None, metadata.get("answer_regex")),
         )
         if extracted is None:
             return Score(
-                value=0.0,
+                value=INCORRECT,
                 explanation="Failed to extract answer from model output.",
-                metadata={"route": "seqqa2", "validator": question_type},
             )
 
         if "answer" in extracted and validator.answer_param != "answer":
@@ -268,22 +202,17 @@ def seqqa2_scorer() -> Scorer:
                 resolved = resolve_file_path(value, files_path)
                 if resolved is None:
                     return Score(
-                        value=0.0,
+                        value=INCORRECT,
                         explanation=f"File not found: {value}",
-                        metadata={"route": "seqqa2", "validator": question_type},
                     )
                 kwargs[key] = resolved
 
         score_value = float(validator.func(**kwargs))
-        explanation = (
-            f"Validator '{question_type}' passed"
-            if score_value == 1.0
-            else f"Validator '{question_type}' failed"
-        )
+        passed = score_value >= 1.0
         return Score(
-            value=score_value,
-            explanation=explanation,
-            metadata={"route": "seqqa2", "validator": question_type},
+            value=CORRECT if passed else INCORRECT,
+            explanation=f"Validator '{question_type}' {'passed' if passed else 'failed'}",
+            metadata={"validator": question_type, "validator_score": score_value},
         )
 
     return score
