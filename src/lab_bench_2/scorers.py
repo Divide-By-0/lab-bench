@@ -160,8 +160,9 @@ def cloning_scorer() -> Scorer:
                 explanation=f"Ground truth file not found: {ground_truth_filename}",
             )
 
+        answer = state.output.completion
         score_value, reason = await cloning_reward(
-            answer=state.output.completion,
+            answer=answer,
             base_dir=Path(files_path_str),
             reference_path=ground_truth_path,
             validator_params=cast(
@@ -171,6 +172,7 @@ def cloning_scorer() -> Scorer:
 
         return Score(
             value=CORRECT if score_value >= 1.0 else INCORRECT,
+            answer=answer,
             explanation=reason,
             metadata={"cloning_score": score_value},
         )
@@ -200,8 +202,9 @@ def seqqa2_scorer() -> Scorer:
                 explanation=f"No validator found for type: {question_type}",
             )
 
+        raw_answer = state.output.completion
         extracted = seqqa2_answer_parser.extract(
-            state.output.completion,
+            raw_answer,
             cast(str | None, metadata.get("answer_regex")),
         )
         if extracted is None:
@@ -234,6 +237,7 @@ def seqqa2_scorer() -> Scorer:
         passed = score_value >= 1.0
         return Score(
             value=CORRECT if passed else INCORRECT,
+            answer=raw_answer,
             explanation=f"Validator '{question_type}' {'passed' if passed else 'failed'}",
             metadata={"validator": question_type, "validator_score": score_value},
         )
