@@ -62,7 +62,7 @@ See `uv run inspect eval --help` for all available options.
 
 ### `lab_bench_2`
 
-- `tag` (str): Which LAB-Bench 2 subset to run. Supported tags: ``dbqa2``, ``figqa2`` (and ``figqa2-img`` / ``figqa2-pdf``), ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``, ``suppqa2``, ``tableqa2`` (and ``tableqa2-img`` / ``tableqa2-pdf``), ``trialqa``. (default: `'litqa3'`)
+- `tag` (str): Which LAB-Bench 2 subset to run. Supported tags: ``cloning``, ``dbqa2``, ``figqa2`` (and ``figqa2-img`` / ``figqa2-pdf``), ``litqa3``, ``patentqa``, ``protocolqa2``, ``sourcequality``, ``suppqa2``, ``tableqa2`` (and ``tableqa2-img`` / ``tableqa2-pdf``), ``trialqa``. (default: `'litqa3'`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'inject'`)
 - `solver` (Solver | None): The solver to run. Defaults to ``bare()`` (the benchmark's "bare" configuration: a plain single-turn ``generate()``) when not provided. Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI. (default: `None`)
 <!-- /Parameters: Automatically Generated -->
@@ -73,21 +73,22 @@ This eval uses the public `EdisonScientific/labbench2` dataset on Hugging Face, 
 
 ### Supported tags
 
-| Tag             | Samples | File-bearing | `mode` to use          | Notes                          |
-| --------------- | ------- | ------------ | ---------------------- |--------------------------------|
-| `dbqa2`         | 86      | No           | any (mode is a no-op)  | Database access; recall judge. |
-| `figqa2`        | 101     | No           | any (mode is a no-op)  | Figure QA; exact-match judge.  |
-| `figqa2-img`    | 101     | Yes          | `file`                 | Figure QA with image files.    |
-| `figqa2-pdf`    | 101     | Yes          | `file`                 | Figure QA with PDF files.      |
-| `litqa3`        | 168     | No           | any (mode is a no-op)  | Literature reasoning.          |
-| `patentqa`      | 121     | No           | any (mode is a no-op)  | Patent comprehension.          |
-| `protocolqa2`   | 125     | Yes          | `file`                 | Lab protocols.                 |
-| `sourcequality` | 150     | Yes          | `file`                 | Source quality assessment.     |
-| `suppqa2`       | 125     | No           | any (mode is a no-op)  | Supplement QA; exact-match.    |
-| `tableqa2`      | 100     | No           | any (mode is a no-op)  | Table QA; exact-match judge.   |
-| `tableqa2-img`  | 100     | Yes          | `file`                 | Table QA with image files.     |
-| `tableqa2-pdf`  | 100     | Yes          | `file`                 | Table QA with PDF files.       |
-| `trialqa`       | 120     | No           | any (mode is a no-op)  | Clinical trial QA.             |
+| Tag             | Samples | File-bearing | `mode` to use          | Notes                             |
+| --------------- | ------- | ------------ | ---------------------- |-----------------------------------|
+| `cloning`       | 14      | Yes          | any (all modes)        | Cloning protocols; reward-scored. |
+| `dbqa2`         | 86      | No           | any (mode is a no-op)  | Database access; recall judge.    |
+| `figqa2`        | 101     | No           | any (mode is a no-op)  | Figure QA; exact-match judge.     |
+| `figqa2-img`    | 101     | Yes          | `file`                 | Figure QA with image files.       |
+| `figqa2-pdf`    | 101     | Yes          | `file`                 | Figure QA with PDF files.         |
+| `litqa3`        | 168     | No           | any (mode is a no-op)  | Literature reasoning.             |
+| `patentqa`      | 121     | No           | any (mode is a no-op)  | Patent comprehension.             |
+| `protocolqa2`   | 125     | Yes          | `file`                 | Lab protocols.                    |
+| `sourcequality` | 150     | Yes          | `file`                 | Source quality assessment.        |
+| `suppqa2`       | 125     | No           | any (mode is a no-op)  | Supplement QA; exact-match.       |
+| `tableqa2`      | 100     | No           | any (mode is a no-op)  | Table QA; exact-match judge.      |
+| `tableqa2-img`  | 100     | Yes          | `file`                 | Table QA with image files.        |
+| `tableqa2-pdf`  | 100     | Yes          | `file`                 | Table QA with PDF files.          |
+| `trialqa`       | 120     | No           | any (mode is a no-op)  | Clinical trial QA.                |
 
 For file-bearing tags, the loader filters out questions that don't opt into
 the requested `mode` (per each question's `QuestionMode` flags in the HF
@@ -112,6 +113,17 @@ The judge prompt varies by tag: most tags use the default semantic prompt;
 correct when it recovers the expected reference values; and the figure, table,
 and supplement tags (`figqa2*`, `tableqa2*`, `suppqa2`) use an exact-match
 variant for numeric answers.
+
+The `cloning` tag is not graded by an LLM judge: it is scored deterministically
+by labbench2's reward pipeline, which parses the submitted protocol, executes it
+(including PCR simulation), and compares the result to the reference assembly via
+sequence-similarity and restriction-digest checks.
+PCR simulation runs a small Go binary that labbench2 compiles on first use, so a
+Go toolchain (1.21+) must be available on the host the first time you score
+`cloning`; the compiled binary is then cached inside the installed package and
+reused. To install Go: `brew install go` (macOS), `sudo apt install golang-go` (Linux),
+or <https://go.dev/dl/>. Without Go, protocol execution fails gracefully: PCR-based
+samples score 0.0 with an explanatory reason rather than crashing the run.
 
 The judge model is selected via the `grader` model role and defaults to
 `anthropic/claude-sonnet-4-5` at temperature 0. Override it on the command line,
