@@ -7,7 +7,7 @@ from inspect_ai.model import ModelOutput
 from inspect_ai.scorer import CORRECT, INCORRECT, Score, Scorer, Target
 from inspect_ai.solver import TaskState
 
-from lab_bench_2 import SUPPORTED_TAGS, parse_judge_verdict
+from lab_bench_2 import SUPPORTED_TAGS, parse_judge_verdict, scorers
 from lab_bench_2.scorers import (
     SCORERS_BY_TAG,
     cloning_scorer,
@@ -111,6 +111,98 @@ def test_recall_judge_scorer_is_scorer() -> None:
 
 def test_exact_match_judge_scorer_is_scorer() -> None:
     assert isinstance(exact_match_judge_scorer(), Scorer)
+
+
+def _patch_grader(monkeypatch: pytest.MonkeyPatch, completion: str) -> None:
+    class _Grader:
+        async def generate(self, prompt: str) -> SimpleNamespace:
+            return SimpleNamespace(completion=completion)
+
+    monkeypatch.setattr(scorers, "get_model", lambda *args, **kwargs: _Grader())
+
+
+class TestJudgeScorer:
+    async def test_structured_correct_verdict_scores_correct(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader returning a structured (typed) correct verdict
+        _patch_grader(
+            monkeypatch,
+            '{"rationale": "matches the reference", "result": "correct"}',
+        )
+        # when
+        sut = semantic_judge_scorer()
+        result = await sut(_task_state("answer", {"tag": "litqa3"}), Target("ref"))
+        # then the typed rationale and verdict are used
+        assert result.value == CORRECT
+        assert result.explanation == "matches the reference"
+        assert result.metadata == {
+            "verdict": "correct",
+            "verdict_source": "structured",
+        }
+
+    @pytest.mark.parametrize("verdict", ["incorrect", "unsure"])
+    async def test_structured_non_correct_verdict_scores_incorrect(
+        self, monkeypatch: pytest.MonkeyPatch, verdict: str
+    ) -> None:
+        _patch_grader(monkeypatch, f'{{"rationale": "x", "result": "{verdict}"}}')
+        sut = semantic_judge_scorer()
+        result = await sut(_task_state("answer", {"tag": "litqa3"}), Target("ref"))
+        assert result.value == INCORRECT
+        assert result.metadata == {"verdict": verdict, "verdict_source": "structured"}
+
+    async def test_falls_back_to_regex_for_non_structured_output(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader that ignores the schema and returns free text
+        _patch_grader(monkeypatch, "Reasoning here.\nresult: correct")
+        # when
+        sut = semantic_judge_scorer()
+        result = await sut(_task_state("answer", {"tag": "litqa3"}), Target("ref"))
+        # then the regex fallback recovers the verdict
+        assert result.value == CORRECT
+        assert result.metadata == {"verdict": "correct", "verdict_source": "fallback"}
+
+    @pytest.mark.parametrize(
+        "completion, expected_verdict",
+        [
+            ("Reasoning here.\nresult: incorrect", "incorrect"),
+            ("no parseable verdict in this text", None),
+        ],
+    )
+    async def test_falls_back_to_regex_scores_incorrect(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        completion: str,
+        expected_verdict: str | None,
+    ) -> None:
+        # given non-structured grader output that is not a correct verdict
+        # (a parsed "incorrect", or nothing parseable at all)
+        _patch_grader(monkeypatch, completion)
+        # when
+        sut = semantic_judge_scorer()
+        result = await sut(_task_state("answer", {"tag": "litqa3"}), Target("ref"))
+        # then it scores incorrect
+        assert result.value == INCORRECT
+        assert result.metadata == {
+            "verdict": expected_verdict,
+            "verdict_source": "fallback",
+        }
+
+    async def test_empty_answer_scores_incorrect(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given an empty answer but correct grade
+        answer = "   "
+        _patch_grader(monkeypatch, '{"rationale": "x", "result": "correct"}')
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await sut(_task_state(answer, {"tag": "litqa3"}), Target("ref"))
+
+        # then
+        assert result.value == INCORRECT
+        assert "No answer" in (result.explanation or "")
 
 
 class TestCloningScorer:

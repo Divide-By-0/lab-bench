@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any, cast
 
-from inspect_ai.model import GenerateConfig, get_model
+from inspect_ai.model import GenerateConfig, ResponseSchema, get_model
 from inspect_ai.scorer import (
     CORRECT,
     INCORRECT,
@@ -18,6 +18,8 @@ from inspect_ai.scorer import (
     stderr,
 )
 from inspect_ai.solver import TaskState
+from inspect_ai.util import json_schema
+from pydantic import ValidationError
 
 from lab_bench_2 import seqqa2_answer_parser
 
@@ -44,7 +46,17 @@ VERDICT_FORMAT_SUFFIX = (
 
 
 def _judge_score(prompt_template: str) -> Scorer:
-    """Build a judge that grades an answer against the reference via the template."""
+    """Build a judge that grades an answer against the reference via the template.
+
+    Requests structured output so the grader returns a typed verdict; falls back
+    to regex parsing for providers that don't honor the schema or for
+    non-compliant responses.
+    """
+    from evals.models import EvaluationResult
+
+    response_schema = ResponseSchema(
+        name="evaluation_result", json_schema=json_schema(EvaluationResult)
+    )
 
     async def score(state: TaskState, target: Target) -> Score:
         answer = state.output.completion.strip()
@@ -56,7 +68,7 @@ def _judge_score(prompt_template: str) -> Scorer:
         grader = get_model(
             role=GRADER_ROLE,
             default=DEFAULT_GRADER_MODEL,
-            config=GenerateConfig(temperature=0.0),
+            config=GenerateConfig(temperature=0.0, response_schema=response_schema),
         )
 
         prompt = prompt_template.format(
@@ -65,13 +77,23 @@ def _judge_score(prompt_template: str) -> Scorer:
             answer=answer,
         )
         result = await grader.generate(prompt)
-        verdict = parse_judge_verdict(result.completion)
+
+        try:
+            evaluation = EvaluationResult.model_validate_json(result.completion)
+            verdict: str | None = evaluation.result
+            explanation = evaluation.rationale
+            verdict_source = "structured"
+        except ValidationError:
+            verdict = parse_judge_verdict(result.completion)
+            explanation = result.completion
+            verdict_source = "fallback"
+
         value = CORRECT if verdict == JUDGE_VERDICT_CORRECT else INCORRECT
         return Score(
             value=value,
             answer=answer,
-            explanation=result.completion,
-            metadata={"verdict": verdict},
+            explanation=explanation,
+            metadata={"verdict": verdict, "verdict_source": verdict_source},
         )
 
     return score

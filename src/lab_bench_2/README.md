@@ -111,6 +111,11 @@ returns one of `correct` / `incorrect` / `unsure`; a `correct` verdict scores
 1.0 and everything else (including unparseable or empty judgements) scores 0.0.
 Reported metrics are `accuracy` and `stderr`.
 
+The judge requests **structured output** (a typed `result` / `rationale`
+schema), so the verdict is read from a typed field rather than scraped from
+prose. If the grader's provider doesn't support structured output, it falls back
+to parsing a `result:` line from the response.
+
 The judge prompt varies by tag: most tags use the default semantic prompt;
 `dbqa2` (database access) uses a recall-based variant that marks an answer
 correct when it recovers the expected reference values; and the figure, table,
