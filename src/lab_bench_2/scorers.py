@@ -121,18 +121,16 @@ def cloning_scorer() -> Scorer:
 
         if not files_path_str or not question_id:
             return Score(
-                value=0.0,
+                value=INCORRECT,
                 explanation="Cloning evaluation requires files_path and id metadata.",
-                metadata={"route": "cloning"},
             )
 
         ground_truth_filename = f"{question_id}_assembled.fa"
         ground_truth_path = resolve_file_path(ground_truth_filename, None)
         if ground_truth_path is None:
             return Score(
-                value=0.0,
+                value=INCORRECT,
                 explanation=f"Ground truth file not found: {ground_truth_filename}",
-                metadata={"route": "cloning"},
             )
 
         score_value, reason = await cloning_reward(
@@ -140,14 +138,14 @@ def cloning_scorer() -> Scorer:
             base_dir=Path(files_path_str),
             reference_path=ground_truth_path,
             validator_params=cast(
-                dict[str, Any] | None, metadata.get("validator_params") or None
+                dict[str, Any], metadata.get("validator_params") or {}
             ),
         )
 
         return Score(
-            value=float(score_value),
+            value=CORRECT if score_value >= 1.0 else INCORRECT,
             explanation=reason,
-            metadata={"route": "cloning"},
+            metadata={"cloning_score": score_value},
         )
 
     return score
