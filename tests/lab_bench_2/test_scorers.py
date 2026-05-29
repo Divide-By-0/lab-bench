@@ -96,7 +96,7 @@ class TestScorerForTag:
 
     def test_unsupported_tag_raises(self) -> None:
         with pytest.raises(NotImplementedError):
-            scorer_for_tag("seqqa2")
+            scorer_for_tag("bogusqa")
 
 
 def test_semantic_judge_scorer_is_scorer() -> None:

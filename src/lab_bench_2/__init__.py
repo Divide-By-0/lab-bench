@@ -15,6 +15,7 @@ from lab_bench_2.scorers import (
     recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
+    seqqa2_scorer,
 )
 from lab_bench_2.solvers import bare
 
@@ -35,4 +36,5 @@ __all__ = [
     "record_to_sample",
     "scorer_for_tag",
     "semantic_judge_scorer",
+    "seqqa2_scorer",
 ]

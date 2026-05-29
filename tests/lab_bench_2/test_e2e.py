@@ -7,7 +7,7 @@ from lab_bench_2.prompt_composer import Mode
 
 def test_unsupported_tag_raises() -> None:
     with pytest.raises(NotImplementedError):
-        lab_bench_2(tag="seqqa2")
+        lab_bench_2(tag="bogusqa")
 
 
 @pytest.mark.huggingface
