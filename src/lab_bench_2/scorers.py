@@ -89,12 +89,27 @@ def recall_judge_scorer() -> Scorer:
     )
 
 
+@scorer(metrics=[accuracy(), stderr()])
+def exact_match_judge_scorer() -> Scorer:
+    """Grade a figure/table/supplement answer by exact numeric match."""
+    from evals.prompts import STRUCTURED_EVALUATION_PROMPT_EXACT_MATCH
+
+    return _judge_score(STRUCTURED_EVALUATION_PROMPT_EXACT_MATCH)
+
+
 SCORERS_BY_TAG = {
     "dbqa2": recall_judge_scorer,
+    "figqa2": exact_match_judge_scorer,
+    "figqa2-img": exact_match_judge_scorer,
+    "figqa2-pdf": exact_match_judge_scorer,
     "litqa3": semantic_judge_scorer,
     "patentqa": semantic_judge_scorer,
     "protocolqa2": semantic_judge_scorer,
     "sourcequality": semantic_judge_scorer,
+    "suppqa2": exact_match_judge_scorer,
+    "tableqa2": exact_match_judge_scorer,
+    "tableqa2-img": exact_match_judge_scorer,
+    "tableqa2-pdf": exact_match_judge_scorer,
     "trialqa": semantic_judge_scorer,
 }
 
