@@ -3,11 +3,11 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
-from inspect_ai.model import ModelOutput
+from inspect_ai.model import ModelName, ModelOutput
 from inspect_ai.scorer import CORRECT, INCORRECT, Score, Scorer, Target
 from inspect_ai.solver import TaskState
 
-from lab_bench_2 import SUPPORTED_TAGS, parse_judge_verdict
+from lab_bench_2 import SUPPORTED_TAGS, parse_judge_verdict, scorers
 from lab_bench_2.scorers import (
     SCORERS_BY_TAG,
     cloning_scorer,
@@ -21,7 +21,7 @@ from lab_bench_2.scorers import (
 
 def _task_state(completion: str, metadata: dict[str, Any]) -> TaskState:
     return TaskState(
-        model="mockllm/model",
+        model=ModelName("mockllm/model"),
         sample_id="sample-1",
         epoch=1,
         input="Question?",
@@ -29,6 +29,13 @@ def _task_state(completion: str, metadata: dict[str, Any]) -> TaskState:
         output=ModelOutput.from_content("mockllm/model", completion),
         metadata=metadata,
     )
+
+
+async def _score(sut: Scorer, state: TaskState, target: Target) -> Score:
+    """Run a scorer and assert it produced a Score (narrows ``Score | None``)."""
+    result = await sut(state, target)
+    assert result is not None
+    return result
 
 
 class TestParseJudgeVerdict:
@@ -113,6 +120,108 @@ def test_exact_match_judge_scorer_is_scorer() -> None:
     assert isinstance(exact_match_judge_scorer(), Scorer)
 
 
+def _patch_grader(monkeypatch: pytest.MonkeyPatch, completion: str) -> None:
+    class _Grader:
+        async def generate(self, prompt: str, **kwargs: Any) -> SimpleNamespace:
+            return SimpleNamespace(completion=completion)
+
+    monkeypatch.setattr(scorers, "get_model", lambda *args, **kwargs: _Grader())
+
+
+class TestJudgeScorer:
+    async def test_structured_correct_verdict_scores_correct(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader returning a structured (typed) correct verdict
+        _patch_grader(
+            monkeypatch,
+            '{"rationale": "matches the reference", "result": "correct"}',
+        )
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+        # then the typed rationale and verdict are used
+        assert result.value == CORRECT
+        assert result.explanation == "matches the reference"
+        assert result.metadata == {
+            "verdict": "correct",
+            "verdict_source": "structured",
+        }
+
+    @pytest.mark.parametrize("verdict", ["incorrect", "unsure"])
+    async def test_structured_non_correct_verdict_scores_incorrect(
+        self, monkeypatch: pytest.MonkeyPatch, verdict: str
+    ) -> None:
+        _patch_grader(monkeypatch, f'{{"rationale": "x", "result": "{verdict}"}}')
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+        assert result.value == INCORRECT
+        assert result.metadata == {"verdict": verdict, "verdict_source": "structured"}
+
+    async def test_falls_back_to_regex_for_non_structured_output(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader that ignores the schema and returns free text
+        _patch_grader(monkeypatch, "Reasoning here.\nresult: correct")
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+        # then the regex fallback recovers the verdict
+        assert result.value == CORRECT
+        assert result.metadata == {"verdict": "correct", "verdict_source": "fallback"}
+
+    @pytest.mark.parametrize(
+        "completion, expected_verdict",
+        [
+            ("Reasoning here.\nresult: incorrect", "incorrect"),
+            ("no parseable verdict in this text", None),
+        ],
+    )
+    async def test_falls_back_to_regex_scores_incorrect(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        completion: str,
+        expected_verdict: str | None,
+    ) -> None:
+        # given non-structured grader output that is not a correct verdict
+        # (a parsed "incorrect", or nothing parseable at all)
+        _patch_grader(monkeypatch, completion)
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+        # then it scores incorrect
+        assert result.value == INCORRECT
+        assert result.metadata == {
+            "verdict": expected_verdict,
+            "verdict_source": "fallback",
+        }
+
+    async def test_empty_answer_scores_incorrect(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given an empty answer but correct grade
+        answer = "   "
+        _patch_grader(monkeypatch, '{"rationale": "x", "result": "correct"}')
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state(answer, {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then
+        assert result.value == INCORRECT
+        assert "No answer" in (result.explanation or "")
+
+
 class TestCloningScorer:
     async def test_scores_correct_when_reward_passes(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -143,7 +252,7 @@ class TestCloningScorer:
             "<protocol>assemble</protocol>",
             {"tag": "cloning", "id": "clone_1", "files_path": str(tmp_path)},
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then
         assert result == Score(
@@ -172,7 +281,7 @@ class TestCloningScorer:
             "<protocol>assemble</protocol>",
             {"tag": "cloning", "id": "clone_1", "files_path": str(tmp_path)},
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then
         assert result.value == INCORRECT
@@ -184,7 +293,7 @@ class TestCloningScorer:
         state = _task_state("<protocol>assemble</protocol>", {"tag": "cloning"})
 
         # when
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then it fails closed before resolving or scoring
         assert result.value == INCORRECT
@@ -202,7 +311,7 @@ class TestCloningScorer:
             "<protocol>assemble</protocol>",
             {"tag": "cloning", "id": "clone_1", "files_path": str(tmp_path)},
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then
         assert result.value == INCORRECT
@@ -230,7 +339,7 @@ class TestSeqqa2Scorer:
                 "validator_params": {},
             },
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then
         assert result == Score(
@@ -265,7 +374,7 @@ class TestSeqqa2Scorer:
                 "validator_params": {},
             },
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then the extracted answer is passed under the validator's param name
         assert result.value == CORRECT
@@ -281,14 +390,14 @@ class TestSeqqa2Scorer:
                 "answer_regex": "(?P<answer>x)",
             },
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
         assert result.value == INCORRECT
         assert "No validator found" in (result.explanation or "")
 
     async def test_incorrect_when_type_missing(self) -> None:
         sut = seqqa2_scorer()
         state = _task_state("<answer>x</answer>", {"tag": "seqqa2"})
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
         assert result.value == INCORRECT
         assert "question type" in (result.explanation or "")
 
@@ -313,7 +422,7 @@ class TestSeqqa2Scorer:
                 "validator_params": {"reference_path": "missing.fa"},
             },
         )
-        result = await sut(state, Target(""))
+        result = await _score(sut, state, Target(""))
 
         # then it fails closed rather than calling the validator
         assert result.value == INCORRECT
