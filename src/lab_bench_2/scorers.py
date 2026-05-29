@@ -25,8 +25,10 @@ GRADER_ROLE = "grader"
 JUDGE_VERDICT_CORRECT = "correct"
 JUDGE_VERDICT_INCORRECT = "incorrect"
 JUDGE_VERDICT_UNSURE = "unsure"
+# Excluding ``=`` from the separator stops the pattern from matching code-like
+# grader output such as ``result = "correct"`` (an assignment, not a verdict).
 _GRADE_PATTERN = re.compile(
-    r"\bresult\b[^A-Za-z]*(correct|incorrect|unsure)\b",
+    r"\bresult\b[^A-Za-z=]*(correct|incorrect|unsure)\b",
     re.IGNORECASE,
 )
 
