@@ -108,7 +108,7 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 # Upstream labbench2 git dep has no py.typed marker / stubs.
-module = ["evals", "evals.*"]
+module = ["evals", "evals.*", "labbench2", "labbench2.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

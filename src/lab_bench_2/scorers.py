@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
+from typing import Any, cast
 
 from inspect_ai.model import GenerateConfig, get_model
 from inspect_ai.scorer import (
@@ -97,7 +99,62 @@ def exact_match_judge_scorer() -> Scorer:
     return _judge_score(STRUCTURED_EVALUATION_PROMPT_EXACT_MATCH)
 
 
+@scorer(metrics=[accuracy(), stderr()])
+def cloning_scorer() -> Scorer:
+    """Score CloningQA answers using labbench2's cloning reward pipeline.
+
+    Validates cloning protocols through 4 sequential stages:
+    1. Format validation — protocol can be parsed
+    2. Execution — protocol runs successfully
+    3. Similarity — output matches reference sequence (threshold: 0.95)
+    4. Digest — restriction enzyme fragments match
+
+    Requires Go 1.21+ on the host for PCR simulation scoring.
+    """
+    from evals.utils import resolve_file_path
+    from labbench2.cloning.rewards import cloning_reward
+
+    async def score(state: TaskState, target: Target) -> Score:
+        metadata = state.metadata or {}
+        files_path_str = metadata.get("files_path")
+        question_id = cast(str | None, metadata.get("id"))
+
+        if not files_path_str or not question_id:
+            return Score(
+                value=0.0,
+                explanation="Cloning evaluation requires files_path and id metadata.",
+                metadata={"route": "cloning"},
+            )
+
+        ground_truth_filename = f"{question_id}_assembled.fa"
+        ground_truth_path = resolve_file_path(ground_truth_filename, None)
+        if ground_truth_path is None:
+            return Score(
+                value=0.0,
+                explanation=f"Ground truth file not found: {ground_truth_filename}",
+                metadata={"route": "cloning"},
+            )
+
+        score_value, reason = await cloning_reward(
+            answer=state.output.completion,
+            base_dir=Path(files_path_str),
+            reference_path=ground_truth_path,
+            validator_params=cast(
+                dict[str, Any] | None, metadata.get("validator_params") or None
+            ),
+        )
+
+        return Score(
+            value=float(score_value),
+            explanation=reason,
+            metadata={"route": "cloning"},
+        )
+
+    return score
+
+
 SCORERS_BY_TAG = {
+    "cloning": cloning_scorer,
     "dbqa2": recall_judge_scorer,
     "figqa2": exact_match_judge_scorer,
     "figqa2-img": exact_match_judge_scorer,
