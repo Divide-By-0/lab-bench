@@ -14,10 +14,12 @@ def test_unsupported_tag_raises() -> None:
 @pytest.mark.huggingface
 @pytest.mark.dataset_download
 def test_litqa3_tools_e2e() -> None:
-    # given the litqa3 task under the agentic (tools) solver, with a mock grader
+    # given the litqa3 task with the agentic (tools) solver overriding the
+    # default via Inspect's solver override, and a mock grader
     # when
     [log] = eval(
-        tasks=lab_bench_2(tag="litqa3", solver=tools()),
+        tasks=lab_bench_2(tag="litqa3"),
+        solver=tools(),
         model="mockllm/model",
         model_roles={"grader": "mockllm/model"},
         limit=1,

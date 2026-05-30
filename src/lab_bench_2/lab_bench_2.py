@@ -1,14 +1,13 @@
 """LAB-Bench 2: a benchmark of biology research tasks (arXiv:2604.09554).
 
-A single parameterized task selects a dataset `tag` and a file-delivery `mode`,
-and accepts an optional `solver` (defaulting to the benchmark's "bare"
-single-turn `generate()`).
+A single parameterized task selects a dataset `tag` and a file-delivery `mode`.
+It runs the benchmark's "bare" single-turn `generate()` by default; override the
+solver from the CLI with Inspect's `--solver` (e.g. the agentic `tools` solver).
 """
 
 from __future__ import annotations
 
 from inspect_ai import Task, task
-from inspect_ai.solver import Solver
 
 from lab_bench_2.dataset import load_lab_bench_2_dataset
 from lab_bench_2.prompt_composer import Mode
@@ -41,9 +40,13 @@ EVAL_VERSION = load_version_from_yaml("lab_bench_2")
 def lab_bench_2(
     tag: str = "litqa3",
     mode: Mode = "inject",
-    solver: Solver | None = None,
 ) -> Task:
     """LAB-Bench 2 evaluation task.
+
+    Runs the benchmark's "bare" solver (single-turn ``generate()``) by default.
+    To run the agentic configuration, override the solver from the CLI with
+    Inspect's ``--solver`` flag, e.g.
+    ``--solver src/lab_bench_2/solvers.py@tools``.
 
     Args:
         tag: Which LAB-Bench 2 subset to run. Supported tags: ``cloning``,
@@ -61,10 +64,6 @@ def lab_bench_2(
             - ``retrieve``: Only file names/stems are given; prompt instructs
               the agent to retrieve the necessary sequences or data from a
               source of its choosing. File contents are withheld.
-        solver: The solver to run. Defaults to ``bare()`` (the benchmark's "bare"
-            configuration: a plain single-turn ``generate()``) when not provided.
-            Pass any Inspect solver to override, e.g. ``-T solver=tools`` for the
-            agentic configuration (provider-native WebSearch + CodeExecution).
     """
     if tag not in SUPPORTED_TAGS:
         raise NotImplementedError(
@@ -72,7 +71,7 @@ def lab_bench_2(
         )
     return Task(
         dataset=load_lab_bench_2_dataset(tag=tag, mode=mode),
-        solver=solver or bare(),
+        solver=bare(),
         scorer=scorer_for_tag(tag),
         version=EVAL_VERSION,
     )

@@ -12,7 +12,10 @@ from inspect_ai.tool import Tool, code_execution, web_search
 
 @solver
 def bare() -> Solver:
-    """The benchmark's "bare" configuration: a plain single-turn ``generate()``."""
+    """The benchmark's "bare" configuration: a plain single-turn ``generate()``.
+
+    It is the default solver for the lab_bench_2 task.
+    """
     return generate()
 
 
@@ -43,6 +46,10 @@ def tools() -> Solver:
     Gives the model the provider-native tools from :func:`native_tools` and runs
     Inspect's tool-use loop, which drives each provider's server-side tool
     round-trips.
+
+    Use CLI with Inspect's `--solver` flag to run the eval with this solver:
+    uv run inspect eval lab_bench_2 -T tag=litqa3 \
+      --solver src/lab_bench_2/solvers.py@tools
     """
     return chain(
         use_tools(native_tools()),
