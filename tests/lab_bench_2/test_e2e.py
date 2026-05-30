@@ -3,11 +3,27 @@ from inspect_ai import eval
 
 from lab_bench_2.lab_bench_2 import lab_bench_2
 from lab_bench_2.prompt_composer import Mode
+from lab_bench_2.solvers import tools
 
 
 def test_unsupported_tag_raises() -> None:
     with pytest.raises(NotImplementedError):
         lab_bench_2(tag="bogusqa")
+
+
+@pytest.mark.huggingface
+@pytest.mark.dataset_download
+def test_litqa3_tools_e2e() -> None:
+    # given the litqa3 task under the agentic (tools) solver, with a mock grader
+    # when
+    [log] = eval(
+        tasks=lab_bench_2(tag="litqa3", solver=tools()),
+        model="mockllm/model",
+        model_roles={"grader": "mockllm/model"},
+        limit=1,
+    )
+    # then the agentic configuration runs end to end
+    assert log.status == "success"
 
 
 @pytest.mark.huggingface

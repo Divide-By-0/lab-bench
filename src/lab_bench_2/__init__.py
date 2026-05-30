@@ -17,7 +17,7 @@ from lab_bench_2.scorers import (
     semantic_judge_scorer,
     seqqa2_scorer,
 )
-from lab_bench_2.solvers import bare
+from lab_bench_2.solvers import bare, native_tools, tools
 
 __all__ = [
     "DEFAULT_GRADER_MODEL",
@@ -31,10 +31,12 @@ __all__ = [
     "exact_match_judge_scorer",
     "lab_bench_2",
     "load_lab_bench_2_dataset",
+    "native_tools",
     "parse_judge_verdict",
     "recall_judge_scorer",
     "record_to_sample",
     "scorer_for_tag",
     "semantic_judge_scorer",
     "seqqa2_scorer",
+    "tools",
 ]

@@ -63,7 +63,8 @@ def lab_bench_2(
               source of its choosing. File contents are withheld.
         solver: The solver to run. Defaults to ``bare()`` (the benchmark's "bare"
             configuration: a plain single-turn ``generate()``) when not provided.
-            Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI.
+            Pass any Inspect solver to override, e.g. ``-T solver=tools`` for the
+            agentic configuration (provider-native WebSearch + CodeExecution).
     """
     if tag not in SUPPORTED_TAGS:
         raise NotImplementedError(
