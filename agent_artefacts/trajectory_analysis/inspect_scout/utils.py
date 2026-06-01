@@ -1,3 +1,4 @@
+# MANAGED FILE - Updates pulled from template. See MANAGED_FILES.md
 """Shared utilities for Inspect Scout analysis scripts."""
 
 from pathlib import Path

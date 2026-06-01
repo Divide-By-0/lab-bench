@@ -1,0 +1,6 @@
+tree template/main:tests/examples/
+
+test_agentic.py
+test_gpqa.py
+test_llm_judge.py
+test_simple_qa.py

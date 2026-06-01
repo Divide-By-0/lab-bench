@@ -1,3 +1,4 @@
+# MANAGED FILE - Updates pulled from template. See MANAGED_FILES.md
 """
 Default scanners for trajectory analysis using Inspect Scout.
 

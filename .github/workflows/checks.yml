@@ -77,7 +77,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         # --all-extras: mypy walks every eval's tests, so per-eval extras
-        # (e.g. lab_bench_2's labbench2 dep, which transitively provides Pillow)
         # must be present for import resolution.
         run: uv sync --frozen --all-extras
       - name: Run mypy

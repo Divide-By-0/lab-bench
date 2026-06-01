@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# MANAGED FILE - Updates pulled from template. See MANAGED_FILES.md
 """
 Analyze sample validity from Inspect Scout scan results.
 
