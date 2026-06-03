@@ -9,9 +9,13 @@ from lab_bench_2.lab_bench_2 import SUPPORTED_TAGS, lab_bench_2
 from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import (
     DEFAULT_GRADER_MODEL,
+    cloning_scorer,
+    exact_match_judge_scorer,
     parse_judge_verdict,
+    recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
+    seqqa2_scorer,
 )
 from lab_bench_2.solvers import bare
 
@@ -23,10 +27,14 @@ __all__ = [
     "SUPPORTED_TAGS",
     "Mode",
     "bare",
+    "cloning_scorer",
+    "exact_match_judge_scorer",
     "lab_bench_2",
     "load_lab_bench_2_dataset",
     "parse_judge_verdict",
+    "recall_judge_scorer",
     "record_to_sample",
     "scorer_for_tag",
     "semantic_judge_scorer",
+    "seqqa2_scorer",
 ]
