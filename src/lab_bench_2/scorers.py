@@ -6,7 +6,12 @@ import re
 from pathlib import Path
 from typing import Any, cast
 
-from inspect_ai.model import GenerateConfig, ResponseSchema, get_model
+from inspect_ai.model import (
+    GenerateConfig,
+    ModelOutput,
+    ResponseSchema,
+    get_model,
+)
 from inspect_ai.scorer import (
     CORRECT,
     INCORRECT,
@@ -26,6 +31,10 @@ from lab_bench_2 import seqqa2_answer_parser
 
 DEFAULT_GRADER_MODEL = "anthropic/claude-sonnet-4-5"
 GRADER_ROLE = "grader"
+
+# Content moderation can block a grader response non-deterministically, so a
+# blocked call might clear on a retry. Cap the attempts before giving up.
+MAX_GRADER_ATTEMPTS = 3
 
 JUDGE_VERDICT_CORRECT = "correct"
 JUDGE_VERDICT_INCORRECT = "incorrect"
@@ -59,6 +68,20 @@ def _judge_score(prompt_template: str) -> Scorer:
         name="evaluation_result", json_schema=json_schema(EvaluationResult)
     )
 
+    async def call_grader_with_retry(prompt: str) -> ModelOutput | None:
+        result: ModelOutput | None = None
+        grader = get_model(role=GRADER_ROLE, default=DEFAULT_GRADER_MODEL)
+        attempts = 0
+        while attempts < MAX_GRADER_ATTEMPTS:
+            attempts += 1
+            result = await grader.generate(
+                prompt,
+                config=GenerateConfig(temperature=0.0, response_schema=response_schema),
+            )
+            if not _grader_refused(result):
+                break
+        return result
+
     async def score(state: TaskState, target: Target) -> Score:
         answer = state.output.completion.strip()
         if not answer:
@@ -66,17 +89,28 @@ def _judge_score(prompt_template: str) -> Scorer:
                 value=INCORRECT, answer="", explanation="No answer was produced."
             )
 
-        grader = get_model(role=GRADER_ROLE, default=DEFAULT_GRADER_MODEL)
-
         prompt = prompt_template.format(
             question=state.input_text,
             correct_answer=target.text,
             answer=answer,
         )
-        result = await grader.generate(
-            prompt,
-            config=GenerateConfig(temperature=0.0, response_schema=response_schema),
-        )
+
+        result = await call_grader_with_retry(prompt)
+
+        if result is None or _grader_refused(result):
+            stop_reason = getattr(result, "stop_reason", None)
+            return Score.unscored(
+                answer=answer,
+                explanation=(
+                    f"Grader returned no gradeable response "
+                    f"attempt(s) (stop_reason={stop_reason}); sample left unscored."
+                ),
+                metadata={
+                    "verdict": None,
+                    "verdict_source": "refusal",
+                    "grader_stop_reason": stop_reason,
+                },
+            )
 
         try:
             evaluation = EvaluationResult.model_validate_json(result.completion)
@@ -97,6 +131,17 @@ def _judge_score(prompt_template: str) -> Scorer:
         )
 
     return score
+
+
+def _grader_refused(result: ModelOutput) -> bool:
+    """Return True when the grader produced no gradeable response.
+
+    A ``content_filter`` stop reason or an empty completion means moderation
+    blocked the grader (or it returned nothing), not that the answer is wrong.
+    """
+    if result.stop_reason == "content_filter":
+        return True
+    return not (result.completion or "").strip()
 
 
 @scorer(metrics=[accuracy(), stderr()])
