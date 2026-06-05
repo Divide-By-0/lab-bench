@@ -8,12 +8,11 @@ single-turn `generate()`).
 from __future__ import annotations
 
 from inspect_ai import Task, task
-from inspect_ai.solver import Solver
 
 from lab_bench_2.dataset import load_lab_bench_2_dataset
 from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import scorer_for_tag
-from lab_bench_2.solvers import bare
+from lab_bench_2.solvers import SolverType, sandbox_for_solver, solver_for_type
 from utils.metadata import load_version_from_yaml
 
 SUPPORTED_TAGS = (
@@ -41,7 +40,7 @@ EVAL_VERSION = load_version_from_yaml("lab_bench_2")
 def lab_bench_2(
     tag: str = "litqa3",
     mode: Mode = "file",
-    solver: Solver | None = None,
+    solver: SolverType = "bare",
 ) -> Task:
     """LAB-Bench 2 evaluation task.
 
@@ -61,9 +60,15 @@ def lab_bench_2(
             - ``retrieve``: Only file names/stems are given; prompt instructs
               the agent to retrieve the necessary sequences or data from a
               source of its choosing. File contents are withheld.
-        solver: The solver to run. Defaults to ``bare()`` (the benchmark's "bare"
-            configuration: a plain single-turn ``generate()``) when not provided.
-            Pass any Inspect solver to override, e.g. ``-T solver=bare`` on the CLI.
+        solver: The solver to run. Options:
+
+            - ``bare``: a plain single-turn `generate()`.
+            - ``tools``: the server-side agentic configuration. The model
+            is given provider-native, **server-side** tools — WebSearch and
+            CodeExecution — and runs Inspect's tool-use loop.
+            - ``agentic``: the client-side agentic configuration. The model is
+            given ``python``/``bash`` (and, with an external provider
+            key, ``web_search``) tools in a Docker sandbox.
     """
     if tag not in SUPPORTED_TAGS:
         raise NotImplementedError(
@@ -71,7 +76,8 @@ def lab_bench_2(
         )
     return Task(
         dataset=load_lab_bench_2_dataset(tag=tag, mode=mode),
-        solver=solver or bare(),
+        solver=solver_for_type(solver),
         scorer=scorer_for_tag(tag),
+        sandbox=sandbox_for_solver(solver),
         version=EVAL_VERSION,
     )
