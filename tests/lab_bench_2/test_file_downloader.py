@@ -36,9 +36,7 @@ class TestFetch:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # given a download that returns an empty directory
-        monkeypatch.setattr(
-            file_downloader, "download_question_files", lambda **_: tmp_path
-        )
+        monkeypatch.setattr("evals.utils.download_question_files", lambda **_: tmp_path)
 
         # when / then
         with pytest.raises(RuntimeError, match="none were downloaded"):
@@ -49,9 +47,7 @@ class TestFetch:
     ) -> None:
         # given a populated download
         (tmp_path / "ok.txt").write_text("ok")
-        monkeypatch.setattr(
-            file_downloader, "download_question_files", lambda **_: tmp_path
-        )
+        monkeypatch.setattr("evals.utils.download_question_files", lambda **_: tmp_path)
 
         # when
         result = file_downloader.fetch("some/prefix")
@@ -70,7 +66,7 @@ class TestFetch:
             captured.update(kwargs)
             return tmp_path
 
-        monkeypatch.setattr(file_downloader, "download_question_files", stub)
+        monkeypatch.setattr("evals.utils.download_question_files", stub)
 
         # when
         file_downloader.fetch("some/prefix", bucket_name="custom-bucket")

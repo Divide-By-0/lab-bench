@@ -6,11 +6,6 @@ import base64
 import hashlib
 from pathlib import Path
 
-# MEDIA_TYPES is reused from EdisonScientific/labbench2 evals/utils.py.
-# Its unusual entries (".json" / ".csv" -> "text/plain") are deliberate
-# provider-compatibility workarounds: Vertex AI rejects application/json and
-# Anthropic's Messages document API rejects text/csv.
-from evals.utils import MEDIA_TYPES
 from inspect_ai.model import Content, ContentDocument, ContentImage
 
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg"}
@@ -34,6 +29,12 @@ def build(files: list[Path], resize_oversized_images: bool = False) -> list[Cont
 
 
 def mime_type(file_path: Path) -> str:
+    # MEDIA_TYPES is reused from EdisonScientific/labbench2 evals/utils.py.
+    # Its unusual entries (".json" / ".csv" -> "text/plain") are deliberate
+    # provider-compatibility workarounds: Vertex AI rejects application/json and
+    # Anthropic's Messages document API rejects text/csv.
+    from evals.utils import MEDIA_TYPES
+
     return MEDIA_TYPES.get(file_path.suffix.lower(), "application/octet-stream")
 
 

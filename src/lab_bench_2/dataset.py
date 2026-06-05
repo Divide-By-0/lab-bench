@@ -13,15 +13,20 @@ import json
 import logging
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-from evals.models import LabBenchQuestion
 from inspect_ai.dataset import Dataset, MemoryDataset, Sample, hf_dataset
 from inspect_ai.model import ChatMessage, ChatMessageUser, Content, ContentText
 
 from lab_bench_2 import attachment_builder, file_downloader, prompt_composer
 from lab_bench_2.prompt_composer import Mode
 from utils.sample_ids import create_stable_id
+
+if TYPE_CHECKING:
+    # ``evals`` ships with the optional ``labbench2`` dependency; import it only
+    # for type checking so module load doesn't require the extra (which would
+    # break Inspect's entry-point task discovery). Runtime uses import it locally.
+    from evals.models import LabBenchQuestion
 
 LAB_BENCH_2_DATASET_PATH = "EdisonScientific/labbench2"
 LAB_BENCH_2_DATASET_REVISION = "27d12d72af24e3f70db8a99df63e567366cbdb80"
@@ -40,6 +45,8 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample:
     Precondition: the record's question supports ``mode``. The loader filters
     unsupported records via ``_question_supports_mode`` before calling this.
     """
+    from evals.models import LabBenchQuestion
+
     question = LabBenchQuestion.model_validate(record)
 
     metadata: dict[str, Any] = {
@@ -102,6 +109,8 @@ def load_lab_bench_2_dataset(
     """
 
     def to_samples(record: dict[str, Any]) -> list[Sample]:
+        from evals.models import LabBenchQuestion
+
         question = LabBenchQuestion.model_validate(record)
         if not _question_supports_mode(question, mode):
             logger.info(

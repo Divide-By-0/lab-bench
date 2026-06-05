@@ -5,8 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
-from evals.utils import is_text_injectable_format
-
 Mode = Literal["file", "inject", "retrieve"]
 
 # Copied verbatim from EdisonScientific/labbench2
@@ -44,6 +42,8 @@ def compose(
 
 
 def _injected_files_text(files: list[Path]) -> str:
+    from evals.utils import is_text_injectable_format
+
     chunks = [
         f"## {f.name}\n\n{f.read_text()}" for f in files if is_text_injectable_format(f)
     ]

@@ -10,14 +10,17 @@ from __future__ import annotations
 from pathlib import Path
 from typing import cast
 
-from evals.utils import GCS_BUCKET, download_question_files
 
-
-def fetch(gcs_prefix: str, bucket_name: str = GCS_BUCKET) -> Path:
+def fetch(gcs_prefix: str, bucket_name: str | None = None) -> Path:
     """Download files under ``gcs_prefix`` and return the local directory.
 
-    Raises ``RuntimeError`` if the prefix yields no files.
+    ``bucket_name`` defaults to the reference implementation's ``GCS_BUCKET``
+    when omitted. Raises ``RuntimeError`` if the prefix yields no files.
     """
+    from evals.utils import GCS_BUCKET, download_question_files
+
+    if bucket_name is None:
+        bucket_name = GCS_BUCKET
     files_path = cast(
         Path,
         download_question_files(bucket_name=bucket_name, gcs_prefix=gcs_prefix),
