@@ -1,0 +1,27 @@
+# LAB-Bench 2 reference run config — tools solver at high reasoning effort, inject mode.
+# Tags are the inject-mode subset of the benchmark. Supply the model under test
+# on the CLI: inspect eval --run-config <this file> --model <provider/model>.
+task:
+  task: lab_bench_2
+  args:
+    solver: tools
+    mode: inject
+    tags:
+      - cloning
+      - dbqa2
+      - figqa2
+      - litqa3
+      - patentqa
+      - seqqa2
+      - suppqa2
+      - tableqa2
+      - trialqa
+model_roles:
+  grader:
+    model: anthropic/claude-sonnet-4-5
+    config:
+      temperature: 0.0
+generate_config:
+  max_tokens: 64000
+  reasoning_effort: high
+  timeout: 3600

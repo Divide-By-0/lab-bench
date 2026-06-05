@@ -3,6 +3,7 @@ from lab_bench_2.dataset import (
     LAB_BENCH_2_DATASET_REVISION,
     LAB_BENCH_2_DATASET_SPLIT,
     load_lab_bench_2_dataset,
+    load_multi_tags_dataset,
     record_to_sample,
 )
 from lab_bench_2.lab_bench_2 import SUPPORTED_TAGS, lab_bench_2
@@ -11,6 +12,7 @@ from lab_bench_2.scorers import (
     DEFAULT_GRADER_MODEL,
     cloning_scorer,
     exact_match_judge_scorer,
+    multi_tags_scorer,
     parse_judge_verdict,
     recall_judge_scorer,
     scorer_for_tag,
@@ -36,10 +38,12 @@ __all__ = [
     "Mode",
     "SolverType",
     "agentic",
+    "multi_tags_scorer",
     "bare",
     "cloning_scorer",
     "exact_match_judge_scorer",
     "lab_bench_2",
+    "load_multi_tags_dataset",
     "load_lab_bench_2_dataset",
     "native_tools",
     "parse_judge_verdict",

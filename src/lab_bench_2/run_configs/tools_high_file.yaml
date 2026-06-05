@@ -1,0 +1,26 @@
+# LAB-Bench 2 reference run config — tools solver at high reasoning effort, file mode.
+# Tags are the file-mode subset of the benchmark. Supply the model under test on
+# the CLI: inspect eval --run-config <this file> --model <provider/model>.
+task:
+  task: lab_bench_2
+  args:
+    solver: tools
+    mode: file
+    tags:
+      - cloning
+      - figqa2-img
+      - figqa2-pdf
+      - protocolqa2
+      - seqqa2
+      - sourcequality
+      - tableqa2-img
+      - tableqa2-pdf
+model_roles:
+  grader:
+    model: anthropic/claude-sonnet-4-5
+    config:
+      temperature: 0.0
+generate_config:
+  max_tokens: 64000
+  reasoning_effort: high
+  timeout: 3600

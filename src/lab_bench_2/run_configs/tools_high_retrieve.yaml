@@ -1,0 +1,16 @@
+# LAB-Bench 2 reference run config — tools solver at high reasoning effort, retrieve mode.
+# Tags are the retrieve-mode subset of the benchmark. Supply the model under test
+# on the CLI: inspect eval --run-config <this file> --model <provider/model>.
+task:
+  task: lab_bench_2
+  args:
+    solver: tools
+    mode: retrieve
+    tags:
+      - cloning
+      - seqqa2
+# No grader model role: cloning and seqqa2 are scored deterministically (no LLM judge).
+generate_config:
+  max_tokens: 64000
+  reasoning_effort: high
+  timeout: 3600

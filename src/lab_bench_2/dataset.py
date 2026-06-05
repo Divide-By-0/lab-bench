@@ -11,11 +11,12 @@ from __future__ import annotations
 import ast
 import json
 import logging
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, cast
 
 from evals.models import LabBenchQuestion
-from inspect_ai.dataset import Dataset, Sample, hf_dataset
+from inspect_ai.dataset import Dataset, MemoryDataset, Sample, hf_dataset
 from inspect_ai.model import ChatMessage, ChatMessageUser, Content, ContentText
 
 from lab_bench_2 import attachment_builder, file_downloader, prompt_composer
@@ -25,6 +26,10 @@ from utils.sample_ids import create_stable_id
 LAB_BENCH_2_DATASET_PATH = "EdisonScientific/labbench2"
 LAB_BENCH_2_DATASET_REVISION = "27d12d72af24e3f70db8a99df63e567366cbdb80"
 LAB_BENCH_2_DATASET_SPLIT = "train"
+
+# How many tags to spell out in a multi-tag dataset name before eliding the
+# rest, to keep the name readable when many tags run together.
+MAX_TAGS_IN_DATASET_NAME = 5
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +117,34 @@ def load_lab_bench_2_dataset(
         revision=LAB_BENCH_2_DATASET_REVISION,
         sample_fields=to_samples,
     )
+
+
+def load_multi_tags_dataset(tags: Sequence[str], mode: Mode = "file") -> Dataset:
+    """Load and concatenate tags' samples into one mixed-tag dataset.
+
+    Each tag is loaded at the given ``mode`` via
+    :func:`load_lab_bench_2_dataset` (which drops samples a tag can't serve in
+    that mode), and the samples are concatenated. Each sample keeps its ``tag``
+    metadata, so a grouped scorer can report per-tag and overall.
+    """
+    samples = [sample for tag in tags for sample in load_lab_bench_2_dataset(tag, mode)]
+    return MemoryDataset(samples=samples, name=_multi_tags_dataset_name(tags))
+
+
+def _multi_tags_dataset_name(tags: Sequence[str]) -> str:
+    """Build a ``MemoryDataset`` name from the selected tags.
+
+    Tags are sorted for stability. When more than ``MAX_TAGS_IN_DATASET_NAME``
+    tags run together, the surplus is elided as ``+N-more`` so the name stays
+    short regardless of how many tags are selected.
+    """
+    ordered = sorted(tags)
+    if len(ordered) <= MAX_TAGS_IN_DATASET_NAME:
+        body = "+".join(ordered)
+    else:
+        shown = "+".join(ordered[:MAX_TAGS_IN_DATASET_NAME])
+        body = f"{shown}+{len(ordered) - MAX_TAGS_IN_DATASET_NAME}-more"
+    return f"lab_bench_2_{body}"
 
 
 def _question_supports_mode(question: LabBenchQuestion, mode: Mode) -> bool:

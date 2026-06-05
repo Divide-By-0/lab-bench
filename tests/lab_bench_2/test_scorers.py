@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from inspect_ai._util.registry import registry_info
 from inspect_ai.model import ModelName, ModelOutput
 from inspect_ai.scorer import CORRECT, INCORRECT, Score, Scorer, Target
 from inspect_ai.solver import TaskState
@@ -12,6 +13,7 @@ from lab_bench_2.scorers import (
     SCORERS_BY_TAG,
     cloning_scorer,
     exact_match_judge_scorer,
+    multi_tags_scorer,
     recall_judge_scorer,
     scorer_for_tag,
     semantic_judge_scorer,
@@ -429,3 +431,71 @@ class TestSeqqa2Scorer:
         # then it fails closed rather than calling the validator
         assert result.value == INCORRECT
         assert "File not found: missing.fa" in (result.explanation or "")
+
+
+class TestMultiTagsScorer:
+    def test_reports_grouped_metrics_over_tag(self) -> None:
+        # given/when the multi-tags scorer
+        metrics = registry_info(multi_tags_scorer).metadata["metrics"]
+        # then it carries two grouped metrics (accuracy + stderr, grouped by tag)
+        assert len(metrics) == 2
+        assert all(registry_info(m).name == "inspect_ai/grouped" for m in metrics)
+
+    async def test_routes_sample_to_its_tag_scorer(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a stand-in scorer registered for one tag
+        async def fake_score(state: TaskState, target: Target) -> Score:
+            return Score(value=CORRECT, explanation="litqa3 path")
+
+        monkeypatch.setitem(SCORERS_BY_TAG, "litqa3", lambda: fake_score)
+
+        # when a litqa3 sample is scored
+        sut = multi_tags_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then it is graded by that tag's scorer
+        assert result.value == CORRECT
+        assert result.explanation == "litqa3 path"
+
+    async def test_builds_inner_scorer_lazily_and_caches(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a factory that records how many times it is built
+        builds = {"count": 0}
+
+        async def inner(state: TaskState, target: Target) -> Score:
+            return Score(value=CORRECT)
+
+        def factory() -> Scorer:
+            builds["count"] += 1
+            return inner
+
+        monkeypatch.setitem(SCORERS_BY_TAG, "litqa3", factory)
+
+        # when the scorer is constructed but nothing scored yet
+        sut = multi_tags_scorer()
+        assert builds["count"] == 0  # lazy: not built at construction
+
+        # and two litqa3 samples are scored
+        state = _task_state("answer", {"tag": "litqa3"})
+        await _score(sut, state, Target("ref"))
+        await _score(sut, state, Target("ref"))
+
+        # then the inner scorer was built exactly once (first use), then cached
+        assert builds["count"] == 1
+
+    async def test_unknown_tag_scores_incorrect(self) -> None:
+        sut = multi_tags_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "bogusqa"}), Target("ref")
+        )
+        assert result.value == INCORRECT
+        assert "bogusqa" in (result.explanation or "")
+
+    async def test_missing_tag_scores_incorrect(self) -> None:
+        sut = multi_tags_scorer()
+        result = await _score(sut, _task_state("answer", {}), Target("ref"))
+        assert result.value == INCORRECT

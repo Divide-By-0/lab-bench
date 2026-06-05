@@ -8,7 +8,7 @@ from lab_bench_2.prompt_composer import Mode
 
 def test_unsupported_tag_raises() -> None:
     with pytest.raises(NotImplementedError):
-        lab_bench_2(tag="bogusqa")
+        lab_bench_2(tags="bogusqa")
 
 
 @pytest.mark.huggingface
@@ -17,7 +17,7 @@ def test_litqa3_tools_e2e() -> None:
     # given the litqa3 task under the agentic (tools) solver, with a mock grader
     # when
     [log] = eval(
-        tasks=lab_bench_2(tag="litqa3", solver="tools"),
+        tasks=lab_bench_2(tags="litqa3", solver="tools"),
         model="mockllm/model",
         model_roles={"grader": "mockllm/model"},
         limit=1,
@@ -45,7 +45,7 @@ def test_litqa3_agentic_e2e() -> None:
     )
     # when
     [log] = eval(
-        tasks=lab_bench_2(tag="litqa3", solver="agentic"),
+        tasks=lab_bench_2(tags="litqa3", solver="agentic"),
         model=model,
         model_roles={"grader": "mockllm/model"},
         limit=1,
@@ -60,7 +60,7 @@ def test_litqa3_bare_e2e() -> None:
     # given the litqa3 task under the default (bare) solver, with a mock grader
     # when
     [log] = eval(
-        tasks=lab_bench_2(tag="litqa3"),
+        tasks=lab_bench_2(tags="litqa3"),
         model="mockllm/model",
         model_roles={"grader": "mockllm/model"},
         limit=1,
@@ -84,7 +84,7 @@ def test_supported_tag_loads_one_sample_e2e(tag: str, mode: Mode) -> None:
     # given a newly enabled tag in its primary mode, with a mock grader
     # when
     [log] = eval(
-        tasks=lab_bench_2(tag=tag, mode=mode),
+        tasks=lab_bench_2(tags=tag, mode=mode),
         model="mockllm/model",
         model_roles={"grader": "mockllm/model"},
         limit=1,

@@ -14,6 +14,7 @@ from inspect_ai.scorer import (
     Scorer,
     Target,
     accuracy,
+    grouped,
     scorer,
     stderr,
 )
@@ -272,6 +273,30 @@ def scorer_for_tag(tag: str) -> Scorer:
             f"supported tags: {sorted(SCORERS_BY_TAG)}."
         )
     return factory()
+
+
+@scorer(metrics=[grouped(accuracy(), "tag"), grouped(stderr(), "tag")])
+def multi_tags_scorer() -> Scorer:
+    """Score a mixed-tag dataset, dispatching each sample to its tag's scorer.
+
+    Each sample is graded by the scorer registered for its ``tag`` metadata; results are
+    reported per tag plus an overall ``all`` aggregate via ``grouped``. Inner
+    scorers are built lazily on first use so a tag's heavy imports only run when
+    a sample of that tag is actually scored.
+    """
+    cache: dict[str, Scorer] = {}
+
+    async def score(state: TaskState, target: Target) -> Score | None:
+        tag = cast(str | None, (state.metadata or {}).get("tag"))
+        if tag is None or tag not in SCORERS_BY_TAG:
+            return Score(
+                value=INCORRECT,
+                explanation=f"No scorer implemented for tag={tag!r}.",
+            )
+        chosen = cache.get(tag) or cache.setdefault(tag, SCORERS_BY_TAG[tag]())
+        return await chosen(state, target)
+
+    return score
 
 
 def parse_judge_verdict(text: str) -> str | None:
