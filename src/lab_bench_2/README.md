@@ -276,6 +276,63 @@ than vendoring (copying) the code into this repository.
 
 ## Evaluation Report
 
-TODO: A brief summary of results for your evaluation implementation compared against a standard set of existing results.
+Model under test: **GPT-5.2** (`gpt-5.2`). The **Paper acc (GPT-5.2)** column is
+the reference accuracy from the original LAB-Bench 2 reports
+([arXiv:2604.09554](https://arxiv.org/abs/2604.09554)), matched per case to the
+nearest paper run configuration. The **Accuracy**, **Stderr**, and **Time**
+columns are from our runs.
+
+| tag         | mode     | solver  | Paper config matched |   N |           Paper acc | Accuracy | Stderr |  Time |
+| ----------- | -------- | ------- | -------------------- | --: |--------------------:| -------: | -----: |------:|
+| litqa3      | N/A      | tools   | `@tools,high`        | 168 |               0.815 |    0.756 |  0.033 | 9m59s |
+| dbqa2       | N/A      | bare    | `bare`               |  86 |               0.070 |    0.058 |  0.025 | 1m51s |
+| cloning     | inject   | tools   | `@tools,high`        |  14 |               0.286 |          |        |       |
+| figqa2-img  | file     | bare    | `bare`               | 101 |               0.564 |    0.525 |  0.050 | 1m10s |
+| seqqa2      | retrieve | bare    | `bare`               | 200 |               0.095 |    0.115 |  0.023 | 2m31s |
+| protocolqa2 | file     | agentic | `@tools,high`\*      | 125 |               0.416 |          |        |       |
+
+\* The paper has no client-side-sandbox (`agentic`) config; `@tools,high`
+(server-side tools) is the closest augmented baseline.
+
+### Notes
+
+- The three completed `bare` GPT-5.2 runs track the paper's `bare` reference
+  within stderr: `dbqa2` 0.058 vs 0.070 (~0.5 stderr) and `figqa2-img` 0.525 vs
+  0.564 (~0.8 stderr). `seqqa2` `retrieve` is 0.115 vs 0.095 (~0.9 stderr) —
+  also within noise; this pairing is degenerate for a no-tool solver (filenames
+  given, contents withheld), so low accuracy is expected.
+- LLM-judge tags (`dbqa2`, `figqa2-img`) are graded by `claude-sonnet-4-5`;
+  `seqqa2` is scored deterministically (no grader).
+
+### Reproducibility
+
+- **Model under test:** `openai/gpt-5.2`. **Grader (LLM-judge tags only):**
+  `anthropic/claude-sonnet-4-5` — the eval default; deterministic tags
+  (`seqqa2`, `cloning`) use no grader.
+- **Eval version:** `1-A`. **Dataset:** `EdisonScientific/labbench2`, split
+  `train`, pinned to revision `27d12d72af24e3f70db8a99df63e567366cbdb80`.
+- **Samples:** each row runs its full set of mode-compatible samples (the `N`
+  column); `seqqa2` `retrieve` is the retrieve-compatible subset (~200 of 400).
+- **Date:** June 2026.
+- **Reasoning effort:** `bare` rows use the model default; the `@tools,high`
+  rows (to fill) use `--reasoning-effort high` to match the paper's augmented
+  configuration.
+
+Commands (one per row):
+
+```bash
+# Bare runs
+uv run inspect eval lab_bench_2 -T tags=dbqa2 -T solver=bare --model openai/gpt-5.2
+uv run inspect eval lab_bench_2 -T tags=figqa2-img -T mode=file -T solver=bare --model openai/gpt-5.2
+uv run inspect eval lab_bench_2 -T tags=seqqa2 -T mode=retrieve -T solver=bare --model openai/gpt-5.2
+
+# @tools,high runs
+uv run inspect eval lab_bench_2 -T tags=litqa3 -T solver=tools \
+  --model openai/gpt-5.2 --reasoning-effort high
+uv run inspect eval lab_bench_2 -T tags=cloning -T mode=inject -T solver=tools \
+  --model openai/gpt-5.2 --reasoning-effort high
+uv run inspect eval lab_bench_2 -T tags=protocolqa2 -T mode=file -T solver=agentic \
+  --model openai/gpt-5.2 --reasoning-effort high
+```
 
 ## Changelog
