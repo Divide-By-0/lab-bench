@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -122,12 +123,28 @@ def test_exact_match_judge_scorer_is_scorer() -> None:
     assert isinstance(exact_match_judge_scorer(), Scorer)
 
 
-def _patch_grader(monkeypatch: pytest.MonkeyPatch, completion: str) -> None:
+def _patch_grader(
+    monkeypatch: pytest.MonkeyPatch,
+    responses: str | list[tuple[str, str]],
+) -> dict[str, int]:
+    """Patch the grader model with canned responses.
+
+    ``responses`` is either a single completion string (one non-refused
+    response) or a list of ``(completion, stop_reason)`` specs returned across
+    successive ``generate`` calls to simulate retries. Returns a dict whose
+    ``calls`` entry tracks how many times the grader was invoked.
+    """
+    specs = [(responses, "stop")] if isinstance(responses, str) else list(responses)
+    counter = {"calls": 0}
+
     class _Grader:
         async def generate(self, prompt: str, **kwargs: Any) -> SimpleNamespace:
-            return SimpleNamespace(completion=completion)
+            counter["calls"] += 1
+            completion, stop_reason = specs[min(counter["calls"] - 1, len(specs) - 1)]
+            return SimpleNamespace(completion=completion, stop_reason=stop_reason)
 
     monkeypatch.setattr(scorers, "get_model", lambda *args, **kwargs: _Grader())
+    return counter
 
 
 class TestJudgeScorer:
@@ -222,6 +239,87 @@ class TestJudgeScorer:
         # then
         assert result.value == INCORRECT
         assert "No answer" in (result.explanation or "")
+
+    async def test_content_filter_then_success_retries_and_scores(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader blocked by the content filter, then a correct verdict
+        calls = _patch_grader(
+            monkeypatch,
+            [
+                ("", "content_filter"),
+                ('{"rationale": "matches", "result": "correct"}', "stop"),
+            ],
+        )
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then the retry recovers the verdict after exactly two attempts
+        assert result.value == CORRECT
+        assert calls["calls"] == 2
+        assert result.metadata == {
+            "verdict": "correct",
+            "verdict_source": "structured",
+        }
+
+    async def test_persistent_content_filter_is_unscored(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given every grader attempt is blocked by the content filter
+        calls = _patch_grader(monkeypatch, [("", "content_filter")])
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then the sample is left unscored after exhausting the retries
+        assert calls["calls"] == scorers.MAX_GRADER_ATTEMPTS
+        assert isinstance(result.value, float) and math.isnan(result.value)
+        assert result.metadata == {
+            "verdict": None,
+            "verdict_source": "refusal",
+            "grader_stop_reason": "content_filter",
+        }
+        assert "unscored" in (result.explanation or "")
+
+    async def test_empty_grader_completion_is_treated_as_refusal(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader that returns an empty completion with no content filter
+        calls = _patch_grader(monkeypatch, [("   ", "stop")])
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then it is retried and left unscored, just like a content-filter block
+        assert calls["calls"] == scorers.MAX_GRADER_ATTEMPTS
+        assert isinstance(result.value, float) and math.isnan(result.value)
+        assert (result.metadata or {})["verdict_source"] == "refusal"
+
+    async def test_first_try_success_calls_grader_once(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # given a grader that returns a verdict on the first attempt
+        calls = _patch_grader(monkeypatch, '{"rationale": "x", "result": "correct"}')
+
+        # when
+        sut = semantic_judge_scorer()
+        result = await _score(
+            sut, _task_state("answer", {"tag": "litqa3"}), Target("ref")
+        )
+
+        # then no extra retries are issued
+        assert result.value == CORRECT
+        assert calls["calls"] == 1
 
 
 class TestCloningScorer:
