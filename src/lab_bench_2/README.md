@@ -3,7 +3,7 @@
 LABBench2 evaluates language models and research agents on life-science tasks spanning literature reasoning, database access, figures, tables, protocols, source quality, sequence analysis, cloning, patents, and clinical trials.
 
 <!-- Contributors: Automatically Generated -->
-Contributed by [@iphan](https://github.com/iphan)
+Contributed by [@iphan](https://github.com/iphan), [@ItsTania](https://github.com/ItsTania), [@lewtun](https://github.com/lewtun), [@Sunishchal](https://github.com/Sunishchal)
 <!-- /Contributors: Automatically Generated -->
 
 <!-- Usage: Automatically Generated -->
@@ -276,6 +276,85 @@ than vendoring (copying) the code into this repository.
 
 ## Evaluation Report
 
-TODO: A brief summary of results for your evaluation implementation compared against a standard set of existing results.
+Model under test: **GPT-5.2** (`gpt-5.2`). The **Paper acc (GPT-5.2)** column is
+the reference accuracy from the original LAB-Bench 2 reports
+([arXiv:2604.09554](https://arxiv.org/abs/2604.09554)), matched per case to the
+nearest paper run configuration. The **Accuracy**, **Stderr**, and **Time**
+columns are from our runs.
+
+| tag         | mode     | solver  | Paper config matched |     N |  Paper acc | Accuracy | Stderr |     Time |
+| ----------- | -------- | ------- | -------------------- |------:|-----------:|---------:|-------:|---------:|
+| litqa3      | N/A      | tools   | `@tools,high`        |  168† |      0.815 |    0.799 |  0.032 |    9m59s |
+| dbqa2       | N/A      | bare    | `bare`               |    86 |      0.070 |    0.058 |  0.025 |    1m51s |
+| cloning     | inject   | tools   | `@tools,high`        |   14§ |      0.286 |    0.286 |  0.125 | 1h41m39s |
+| figqa2-img  | file     | bare    | `bare`               |   101 |      0.564 |    0.525 |  0.050 |    1m10s |
+| seqqa2      | retrieve | bare    | `bare`               |   200 |      0.095 |    0.115 |  0.023 |    2m31s |
+| protocolqa2 | file     | agentic | `@tools,high`\*      |  125‡ |      0.416 |    0.390 |  0.044 |    13m57 |
+
+\* The paper has no client-side-sandbox (`agentic`) config; `@tools,high`
+(server-side tools) is the closest augmented baseline.
+
+† `litqa3`: 9 of the 168 grader calls were blocked by the content filter (see
+the refusals note below) and excluded as unscored; the reported accuracy and
+stderr are over the 159 scored samples.
+
+‡ `protocolqa2`: 2 of the 125 grader calls were blocked by the content filter
+(see the refusals note below) and excluded as unscored; the reported
+accuracy and stderr are over the 123 scored samples.
+
+§ `cloning`: its low score is partly a refusal artifact, not pure capability.
+The model under test declined ~40% of this small 14-question set on biosecurity
+grounds (refusing to give actionable cloning protocols), plus 1 OpenAI API-level
+content-filter block.
+
+### Notes
+
+- Every GPT-5.2 run tracks its matched paper reference within stderr (≤ ~1
+  stderr).
+- Grader refusals are excluded from the results. The LLM judge
+  (`claude-sonnet-4-5`) is occasionally blocked by Anthropic's content filter on
+  biosecurity-adjacent questions, which returns an empty response with
+  `stop_reason=content_filter`. The sample is retried up to 3× and, if still
+  blocked, marked **unscored** (`verdict_source="refusal"`) rather than counted
+  wrong.
+- LLM-judge tags (`litqa3`, `dbqa2`, `figqa2-img`, `protocolqa2`) are graded by
+  `claude-sonnet-4-5`; deterministic tags (`seqqa2`, `cloning`) use no grader,
+  so they are unaffected by *grader* refusals.
+
+### Reproducibility
+
+- **Model under test:** `openai/gpt-5.2`. **Grader (LLM-judge tags only):**
+  `anthropic/claude-sonnet-4-5` — the eval default; deterministic tags
+  (`seqqa2`, `cloning`) use no grader.
+- **Eval version:** `1-A`. **Dataset:** `EdisonScientific/labbench2`, split
+  `train`, pinned to revision `27d12d72af24e3f70db8a99df63e567366cbdb80`.
+- **Samples:** each row runs its full set of mode-compatible samples (the `N`
+  column); `seqqa2` `retrieve` is the retrieve-compatible subset (~200 of 400).
+- **Date:** June 2026.
+- **Reasoning effort:** `bare` rows use the model default; the `@tools,high`
+  rows (to fill) use `--reasoning-effort high` to match the paper's augmented
+  configuration.
+
+Commands (one per row):
+
+```bash
+# Bare runs
+uv run inspect eval lab_bench_2 -T tags=dbqa2 -T solver=bare --model openai/gpt-5.2
+uv run inspect eval lab_bench_2 -T tags=figqa2-img -T mode=file -T solver=bare --model openai/gpt-5.2
+uv run inspect eval lab_bench_2 -T tags=seqqa2 -T mode=retrieve -T solver=bare --model openai/gpt-5.2
+
+# @tools,high runs
+uv run inspect eval lab_bench_2 -T tags=litqa3 -T solver=tools \
+  --model openai/gpt-5.2 --reasoning-effort high
+uv run inspect eval lab_bench_2 -T tags=cloning -T mode=inject -T solver=tools \
+  --model openai/gpt-5.2 --reasoning-effort high
+uv run inspect eval lab_bench_2 -T tags=protocolqa2 -T mode=file -T solver=agentic \
+  --model openai/gpt-5.2 --reasoning-effort high
+```
 
 ## Changelog
+
+### [1-A] - 2026-06-05
+
+- Add the initial implementation of LABBench2, which supports 15 tags, 3 file processing
+modes, 5 scorers and 3 solvers

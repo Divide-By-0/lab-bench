@@ -9,9 +9,12 @@ arxiv: https://arxiv.org/abs/2604.09554
 group: Reasoning
 contributors:
   - iphan
+  - ItsTania
+  - lewtun
+  - Sunishchal
 version: "1-A"
 tasks:
   - name: lab_bench_2
-    dataset_samples: 168
+    dataset_samples: 1,912
 metadata:
   requires_internet: true
