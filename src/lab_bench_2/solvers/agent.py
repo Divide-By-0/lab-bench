@@ -43,7 +43,8 @@ def build_sandbox_prompt(web_search: bool) -> str:
     You are a helpful assistant completing a scientific research task. You have \
 access to {tools_clause} in a sandboxed environment. The \
 following Python libraries are pre-installed: biopython, pydna, primer3-py, \
-pandas, numpy, scipy.
+pandas, numpy, scipy, pymupdf (fitz), pdfplumber. Use pymupdf or pdfplumber to \
+read any PDF files.
 
     Any files related to the question are in your working directory. Start by \
 running `ls` to see what is available, then use Python or Bash to read and \

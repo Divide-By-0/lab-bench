@@ -289,7 +289,7 @@ columns are from our runs.
 | cloning     | inject   | tools   | `@tools,high`        |   14§ |      0.286 |    0.286 |  0.125 | 1h41m39s |
 | figqa2-img  | file     | bare    | `bare`               |   101 |      0.564 |    0.525 |  0.050 |    1m10s |
 | seqqa2      | retrieve | bare    | `bare`               |   200 |      0.095 |    0.115 |  0.023 |    2m31s |
-| protocolqa2 | file     | agentic | `@tools,high`\*      |  125‡ |      0.416 |    0.390 |  0.044 |    13m57 |
+| protocolqa2 | file     | agentic | `@tools,high`\*      |  125‡ |      0.416 |    0.447 |  0.045 |    6m18s |
 
 \* The paper has no client-side-sandbox (`agentic`) config; `@tools,high`
 (server-side tools) is the closest augmented baseline.

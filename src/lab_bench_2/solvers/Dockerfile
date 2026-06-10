@@ -1,8 +1,11 @@
 # Scientific Python stack for the agentic solver's sandboxed python/bash tools.
 # Versions are pinned for reproducible builds. pydna constrains biopython,
 # numpy, pandas, and scipy, so bump them as a set (re-resolve, don't pin
-# individually). The base image is intentionally left unpinned: it must track
-# the inspect tool-support protocol of the installed inspect_ai.
+# individually). pymupdf/pdfplumber give the agent PDF text/table extraction
+# (file-bearing tags copy PDFs into the sandbox); they are independent of the
+# pydna-constrained set, so pin them on their own. The base image is
+# intentionally left unpinned: it must track the inspect tool-support protocol
+# of the installed inspect_ai.
 FROM aisiuk/inspect-tool-support
 
 RUN pip install --no-cache-dir \
@@ -11,4 +14,6 @@ RUN pip install --no-cache-dir \
     primer3-py==2.3.0 \
     pandas==3.0.3 \
     numpy==2.4.6 \
-    scipy==1.17.1
+    scipy==1.17.1 \
+    pymupdf==1.27.2.3 \
+    pdfplumber==0.11.9

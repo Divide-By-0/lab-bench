@@ -13,12 +13,24 @@ from lab_bench_2.solvers.agent import (
     FINAL_WARNING_MESSAGE,
     agent_with_final_warning,
     agentic,
+    build_sandbox_prompt,
     copy_files_to_sandbox,
 )
 
 
 def test_agentic_returns_solver() -> None:
     assert isinstance(agentic(), Solver)
+
+
+@pytest.mark.parametrize("web_search", [True, False])
+def test_sandbox_prompt_advertises_pdf_libraries(web_search: bool) -> None:
+    # given/when the sandbox system prompt
+    prompt = build_sandbox_prompt(web_search=web_search)
+    # then it tells the agent the PDF readers are available, so it does not have
+    # to guess (and stays in sync with the libraries installed in the Dockerfile)
+    assert "pymupdf" in prompt
+    assert "fitz" in prompt
+    assert "pdfplumber" in prompt
 
 
 def _never_submit_until_warned(
@@ -106,9 +118,11 @@ class TestCopyFilesToSandbox:
     async def test_writes_each_question_file_into_the_sandbox(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        # given a question whose files are cached locally
+        # given a question whose files are cached locally (incl. a binary PDF —
+        # the file type that drove the sandbox PDF-tooling fix)
         (tmp_path / "seq.fasta").write_text(">a\nACGT\n")
         (tmp_path / "data.csv").write_text("x,y\n1,2\n")
+        (tmp_path / "protocol.pdf").write_bytes(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
         fake_env = MagicMock()
         fake_env.write_file = AsyncMock()
         monkeypatch.setattr(agent_module, "sandbox", lambda *a, **k: fake_env)
@@ -124,7 +138,7 @@ class TestCopyFilesToSandbox:
         await copy_files_to_sandbox()(state, cast(Generate, AsyncMock()))
         # then each file is written into the sandbox cwd by basename
         written = {call.args[0] for call in fake_env.write_file.await_args_list}
-        assert written == {"seq.fasta", "data.csv"}
+        assert written == {"seq.fasta", "data.csv", "protocol.pdf"}
 
     async def test_is_noop_without_files_path(
         self, monkeypatch: pytest.MonkeyPatch
