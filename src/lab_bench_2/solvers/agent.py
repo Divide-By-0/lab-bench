@@ -39,6 +39,18 @@ def build_sandbox_prompt(web_search: bool) -> str:
     tools_clause = (
         "Python, Bash, and Web Search tools" if web_search else "Python and Bash tools"
     )
+    # REASON: an agent that starts open-ended web searching does not come back. One
+    # observed run spent 18 of its last 22 tool calls on DuckDuckGo queries that
+    # returned nothing, and hit the token limit without answering -- while the same
+    # task succeeded in 31 calls when it just computed. Scope the tool to single
+    # factual lookups so it cannot become a research strategy.
+    search_clause = (
+        "\n\n    Use Web Search only to answer a single specific factual question "
+        "(for example, the catalogue sequence of a named plasmid). Do not use it to "
+        "research the task, look for worked solutions, or browse. Everything you need "
+        "to compute the answer is in your working directory and /opt/docs."
+        if web_search else ""
+    )
     return dedent(f"""\
     You are a helpful assistant completing a scientific research task. You have \
 access to {tools_clause} in a sandboxed environment. The \
@@ -51,9 +63,16 @@ running `ls` to see what is available, then use Python or Bash to read and \
 analyze them. Use Python when computational analysis would help answer the \
 question. Before taking an action, briefly describe your reasoning.
 
-    The environment is non-interactive — imports and variables do not persist \
-between calls. Each code execution is independent. If you need to work with long \
-sequences, save them to a file and load from that file in subsequent calls.
+    Your Python session is persistent: variables, imports and functions defined \
+in one call are still available in later calls. Do not re-import modules or \
+re-parse a file you have already read — just reuse the variable.
+
+    API reference for the installed libraries is on disk at /opt/docs (one .txt \
+per module, e.g. /opt/docs/pydna.design.txt, /opt/docs/pydna.assembly2.txt, \
+/opt/docs/Bio.Restriction.txt). Read those instead of guessing at an API or \
+searching for documentation.
+
+{search_clause}
 
     When you have your final answer, call the submit() tool. Be specific and \
 precise — provide exact numerical values, sequences, or lists as requested. For \

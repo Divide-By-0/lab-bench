@@ -6,7 +6,9 @@ import logging
 import os
 from typing import Literal
 
-from inspect_ai.tool import Tool, bash, python, web_search
+from inspect_ai.tool import Tool, bash, web_search
+
+from lab_bench_2.solvers.stateful_python import python_session
 
 # External web-search providers, in priority order. Internal providers (openai,
 # anthropic, gemini) use the model's built-in search but cannot coexist with
@@ -41,7 +43,10 @@ def sandbox_tools(timeout: int = 180) -> list[Tool]:
     web_search is included when an external provider key is configured
     (TAVILY_API_KEY, EXA_API_KEY, or GOOGLE_CSE_API_KEY).
     """
-    tools: list[Tool] = [python(timeout=timeout), bash(timeout=timeout)]
+    # REASON: python_session, not the stock python(), because the stock tool loses all
+    # state between calls -- 94 of 125 observed tool errors were NameError from exactly
+    # that. See stateful_python.py.
+    tools: list[Tool] = [python_session(timeout=timeout), bash(timeout=timeout)]
     ws = _build_web_search()
     if ws is not None:
         tools.append(ws)
