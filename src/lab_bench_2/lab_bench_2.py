@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from inspect_ai import Task, task
 from inspect_ai.dataset import Dataset
+from inspect_ai.model import ContentText
 from inspect_ai.scorer import Scorer
 
 from lab_bench_2.dataset import load_lab_bench_2_dataset, load_multi_tags_dataset
@@ -92,6 +93,8 @@ def lab_bench_2(
             _ensure_supported(selected)
         dataset = load_multi_tags_dataset(selected, mode=mode)
         scorer = multi_tags_scorer()
+    if solver == "agentic":
+        _strip_attachments_for_sandbox(dataset)
     return Task(
         dataset=dataset,
         solver=solver_for_type(solver),
@@ -99,6 +102,33 @@ def lab_bench_2(
         sandbox=sandbox_for_solver(solver),
         version=EVAL_VERSION,
     )
+
+
+def _strip_attachments_for_sandbox(dataset: Dataset) -> None:
+    """Drop file attachments from prompts when the agentic solver is in use.
+
+    REASON: ``copy_files_to_sandbox()`` already writes every question file into the
+    container, so attaching the same bytes to the prompt is pure duplication. It is
+    not free -- for the seqqa2 tags each attachment is the 1.53 MB M. genitalium
+    GenBank, about 600k input tokens per question, versus a 687-token prompt once the
+    agent reads the file off disk instead.
+
+    It also breaks outright on Vertex: Inspect's Google provider materializes
+    attachments through ``client.files.upload()``, which is Gemini Developer API only,
+    so ``mode=file`` + ``agentic`` raises "This method is only supported in the Gemini
+    Developer client" before a single sample runs.
+
+    The prompt *text* is untouched -- it still names the files, and the agent's system
+    prompt already tells it they are in the working directory.
+    """
+    for sample in dataset:
+        messages = sample.input
+        if isinstance(messages, str):
+            continue
+        for message in messages:
+            content = getattr(message, "content", None)
+            if isinstance(content, list):
+                message.content = [c for c in content if isinstance(c, ContentText)]
 
 
 def _ensure_supported(tags: list[str]) -> None:
