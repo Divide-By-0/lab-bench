@@ -269,7 +269,19 @@ GenBank annotations, the display transfers annotations only when a feature from 
 input GenBank file exactly matches an assembled sequence. This display is a
 reviewer aid: it is generated on a best-effort basis and never changes the cloning
 score. Existing eval logs are immutable and do not gain the panel retroactively;
-rerun the sample to include it.
+rerun the sample to include it, or create enriched copies with:
+
+```bash
+uv run python tools/enrich_cloning_traces.py path/to/logs path/to/enriched-logs \
+  --cache-dir path/to/writable-cache
+```
+
+The backfill utility downloads the public cloning inputs and hidden reference
+assemblies, leaves the source logs unchanged, and requires the same Go toolchain
+as ordinary cloning scoring when a submitted protocol includes PCR. It adds the
+panel to both the transcript and the cloning scorer explanation; the latter keeps
+the visualization accessible from the **Scoring** tab when Inspect suppresses
+transcript events for an exceptionally large sample.
 
 The `seqqa2` tag is also scored deterministically. A
 per-question validator (selected by the question's `type`) checks the answer
