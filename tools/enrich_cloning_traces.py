@@ -41,6 +41,11 @@ def parse_args() -> argparse.Namespace:
         default="_genbank",
         help="Suffix added to copied log filenames (default: _genbank)",
     )
+    parser.add_argument(
+        "--reference-dir",
+        type=Path,
+        help="Optional directory of corrected <question-id>_assembled.fa references",
+    )
     return parser.parse_args()
 
 
@@ -149,7 +154,11 @@ def _answer(sample: EvalSample) -> str:
     return sample.output.completion
 
 
-async def enrich_sample(sample: EvalSample, cache_dir: Path) -> bool:
+async def enrich_sample(
+    sample: EvalSample,
+    cache_dir: Path,
+    reference_dir: Path | None = None,
+) -> bool:
     if sample.metadata.get("tag") != "cloning":
         return False
     if any(
@@ -161,7 +170,11 @@ async def enrich_sample(sample: EvalSample, cache_dir: Path) -> bool:
     question_id = str(sample.metadata["id"])
     cache_root = cache_dir / GCS_BUCKET
     base_dir = cache_root / "cloning" / question_id
-    reference_path = cache_root / "validation" / f"{question_id}_assembled.fa"
+    reference_path = (
+        reference_dir / f"{question_id}_assembled.fa"
+        if reference_dir is not None
+        else cache_root / "validation" / f"{question_id}_assembled.fa"
+    )
     try:
         markdown = await cloning_comparison_markdown(
             answer=_answer(sample),
@@ -208,7 +221,11 @@ async def enrich_sample(sample: EvalSample, cache_dir: Path) -> bool:
 
 
 async def enrich_logs(
-    source_dir: Path, output_dir: Path, cache_dir: Path, suffix: str
+    source_dir: Path,
+    output_dir: Path,
+    cache_dir: Path,
+    suffix: str,
+    reference_dir: Path | None = None,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     logs: list[tuple[Path, EvalLog]] = []
@@ -224,7 +241,7 @@ async def enrich_logs(
     for source_path, log in logs:
         changed = False
         for sample in log.samples or []:
-            changed = await enrich_sample(sample, cache_dir) or changed
+            changed = await enrich_sample(sample, cache_dir, reference_dir) or changed
         destination = output_dir / f"{source_path.stem}{suffix}{source_path.suffix}"
         if changed:
             write_eval_log(log, destination)
@@ -236,7 +253,13 @@ async def enrich_logs(
 def main() -> None:
     args = parse_args()
     asyncio.run(
-        enrich_logs(args.source_dir, args.output_dir, args.cache_dir, args.suffix)
+        enrich_logs(
+            args.source_dir,
+            args.output_dir,
+            args.cache_dir,
+            args.suffix,
+            args.reference_dir,
+        )
     )
 
 

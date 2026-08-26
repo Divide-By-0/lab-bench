@@ -283,6 +283,32 @@ panel to both the transcript and the cloning scorer explanation; the latter keep
 the visualization accessible from the **Scoring** tab when Inspect suppresses
 transcript events for an exceptionally large sample.
 
+To correct missing circular topology without modifying the original FASTA files
+or eval logs, create corrected reference and rescored log copies:
+
+```bash
+uv run python tools/rescore_cloning_traces.py path/to/original-logs \
+  path/to/rescored-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --all-cloning-references-circular
+```
+
+Use `--all-cloning-references-circular` only for a corpus known to contain final
+plasmid/vector assemblies. Without it, the tool repairs topology only when the
+dataset's expected digest fragments uniquely support a circular reference. The
+tool reruns the digest stage for affected digest failures, preserves the original
+score and explanation in metadata, and reports every score change. Render those
+rescored logs against the corrected references with:
+
+```bash
+uv run python tools/enrich_cloning_traces.py path/to/rescored-logs \
+  path/to/reviewed-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --suffix _reviewed
+```
+
 The `seqqa2` tag is also scored deterministically. A
 per-question validator (selected by the question's `type`) checks the answer
 extracted via that question's `answer_regex`; extraction tolerates line-wrapped

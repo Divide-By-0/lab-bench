@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from random import Random
 from types import SimpleNamespace
 from typing import Any
 
@@ -156,3 +157,24 @@ def test_digest_diagnostic_detects_missing_reference_topology() -> None:
     assert len(diagnostic.predicted_lengths) == 2
     assert len(diagnostic.reference_lengths_as_loaded) == 3
     assert all(pair.similarity == 1.0 for pair in diagnostic.circular_reference_pairs)
+
+
+def test_maps_repeated_cds_with_modified_assembly_boundaries() -> None:
+    feature_sequence = "".join(Random(7).choices("ACGT", k=180))
+    variant = "CCC" + feature_sequence[3:-3] + "GGG"
+    reference = _sequence(("TTTT" + variant) * 5)
+    feature = SourceFeature(
+        label="reporter",
+        feature_type="CDS",
+        sequence=feature_sequence,
+        source="insert",
+        strand=1,
+    )
+
+    comparison = build_sequence_comparison(None, reference, (feature,))
+    reporters = [
+        mapped for mapped in comparison.reference_features if mapped.label == "reporter"
+    ]
+
+    assert len(reporters) == 5
+    assert all(0.95 <= mapped.identity < 1.0 for mapped in reporters)

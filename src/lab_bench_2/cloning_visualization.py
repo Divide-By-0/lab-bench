@@ -40,6 +40,8 @@ _MAX_FEATURES = 24
 _MAX_DIFF_ROWS = 8
 _MAX_ROTATION_CANDIDATES = 128
 _MIN_FEATURE_LENGTH = 12
+_MIN_APPROXIMATE_FEATURE_LENGTH = 120
+_MIN_APPROXIMATE_FEATURE_IDENTITY = 0.95
 _MAX_FEATURE_OCCURRENCES = 8
 _MIN_DIFFERENCE_WIDTH = 2
 _MAX_SEQUENCE_WINDOW = 80
@@ -70,6 +72,7 @@ class MappedFeature:
     end: int
     source: str
     strand: int
+    identity: float = 1.0
 
 
 @dataclass(frozen=True)
@@ -109,6 +112,8 @@ class FeatureLegendEntry:
     source: str
     predicted_ranges: tuple[tuple[int, int], ...]
     reference_ranges: tuple[tuple[int, int], ...]
+    predicted_identities: tuple[float, ...]
+    reference_identities: tuple[float, ...]
 
 
 @dataclass(frozen=True)
@@ -212,7 +217,12 @@ async def cloning_comparison_markdown(
         else ()
     )
     digest = _digest_diagnostic(comparison, validator_params or {})
-    png = render_comparison_png(comparison, provenance=provenance, digest=digest)
+    mapped_provenance = tuple(segment for segment in provenance if segment.ranges)
+    png = render_comparison_png(
+        comparison,
+        provenance=mapped_provenance,
+        digest=digest,
+    )
     encoded = base64.b64encode(png).decode("ascii")
     return _comparison_markdown(
         comparison,
@@ -298,16 +308,14 @@ async def _protocol_provenance(
     """Map top-level assembly inputs back onto the predicted plasmid."""
     from labbench2.cloning.utils import reverse_complement
 
-    nodes = getattr(operation, "sequences", None)
-    if not isinstance(nodes, list) or not nodes:
-        nodes = [operation]
     doubled = predicted_sequence + predicted_sequence
     segments: list[ProvenanceSegment] = []
-    for node_index, node in enumerate(nodes, start=1):
+
+    async def collect(node: Any, code: str) -> None:
         try:
             fragments = await node.execute(base_dir)
         except Exception:
-            continue
+            fragments = []
         for fragment_index, fragment in enumerate(fragments, start=1):
             mapped_ranges: tuple[tuple[int, int], ...] = ()
             mapped_strand = 1
@@ -324,15 +332,15 @@ async def _protocol_provenance(
                     )
                     mapped_strand = strand
                     break
-            code = f"P{node_index}"
+            fragment_code = code
             if len(fragments) > 1:
-                code += f".{fragment_index}"
+                fragment_code += f".{fragment_index}"
             source_files = tuple(
                 sorted(Path(value).stem for value in node.file_references())
             )
             segments.append(
                 ProvenanceSegment(
-                    code=code,
+                    code=fragment_code,
                     operation=_operation_label(node),
                     source_files=source_files,
                     fragment_length=len(fragment.sequence),
@@ -340,7 +348,27 @@ async def _protocol_provenance(
                     strand=mapped_strand,
                 )
             )
+        for child_index, child in enumerate(_operation_children(node), start=1):
+            await collect(child, f"{code}.{child_index}")
+
+    roots = _operation_children(operation)
+    if not roots:
+        roots = (operation,)
+    for node_index, node in enumerate(roots, start=1):
+        await collect(node, f"P{node_index}")
     return tuple(segments)
+
+
+def _operation_children(operation: Any) -> tuple[Any, ...]:
+    """Return sequence-producing children, excluding literal primer arguments."""
+    name = type(operation).__name__
+    if name in {"GibsonOperation", "GoldenGateOperation"}:
+        return tuple(getattr(operation, "sequences", ()))
+    if name == "RestrictionAssembleOperation":
+        return (operation.fragment1, operation.fragment2)
+    if name in {"PCROperation", "EnzymeCutOperation"}:
+        return (operation.sequence,)
+    return ()
 
 
 def _operation_label(operation: Any) -> str:
@@ -630,6 +658,7 @@ def _map_features(
     for feature in sorted(
         source_features, key=lambda value: len(value.sequence), reverse=True
     ):
+        exact_found = False
         candidates: tuple[tuple[str, int], ...] = ((feature.sequence, feature.strand),)
         reverse = feature.sequence.translate(_DNA_COMPLEMENT)[::-1]
         if reverse != feature.sequence:
@@ -645,6 +674,7 @@ def _map_features(
                     start + len(candidate),
                 )
                 if key not in seen:
+                    exact_found = True
                     seen.add(key)
                     mapped.append(
                         MappedFeature(
@@ -654,10 +684,13 @@ def _map_features(
                             end=start + len(candidate),
                             source=feature.source,
                             strand=strand,
+                            identity=1.0,
                         )
                     )
                 occurrence_count += 1
                 start = sequence.find(candidate, start + 1)
+        if not exact_found and len(feature.sequence) >= _MIN_APPROXIMATE_FEATURE_LENGTH:
+            _map_boundary_variant_feature(sequence, feature, mapped, seen)
         if len(mapped) >= _MAX_FEATURES * 2:
             break
 
@@ -670,6 +703,49 @@ def _map_features(
         )
     )
     return mapped[:_MAX_FEATURES]
+
+
+def _map_boundary_variant_feature(
+    sequence: str,
+    feature: SourceFeature,
+    mapped: list[MappedFeature],
+    seen: set[tuple[str, str, int, int]],
+) -> None:
+    """Map long features whose Golden Gate/Gibson boundaries were altered."""
+    from rapidfuzz.distance import Levenshtein
+
+    trim = min(24, max(3, len(feature.sequence) // 50))
+    candidates: tuple[tuple[str, int], ...] = ((feature.sequence, feature.strand),)
+    reverse = feature.sequence.translate(_DNA_COMPLEMENT)[::-1]
+    if reverse != feature.sequence:
+        candidates += ((reverse, -feature.strand),)
+    for candidate, strand in candidates:
+        core = candidate[trim:-trim]
+        core_start = sequence.find(core)
+        occurrence_count = 0
+        while core_start >= 0 and occurrence_count < _MAX_FEATURE_OCCURRENCES:
+            start = core_start - trim
+            end = start + len(candidate)
+            if start >= 0 and end <= len(sequence):
+                identity = float(
+                    Levenshtein.normalized_similarity(sequence[start:end], candidate)
+                )
+                key = (feature.label, feature.feature_type, start, end)
+                if identity >= _MIN_APPROXIMATE_FEATURE_IDENTITY and key not in seen:
+                    seen.add(key)
+                    mapped.append(
+                        MappedFeature(
+                            label=feature.label,
+                            feature_type=feature.feature_type,
+                            start=start,
+                            end=end,
+                            source=feature.source,
+                            strand=strand,
+                            identity=identity,
+                        )
+                    )
+            occurrence_count += 1
+            core_start = sequence.find(core, core_start + 1)
 
 
 def _draw_sequence_track(
@@ -942,7 +1018,7 @@ def _legend_key(entry: FeatureLegendEntry) -> tuple[str, str, str, int]:
 def _feature_legend(comparison: SequenceComparison) -> tuple[FeatureLegendEntry, ...]:
     grouped: dict[
         tuple[str, str, str, int],
-        dict[str, list[tuple[int, int]] | MappedFeature],
+        dict[str, list[tuple[int, int]] | list[float] | MappedFeature],
     ] = {}
     for assembly, features in (
         ("predicted", comparison.predicted_features),
@@ -952,10 +1028,18 @@ def _feature_legend(comparison: SequenceComparison) -> tuple[FeatureLegendEntry,
             key = _mapped_feature_key(feature)
             values = grouped.setdefault(
                 key,
-                {"feature": feature, "predicted": [], "reference": []},
+                {
+                    "feature": feature,
+                    "predicted": [],
+                    "reference": [],
+                    "predicted_identity": [],
+                    "reference_identity": [],
+                },
             )
             ranges = cast(list[tuple[int, int]], values[assembly])
             ranges.append((feature.start, feature.end))
+            identities = cast(list[float], values[f"{assembly}_identity"])
+            identities.append(feature.identity)
 
     ordered = sorted(
         grouped.values(),
@@ -983,6 +1067,12 @@ def _feature_legend(comparison: SequenceComparison) -> tuple[FeatureLegendEntry,
                 ),
                 reference_ranges=tuple(
                     cast(list[tuple[int, int]], values["reference"])
+                ),
+                predicted_identities=tuple(
+                    cast(list[float], values["predicted_identity"])
+                ),
+                reference_identities=tuple(
+                    cast(list[float], values["reference_identity"])
                 ),
             )
         )
@@ -1016,6 +1106,9 @@ def _draw_feature_legend(
         text = (
             f"{entry.code}  {entry.label} · {entry.feature_type} · {entry.length:,} bp"
         )
+        mapping = _format_mapping_identity(entry)
+        if mapping != "exact":
+            text += f" · {mapping.replace('–', '-')}"
         draw.text((x + 22, y), text[:62], fill="#334155", font=font)
 
 
@@ -1148,8 +1241,8 @@ def _comparison_markdown(
                     "printed on every colored region in the image."
                 ),
                 "",
-                "| ID | Annotation | Type | Length | Predicted coordinates | Reference coordinates | Source |",
-                "| --- | --- | --- | ---: | --- | --- | --- |",
+                "| ID | Annotation | Type | Length | Predicted coordinates | Reference coordinates | Mapping | Source |",
+                "| --- | --- | --- | ---: | --- | --- | --- | --- |",
             )
         )
         for entry in feature_legend:
@@ -1163,6 +1256,7 @@ def _comparison_markdown(
                         f"{entry.length:,} bp",
                         _format_feature_ranges(entry.predicted_ranges),
                         _format_feature_ranges(entry.reference_ranges),
+                        _format_mapping_identity(entry),
                         _markdown_cell(entry.source),
                     )
                 )
@@ -1305,6 +1399,17 @@ def _format_feature_ranges(ranges: tuple[tuple[int, int], ...]) -> str:
     if not ranges:
         return "—"
     return ", ".join(f"{start + 1:,}–{end:,}" for start, end in ranges)
+
+
+def _format_mapping_identity(entry: FeatureLegendEntry) -> str:
+    identities = entry.predicted_identities + entry.reference_identities
+    if not identities or all(value == 1.0 for value in identities):
+        return "exact"
+    minimum = min(identities)
+    maximum = max(identities)
+    if minimum == maximum:
+        return f"boundary variant ({minimum:.2%})"
+    return f"boundary variants ({minimum:.2%}–{maximum:.2%})"
 
 
 def _markdown_cell(value: str) -> str:
