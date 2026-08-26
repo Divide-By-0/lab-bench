@@ -8,6 +8,8 @@ import pytest
 
 from lab_bench_2.cloning_visualization import (
     SourceFeature,
+    _feature_legend,
+    _nice_tick_interval,
     build_sequence_comparison,
     load_source_features,
     render_comparison_png,
@@ -95,3 +97,32 @@ def test_loads_annotations_from_input_genbank(tmp_path: Path) -> None:
             strand=1,
         ),
     )
+
+
+def test_uses_readable_base_pair_tick_intervals() -> None:
+    assert _nice_tick_interval(8_970) == 1_000
+    assert _nice_tick_interval(42_000) == 5_000
+    assert _nice_tick_interval(850) == 100
+
+
+def test_feature_key_has_stable_ids_and_both_coordinate_sets() -> None:
+    reference = _sequence("AAAACCCCGGGGTTTT")
+    predicted = _sequence("AAAACCCCGGGGTTTT")
+    features = (
+        SourceFeature(
+            label="payload",
+            feature_type="CDS",
+            sequence="CCCCGGGG",
+            source="input",
+            strand=1,
+        ),
+    )
+
+    legend = _feature_legend(build_sequence_comparison(predicted, reference, features))
+
+    assert len(legend) == 1
+    assert legend[0].code == "F1"
+    assert legend[0].label == "payload"
+    assert legend[0].length == 8
+    assert legend[0].predicted_ranges == ((4, 12),)
+    assert legend[0].reference_ranges == ((4, 12),)

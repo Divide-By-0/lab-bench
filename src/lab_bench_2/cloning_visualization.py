@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import io
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -40,8 +41,6 @@ _MAX_DIFF_ROWS = 8
 _MAX_ROTATION_CANDIDATES = 128
 _MIN_FEATURE_LENGTH = 12
 _MAX_FEATURE_OCCURRENCES = 8
-_MAX_LABELED_FEATURE_LANE = 2
-_MIN_FEATURE_LABEL_WIDTH = 18
 _MIN_DIFFERENCE_WIDTH = 2
 _MAX_SEQUENCE_WINDOW = 80
 _FASTA_LINE_WIDTH = 80
@@ -95,6 +94,19 @@ class SequenceComparison:
     reference_features: tuple[MappedFeature, ...]
     differences: tuple[Difference, ...]
     prediction_error: str | None = None
+
+
+@dataclass(frozen=True)
+class FeatureLegendEntry:
+    """Stable display identity for one annotation in either assembly."""
+
+    code: str
+    label: str
+    feature_type: str
+    length: int
+    source: str
+    predicted_ranges: tuple[tuple[int, int], ...]
+    reference_ranges: tuple[tuple[int, int], ...]
 
 
 async def cloning_comparison_markdown(
@@ -218,7 +230,20 @@ def render_comparison_png(comparison: SequenceComparison) -> bytes:
     """Render a compact PNG that Inspect can display inside an Info event."""
     from PIL import Image, ImageDraw, ImageFont
 
-    width, height = 1200, 560
+    width = 1200
+    legend = _feature_legend(comparison)
+    feature_codes = {_legend_key(entry): entry.code for entry in legend}
+    predicted_lanes = _feature_lane_counts(
+        comparison.predicted_features, comparison.predicted, width
+    )
+    reference_lanes = _feature_lane_counts(
+        comparison.reference_features, comparison.reference, width
+    )
+    predicted_height = _sequence_track_height(*predicted_lanes)
+    reference_height = _sequence_track_height(*reference_lanes)
+    legend_rows = math.ceil(len(legend) / 2)
+    legend_height = 48 + legend_rows * 24 if legend else 0
+    height = 84 + predicted_height + 24 + reference_height + 94 + legend_height + 28
     image = Image.new("RGB", (width, height), "#ffffff")
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default(size=14)
@@ -228,28 +253,39 @@ def render_comparison_png(comparison: SequenceComparison) -> bytes:
     metrics = _metric_line(comparison)
     draw.text((48, 50), metrics, fill="#475569", font=font)
 
-    _draw_sequence_track(
+    next_y = _draw_sequence_track(
         draw,
         title="Predicted assembly",
         sequence=comparison.predicted,
         circular=comparison.predicted_circular,
         features=comparison.predicted_features,
-        y=180,
+        top=82,
         width=width,
         font=font,
+        feature_codes=feature_codes,
         empty_message=comparison.prediction_error or "No predicted assembly",
     )
-    _draw_sequence_track(
+    next_y = _draw_sequence_track(
         draw,
         title="Reference assembly",
         sequence=comparison.reference,
         circular=comparison.reference_circular,
         features=comparison.reference_features,
-        y=365,
+        top=next_y + 24,
         width=width,
         font=font,
+        feature_codes=feature_codes,
     )
-    _draw_difference_track(draw, comparison, y=480, width=width, font=font)
+    difference_y = next_y + 64
+    _draw_difference_track(draw, comparison, y=difference_y, width=width, font=font)
+    if legend:
+        _draw_feature_legend(
+            draw,
+            legend,
+            top=difference_y + 76,
+            width=width,
+            font=font,
+        )
 
     with io.BytesIO() as output:
         image.save(output, format="PNG", optimize=True)
@@ -373,62 +409,245 @@ def _draw_sequence_track(
     sequence: str | None,
     circular: bool,
     features: tuple[MappedFeature, ...],
-    y: int,
+    top: int,
     width: int,
     font: Any,
+    feature_codes: dict[tuple[str, str, str, int], str],
     empty_message: str = "",
-) -> None:
+) -> int:
     left, right = 70, width - 70
-    draw.text((left, y - 95), title, fill="#0f172a", font=font)
+    draw.text((left, top), title, fill="#0f172a", font=font)
     if sequence is None:
-        draw.rounded_rectangle((left, y - 22, right, y + 28), 8, fill="#f8fafc")
-        draw.text((left + 14, y - 6), empty_message[:150], fill="#b91c1c", font=font)
-        return
+        box_top = top + 34
+        draw.rounded_rectangle((left, box_top, right, box_top + 50), 8, fill="#f8fafc")
+        draw.text(
+            (left + 14, box_top + 16),
+            empty_message[:150],
+            fill="#b91c1c",
+            font=font,
+        )
+        return box_top + 50
 
     topology = "circular" if circular else "linear"
+    tick_interval = _nice_tick_interval(len(sequence))
     draw.text(
-        (left, y - 80),
-        f"{len(sequence):,} bp, {topology}",
+        (left, top + 20),
+        (f"{len(sequence):,} bp, {topology} · scale ticks every {tick_interval:,} bp"),
         fill="#64748b",
         font=font,
     )
+    positive_lanes, negative_lanes = _feature_lane_counts(features, sequence, width)
+    y = top + 66 + positive_lanes * 24
     draw.line((left, y, right, y), fill="#334155", width=5)
-    lane_ends = {
-        1: [float(left - 1), float(left - 1), float(left - 1)],
-        -1: [float(left - 1), float(left - 1), float(left - 1)],
-    }
     scale = (right - left) / max(1, len(sequence))
-    for feature in features:
+    _draw_scale(draw, left, right, y, len(sequence), scale, tick_interval, font)
+    for feature, lane, start_x, end_x in _layout_features(features, sequence, width):
+        feature_y = y - 27 - lane * 24 if feature.strand >= 0 else y + 28 + lane * 24
+        color = _FEATURE_COLORS.get(feature.feature_type, "#64748b")
+        draw.rounded_rectangle(
+            (start_x, feature_y, end_x, feature_y + 16), 3, fill=color
+        )
+        code = feature_codes[_mapped_feature_key(feature)]
+        code_box = draw.textbbox((0, 0), code, font=font)
+        code_width = code_box[2] - code_box[0]
+        midpoint = (start_x + end_x) / 2
+        code_x = min(right - code_width, max(left, midpoint - code_width / 2))
+        code_y = feature_y - 16 if feature.strand >= 0 else feature_y + 17
+        draw.rectangle(
+            (code_x - 2, code_y, code_x + code_width + 2, code_y + 14),
+            fill="#ffffff",
+        )
+        draw.text((code_x, code_y), code, fill=color, font=font)
+
+    return top + _sequence_track_height(positive_lanes, negative_lanes)
+
+
+def _draw_scale(
+    draw: Any,
+    left: int,
+    right: int,
+    y: int,
+    sequence_length: int,
+    scale: float,
+    interval: int,
+    font: Any,
+) -> None:
+    ticks = list(range(0, sequence_length + 1, interval))
+    if not ticks or ticks[-1] != sequence_length:
+        ticks.append(sequence_length)
+    previous_label_right = float("-inf")
+    for position in ticks:
+        x = left + position * scale
+        draw.line((x, y - 6, x, y + 7), fill="#334155", width=1)
+        label = f"{position:,}"
+        bounds = draw.textbbox((0, 0), label, font=font)
+        label_width = bounds[2] - bounds[0]
+        label_x = min(right - label_width, max(left, x - label_width / 2))
+        if position not in {0, sequence_length} and label_x < previous_label_right + 8:
+            continue
+        if position == sequence_length and label_x < previous_label_right + 8:
+            draw.rectangle((label_x - 2, y + 8, right + 2, y + 23), fill="#ffffff")
+        draw.text((label_x, y + 8), label, fill="#475569", font=font)
+        previous_label_right = label_x + label_width
+
+
+def _nice_tick_interval(sequence_length: int, target_ticks: int = 10) -> int:
+    """Return a readable 1/2/5-multiple interval for a bp axis."""
+    if sequence_length <= 0:
+        return 1
+    rough = sequence_length / target_ticks
+    magnitude = 10 ** math.floor(math.log10(max(1.0, rough)))
+    normalized = rough / magnitude
+    multiplier = next(value for value in (1, 2, 5, 10) if normalized <= value)
+    return max(1, int(multiplier * magnitude))
+
+
+def _layout_features(
+    features: tuple[MappedFeature, ...], sequence: str, width: int
+) -> list[tuple[MappedFeature, int, float, float]]:
+    """Assign every mapped feature a non-overlapping annotation lane."""
+    left, right = 70, width - 70
+    scale = (right - left) / max(1, len(sequence))
+    lane_ends: dict[int, list[float]] = {1: [], -1: []}
+    layout: list[tuple[MappedFeature, int, float, float]] = []
+    for feature in sorted(
+        features,
+        key=lambda value: (value.start, -(value.end - value.start), value.label),
+    ):
         start_x = left + feature.start * scale
         end_x = max(start_x + 2, left + min(feature.end, len(sequence)) * scale)
+        occupied_start = min(start_x, (start_x + end_x) / 2 - 12)
+        occupied_end = max(end_x, (start_x + end_x) / 2 + 12)
         direction = 1 if feature.strand >= 0 else -1
-        available_lanes = lane_ends[direction]
+        lanes = lane_ends[direction]
         lane = next(
             (
                 index
-                for index, lane_end in enumerate(available_lanes)
-                if start_x > lane_end + 8
+                for index, lane_end in enumerate(lanes)
+                if occupied_start > lane_end + 8
             ),
-            None,
+            len(lanes),
         )
-        if lane is None:
-            continue
-        available_lanes[lane] = end_x
-        feature_y = y - 23 - lane * 22 if feature.strand >= 0 else y + 9 + lane * 22
-        color = _FEATURE_COLORS.get(feature.feature_type, "#64748b")
-        draw.rounded_rectangle(
-            (start_x, feature_y, end_x, feature_y + 14), 3, fill=color
-        )
-        if (
-            lane < _MAX_LABELED_FEATURE_LANE
-            and end_x - start_x >= _MIN_FEATURE_LABEL_WIDTH
-        ):
-            draw.text(
-                (start_x, feature_y - 15),
-                feature.label[:24],
-                fill="#334155",
-                font=font,
+        if lane == len(lanes):
+            lanes.append(occupied_end)
+        else:
+            lanes[lane] = occupied_end
+        layout.append((feature, lane, start_x, end_x))
+    return layout
+
+
+def _feature_lane_counts(
+    features: tuple[MappedFeature, ...], sequence: str | None, width: int
+) -> tuple[int, int]:
+    if not sequence:
+        return (0, 0)
+    layout = _layout_features(features, sequence, width)
+    positive = max(
+        (lane + 1 for feature, lane, _, _ in layout if feature.strand >= 0),
+        default=0,
+    )
+    negative = max(
+        (lane + 1 for feature, lane, _, _ in layout if feature.strand < 0),
+        default=0,
+    )
+    return positive, negative
+
+
+def _sequence_track_height(positive_lanes: int, negative_lanes: int) -> int:
+    return 101 + positive_lanes * 24 + negative_lanes * 24
+
+
+def _mapped_feature_key(feature: MappedFeature) -> tuple[str, str, str, int]:
+    return (
+        feature.label,
+        feature.feature_type,
+        feature.source,
+        feature.end - feature.start,
+    )
+
+
+def _legend_key(entry: FeatureLegendEntry) -> tuple[str, str, str, int]:
+    return entry.label, entry.feature_type, entry.source, entry.length
+
+
+def _feature_legend(comparison: SequenceComparison) -> tuple[FeatureLegendEntry, ...]:
+    grouped: dict[
+        tuple[str, str, str, int],
+        dict[str, list[tuple[int, int]] | MappedFeature],
+    ] = {}
+    for assembly, features in (
+        ("predicted", comparison.predicted_features),
+        ("reference", comparison.reference_features),
+    ):
+        for feature in features:
+            key = _mapped_feature_key(feature)
+            values = grouped.setdefault(
+                key,
+                {"feature": feature, "predicted": [], "reference": []},
             )
+            ranges = cast(list[tuple[int, int]], values[assembly])
+            ranges.append((feature.start, feature.end))
+
+    ordered = sorted(
+        grouped.values(),
+        key=lambda values: (
+            min(
+                start
+                for name in ("predicted", "reference")
+                for start, _ in cast(list[tuple[int, int]], values[name])
+            ),
+            cast(MappedFeature, values["feature"]).label,
+        ),
+    )
+    entries: list[FeatureLegendEntry] = []
+    for index, values in enumerate(ordered, start=1):
+        feature = cast(MappedFeature, values["feature"])
+        entries.append(
+            FeatureLegendEntry(
+                code=f"F{index}",
+                label=feature.label,
+                feature_type=feature.feature_type,
+                length=feature.end - feature.start,
+                source=feature.source,
+                predicted_ranges=tuple(
+                    cast(list[tuple[int, int]], values["predicted"])
+                ),
+                reference_ranges=tuple(
+                    cast(list[tuple[int, int]], values["reference"])
+                ),
+            )
+        )
+    return tuple(entries)
+
+
+def _draw_feature_legend(
+    draw: Any,
+    entries: tuple[FeatureLegendEntry, ...],
+    *,
+    top: int,
+    width: int,
+    font: Any,
+) -> None:
+    left = 70
+    draw.text((left, top), "Feature key", fill="#0f172a", font=font)
+    draw.text(
+        (left + 92, top),
+        "IDs appear on every colored region; exact coordinates are listed below the image.",
+        fill="#64748b",
+        font=font,
+    )
+    rows = math.ceil(len(entries) / 2)
+    column_width = (width - 140) / 2
+    for index, entry in enumerate(entries):
+        column, row = divmod(index, rows)
+        x = left + column * column_width
+        y = top + 28 + row * 24
+        color = _FEATURE_COLORS.get(entry.feature_type, "#64748b")
+        draw.rounded_rectangle((x, y + 2, x + 15, y + 15), 2, fill=color)
+        text = (
+            f"{entry.code}  {entry.label} · {entry.feature_type} · {entry.length:,} bp"
+        )
+        draw.text((x + 22, y), text[:62], fill="#334155", font=font)
 
 
 def _draw_difference_track(
@@ -507,6 +726,38 @@ def _comparison_markdown(comparison: SequenceComparison, encoded_png: str) -> st
         lines.extend(
             ("", f"**Prediction visualization:** {comparison.prediction_error}")
         )
+    feature_legend = _feature_legend(comparison)
+    if feature_legend:
+        lines.extend(
+            (
+                "",
+                "#### Feature key",
+                "",
+                (
+                    "Coordinates are 1-based and inclusive. Feature IDs match the labels "
+                    "printed on every colored region in the image."
+                ),
+                "",
+                "| ID | Annotation | Type | Length | Predicted coordinates | Reference coordinates | Source |",
+                "| --- | --- | --- | ---: | --- | --- | --- |",
+            )
+        )
+        for entry in feature_legend:
+            lines.append(
+                "| "
+                + " | ".join(
+                    (
+                        entry.code,
+                        _markdown_cell(entry.label),
+                        _markdown_cell(entry.feature_type),
+                        f"{entry.length:,} bp",
+                        _format_feature_ranges(entry.predicted_ranges),
+                        _format_feature_ranges(entry.reference_ranges),
+                        _markdown_cell(entry.source),
+                    )
+                )
+                + " |"
+            )
     if comparison.differences:
         lines.extend(("", "#### First sequence differences", ""))
         for difference in comparison.differences[:_MAX_DIFF_ROWS]:
@@ -562,6 +813,16 @@ def _comparison_markdown(comparison: SequenceComparison, encoded_png: str) -> st
         )
     )
     return "\n".join(lines)
+
+
+def _format_feature_ranges(ranges: tuple[tuple[int, int], ...]) -> str:
+    if not ranges:
+        return "—"
+    return ", ".join(f"{start + 1:,}–{end:,}" for start, end in ranges)
+
+
+def _markdown_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
 
 
 def _sequence_window(sequence: str, start: int, end: int, flank: int = 16) -> str:
