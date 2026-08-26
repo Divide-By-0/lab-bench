@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Any, cast
@@ -28,6 +29,8 @@ from inspect_ai.util import json_schema
 from pydantic import ValidationError
 
 from lab_bench_2 import seqqa2_answer_parser
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_GRADER_MODEL = "anthropic/claude-sonnet-4-5"
 GRADER_ROLE = "grader"
@@ -213,6 +216,28 @@ def cloning_scorer() -> Scorer:
                 dict[str, Any], metadata.get("validator_params") or {}
             ),
         )
+
+        # Add a reviewer-facing annotated comparison to the Inspect transcript.
+        # This is deliberately best-effort: visualization must never change a
+        # benchmark score or turn a completed evaluation into an error.
+        try:
+            from inspect_ai.log import transcript
+
+            from lab_bench_2.cloning_visualization import (
+                cloning_comparison_markdown,
+            )
+
+            comparison = await cloning_comparison_markdown(
+                answer=answer,
+                base_dir=Path(files_path_str),
+                reference_path=ground_truth_path,
+            )
+            transcript().info(comparison, source="cloning sequence comparison")
+        except Exception:
+            logger.warning(
+                "Unable to render cloning sequence comparison",
+                exc_info=True,
+            )
 
         return Score(
             value=CORRECT if score_value >= 1.0 else INCORRECT,

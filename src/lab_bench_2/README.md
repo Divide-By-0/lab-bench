@@ -260,6 +260,17 @@ PCR simulation requires that Go be available on the host. Without Go,
 protocol execution fails gracefully: PCR-based samples score 0.0 with an explanatory
 reason rather than crashing the run.
 
+Each newly scored cloning sample also includes a **Cloning sequence comparison**
+Info event in its Inspect transcript. The event contains annotated predicted and
+reference assembly tracks, aligned similarity and length metrics, locations and
+sequence windows for the first differences, and expandable FASTA sequences. Since
+the generated and reference assemblies contain sequence and topology but not full
+GenBank annotations, the display transfers annotations only when a feature from an
+input GenBank file exactly matches an assembled sequence. This display is a
+reviewer aid: it is generated on a best-effort basis and never changes the cloning
+score. Existing eval logs are immutable and do not gain the panel retroactively;
+rerun the sample to include it.
+
 The `seqqa2` tag is also scored deterministically. A
 per-question validator (selected by the question's `type`) checks the answer
 extracted via that question's `answer_regex`; extraction tolerates line-wrapped

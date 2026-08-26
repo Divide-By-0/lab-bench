@@ -160,7 +160,7 @@ lab_bench_2 = "lab_bench_2"
 # Reference implementation's deterministic scoring code (CC BY-SA 4.0), scoped to
 # this eval rather than core. Pulled as a dependency rather than vendored; source
 # + pin in [tool.uv.sources]. See src/lab_bench_2/README.md.
-lab_bench_2 = ["labbench2"]
+lab_bench_2 = ["labbench2", "pillow>=11.0"]
 test = []
 
 [dependency-groups]

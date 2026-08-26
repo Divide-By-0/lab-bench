@@ -1797,6 +1797,7 @@ dependencies = [
 [package.optional-dependencies]
 lab-bench-2 = [
     { name = "labbench2" },
+    { name = "pillow" },
 ]
 
 [package.dev-dependencies]
@@ -1821,6 +1822,7 @@ requires-dist = [
     { name = "datasets", specifier = ">=4.8.5" },
     { name = "inspect-ai", specifier = ">=0.3.234" },
     { name = "labbench2", marker = "extra == 'lab-bench-2'", git = "https://github.com/EdisonScientific/labbench2.git?rev=c028ecdcf144b55ffcd92b68be45081df5628c20" },
+    { name = "pillow", marker = "extra == 'lab-bench-2'", specifier = ">=11.0" },
     { name = "pyyaml", specifier = ">=5.1.0" },
 ]
 provides-extras = ["lab-bench-2", "test"]
