@@ -324,6 +324,16 @@ async def _protocol_provenance(
                 (-1, reverse_complement(fragment.sequence.upper())),
             ):
                 start = doubled.find(candidate)
+                # PCR/Gibson/Golden-Gate products often contain primer tails or
+                # junction bases that are absent from the final assembly. Map
+                # the longest exact internal core so provenance remains visible.
+                if start < 0 and len(candidate) >= 100:
+                    for trim in range(1, min(60, len(candidate) // 2) + 1):
+                        core = candidate[trim : len(candidate) - trim]
+                        start = doubled.find(core)
+                        if start >= 0:
+                            candidate = core
+                            break
                 if 0 <= start < len(predicted_sequence):
                     mapped_ranges = _split_circular_range(
                         start,
