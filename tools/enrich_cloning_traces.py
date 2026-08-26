@@ -167,6 +167,7 @@ async def enrich_sample(sample: EvalSample, cache_dir: Path) -> bool:
             answer=_answer(sample),
             base_dir=base_dir,
             reference_path=reference_path,
+            validator_params=sample.metadata.get("validator_params") or {},
         )
     except Exception as exc:
         markdown = (

@@ -338,6 +338,7 @@ class TestCloningScorer:
                 "answer": "<protocol>assemble</protocol>",
                 "base_dir": tmp_path,
                 "reference_path": reference,
+                "validator_params": {},
             }
             return "comparison markdown"
 

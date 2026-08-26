@@ -231,6 +231,9 @@ def cloning_scorer() -> Scorer:
                 answer=answer,
                 base_dir=Path(files_path_str),
                 reference_path=ground_truth_path,
+                validator_params=cast(
+                    dict[str, Any], metadata.get("validator_params") or {}
+                ),
             )
             transcript().info(comparison, source="cloning sequence comparison")
         except Exception:

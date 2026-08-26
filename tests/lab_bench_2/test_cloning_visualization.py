@@ -8,8 +8,10 @@ import pytest
 
 from lab_bench_2.cloning_visualization import (
     SourceFeature,
+    _digest_diagnostic,
     _feature_legend,
     _nice_tick_interval,
+    _split_circular_range,
     build_sequence_comparison,
     load_source_features,
     render_comparison_png,
@@ -126,3 +128,31 @@ def test_feature_key_has_stable_ids_and_both_coordinate_sets() -> None:
     assert legend[0].length == 8
     assert legend[0].predicted_ranges == ((4, 12),)
     assert legend[0].reference_ranges == ((4, 12),)
+
+
+def test_splits_provenance_fragment_across_circular_origin() -> None:
+    assert _split_circular_range(8, 13, 10) == ((8, 10), (0, 3))
+
+
+def test_digest_diagnostic_detects_missing_reference_topology() -> None:
+    sequence = "A" * 20 + "AGATCT" + "C" * 20 + "CGATCG" + "G" * 20
+    comparison = build_sequence_comparison(
+        _sequence(sequence, circular=True),
+        _sequence(sequence, circular=False),
+    )
+    validator_params = {
+        "enzyme_1": "BglII",
+        "enzyme_2": "PvuI",
+        "edit_distance_threshold": 0.95,
+    }
+    initial = _digest_diagnostic(comparison, validator_params)
+    assert initial is not None
+    validator_params["fragments"] = list(initial.circular_reference_lengths)
+
+    diagnostic = _digest_diagnostic(comparison, validator_params)
+
+    assert diagnostic is not None
+    assert diagnostic.topology_mismatch
+    assert len(diagnostic.predicted_lengths) == 2
+    assert len(diagnostic.reference_lengths_as_loaded) == 3
+    assert all(pair.similarity == 1.0 for pair in diagnostic.circular_reference_pairs)

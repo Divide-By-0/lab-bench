@@ -45,6 +45,8 @@ _MIN_DIFFERENCE_WIDTH = 2
 _MAX_SEQUENCE_WINDOW = 80
 _FASTA_LINE_WIDTH = 80
 _DNA_COMPLEMENT = str.maketrans("ACGTRYMKBDHVN", "TGCAYRKMVHDBN")
+_PROVENANCE_COLORS = ("#0ea5e9", "#a855f7", "#f97316", "#22c55e")
+_DIGEST_COLORS = ("#7c3aed", "#0f766e", "#be123c", "#b45309")
 
 
 @dataclass(frozen=True)
@@ -109,10 +111,59 @@ class FeatureLegendEntry:
     reference_ranges: tuple[tuple[int, int], ...]
 
 
+@dataclass(frozen=True)
+class ProvenanceSegment:
+    """One protocol input fragment mapped onto the predicted assembly."""
+
+    code: str
+    operation: str
+    source_files: tuple[str, ...]
+    fragment_length: int
+    ranges: tuple[tuple[int, int], ...]
+    strand: int
+
+
+@dataclass(frozen=True)
+class RestrictionSite:
+    """Recognition sequence and cut position for a restriction enzyme."""
+
+    enzyme: str
+    motif: str
+    motif_start: int
+    cut_position: int
+
+
+@dataclass(frozen=True)
+class DigestFragmentPair:
+    """Size-sorted predicted/reference digest fragment comparison."""
+
+    predicted_length: int
+    reference_length: int
+    similarity: float
+
+
+@dataclass(frozen=True)
+class DigestDiagnostic:
+    """A transparent reproduction of the benchmark's digest validation."""
+
+    enzymes: tuple[str, ...]
+    threshold: float
+    expected_lengths: tuple[int, ...]
+    predicted_sites: tuple[RestrictionSite, ...]
+    reference_sites: tuple[RestrictionSite, ...]
+    predicted_lengths: tuple[int, ...]
+    reference_lengths_as_loaded: tuple[int, ...]
+    fragment_pairs_as_loaded: tuple[DigestFragmentPair, ...]
+    circular_reference_lengths: tuple[int, ...]
+    circular_reference_pairs: tuple[DigestFragmentPair, ...]
+    topology_mismatch: bool
+
+
 async def cloning_comparison_markdown(
     answer: str,
     base_dir: Path,
     reference_path: Path,
+    validator_params: dict[str, Any] | None = None,
 ) -> str:
     """Build an Inspect-renderable annotated comparison for a cloning answer.
 
@@ -131,6 +182,7 @@ async def cloning_comparison_markdown(
     reference = BioSequence.from_file(reference_path)
     predicted: BioSequence | None = None
     prediction_error: str | None = None
+    protocol: Any | None = None
 
     if PROTOCOL_TAG_OPEN not in answer or PROTOCOL_TAG_CLOSE not in answer:
         prediction_error = "No executable protocol was submitted."
@@ -139,7 +191,8 @@ async def cloning_comparison_markdown(
             expression = extract_between_tags(
                 answer, PROTOCOL_TAG_OPEN, PROTOCOL_TAG_CLOSE
             )
-            results = await CloningProtocol(expression).run(base_dir)
+            protocol = CloningProtocol(expression)
+            results = await protocol.run(base_dir)
             if results:
                 predicted = results[0]
             else:
@@ -153,9 +206,20 @@ async def cloning_comparison_markdown(
         source_features=load_source_features(base_dir),
         prediction_error=prediction_error,
     )
-    png = render_comparison_png(comparison)
+    provenance = (
+        await _protocol_provenance(protocol.operation, base_dir, comparison.predicted)
+        if protocol is not None and comparison.predicted
+        else ()
+    )
+    digest = _digest_diagnostic(comparison, validator_params or {})
+    png = render_comparison_png(comparison, provenance=provenance, digest=digest)
     encoded = base64.b64encode(png).decode("ascii")
-    return _comparison_markdown(comparison, encoded)
+    return _comparison_markdown(
+        comparison,
+        encoded,
+        provenance=provenance,
+        digest=digest,
+    )
 
 
 def load_source_features(base_dir: Path) -> tuple[SourceFeature, ...]:
@@ -226,7 +290,201 @@ def build_sequence_comparison(
     )
 
 
-def render_comparison_png(comparison: SequenceComparison) -> bytes:
+async def _protocol_provenance(
+    operation: Any,
+    base_dir: Path,
+    predicted_sequence: str,
+) -> tuple[ProvenanceSegment, ...]:
+    """Map top-level assembly inputs back onto the predicted plasmid."""
+    from labbench2.cloning.utils import reverse_complement
+
+    nodes = getattr(operation, "sequences", None)
+    if not isinstance(nodes, list) or not nodes:
+        nodes = [operation]
+    doubled = predicted_sequence + predicted_sequence
+    segments: list[ProvenanceSegment] = []
+    for node_index, node in enumerate(nodes, start=1):
+        try:
+            fragments = await node.execute(base_dir)
+        except Exception:
+            continue
+        for fragment_index, fragment in enumerate(fragments, start=1):
+            mapped_ranges: tuple[tuple[int, int], ...] = ()
+            mapped_strand = 1
+            for strand, candidate in (
+                (1, fragment.sequence.upper()),
+                (-1, reverse_complement(fragment.sequence.upper())),
+            ):
+                start = doubled.find(candidate)
+                if 0 <= start < len(predicted_sequence):
+                    mapped_ranges = _split_circular_range(
+                        start,
+                        start + len(candidate),
+                        len(predicted_sequence),
+                    )
+                    mapped_strand = strand
+                    break
+            code = f"P{node_index}"
+            if len(fragments) > 1:
+                code += f".{fragment_index}"
+            source_files = tuple(
+                sorted(Path(value).stem for value in node.file_references())
+            )
+            segments.append(
+                ProvenanceSegment(
+                    code=code,
+                    operation=_operation_label(node),
+                    source_files=source_files,
+                    fragment_length=len(fragment.sequence),
+                    ranges=mapped_ranges,
+                    strand=mapped_strand,
+                )
+            )
+    return tuple(segments)
+
+
+def _operation_label(operation: Any) -> str:
+    name = type(operation).__name__.removesuffix("Operation")
+    return {
+        "PCR": "PCR fragment",
+        "Gibson": "Gibson input",
+        "GoldenGate": "Golden Gate input",
+        "RestrictionAssemble": "restriction-assembly input",
+        "EnzymeCut": "restriction fragment",
+        "FileReference": "input sequence",
+    }.get(name, name)
+
+
+def _split_circular_range(
+    start: int, end: int, sequence_length: int
+) -> tuple[tuple[int, int], ...]:
+    if sequence_length <= 0 or end <= start:
+        return ()
+    span = min(end - start, sequence_length)
+    start %= sequence_length
+    normalized_end = start + span
+    if normalized_end <= sequence_length:
+        return ((start, normalized_end),)
+    return ((start, sequence_length), (0, normalized_end - sequence_length))
+
+
+def _digest_diagnostic(
+    comparison: SequenceComparison,
+    validator_params: dict[str, Any],
+) -> DigestDiagnostic | None:
+    if comparison.predicted is None:
+        return None
+    enzymes: list[str] = []
+    index = 1
+    while value := validator_params.get(f"enzyme_{index}"):
+        enzymes.append(str(value))
+        index += 1
+    if not enzymes:
+        return None
+
+    from labbench2.cloning.enzyme_cut import enzyme_cut
+    from labbench2.cloning.sequence_alignment import sequence_similarity
+    from labbench2.cloning.sequence_models import BioSequence
+
+    predicted = BioSequence(
+        sequence=comparison.predicted,
+        is_circular=comparison.predicted_circular,
+    )
+    reference_as_loaded = BioSequence(
+        sequence=comparison.reference,
+        is_circular=comparison.reference_circular,
+    )
+    reference_circular = reference_as_loaded.model_copy(update={"is_circular": True})
+
+    def digest(sequence: BioSequence) -> list[BioSequence]:
+        fragments = [sequence]
+        for enzyme in enzymes:
+            fragments = [
+                output
+                for fragment in fragments
+                for output in enzyme_cut(fragment, enzyme)
+            ]
+        return sorted(fragments, key=lambda value: len(value.sequence))
+
+    predicted_fragments = digest(predicted)
+    loaded_fragments = digest(reference_as_loaded)
+    circular_fragments = digest(reference_circular)
+
+    def pairs(reference_fragments: list[BioSequence]) -> tuple[DigestFragmentPair, ...]:
+        if len(predicted_fragments) != len(reference_fragments):
+            return ()
+        return tuple(
+            DigestFragmentPair(
+                predicted_length=len(predicted_fragment.sequence),
+                reference_length=len(reference_fragment.sequence),
+                similarity=sequence_similarity(predicted_fragment, reference_fragment),
+            )
+            for predicted_fragment, reference_fragment in zip(
+                predicted_fragments, reference_fragments, strict=True
+            )
+        )
+
+    expected_lengths = tuple(
+        sorted(int(value) for value in validator_params.get("fragments", []))
+    )
+    circular_lengths = tuple(len(value.sequence) for value in circular_fragments)
+    topology_mismatch = bool(
+        comparison.predicted_circular
+        and not comparison.reference_circular
+        and expected_lengths
+        and expected_lengths == circular_lengths
+    )
+    return DigestDiagnostic(
+        enzymes=tuple(enzymes),
+        threshold=float(validator_params.get("edit_distance_threshold", 0.95)),
+        expected_lengths=expected_lengths,
+        predicted_sites=_restriction_sites(
+            comparison.predicted, comparison.predicted_circular, tuple(enzymes)
+        ),
+        reference_sites=_restriction_sites(
+            comparison.reference, comparison.reference_circular, tuple(enzymes)
+        ),
+        predicted_lengths=tuple(len(value.sequence) for value in predicted_fragments),
+        reference_lengths_as_loaded=tuple(
+            len(value.sequence) for value in loaded_fragments
+        ),
+        fragment_pairs_as_loaded=pairs(loaded_fragments),
+        circular_reference_lengths=circular_lengths,
+        circular_reference_pairs=pairs(circular_fragments),
+        topology_mismatch=topology_mismatch,
+    )
+
+
+def _restriction_sites(
+    sequence: str,
+    circular: bool,
+    enzymes: tuple[str, ...],
+) -> tuple[RestrictionSite, ...]:
+    from Bio.Restriction import RestrictionBatch  # type: ignore[attr-defined]
+    from Bio.Seq import Seq
+
+    sites: list[RestrictionSite] = []
+    for enzyme_name in enzymes:
+        enzyme = RestrictionBatch([enzyme_name]).get(enzyme_name)
+        for cut_position in enzyme.search(Seq(sequence), linear=not circular):
+            motif_start = (cut_position - enzyme.fst5 - 1) % len(sequence)
+            sites.append(
+                RestrictionSite(
+                    enzyme=enzyme_name,
+                    motif=str(enzyme.site),
+                    motif_start=motif_start,
+                    cut_position=((cut_position - 1) % len(sequence)) + 1,
+                )
+            )
+    return tuple(sorted(sites, key=lambda value: value.motif_start))
+
+
+def render_comparison_png(
+    comparison: SequenceComparison,
+    *,
+    provenance: tuple[ProvenanceSegment, ...] = (),
+    digest: DigestDiagnostic | None = None,
+) -> bytes:
     """Render a compact PNG that Inspect can display inside an Info event."""
     from PIL import Image, ImageDraw, ImageFont
 
@@ -239,8 +497,17 @@ def render_comparison_png(comparison: SequenceComparison) -> bytes:
     reference_lanes = _feature_lane_counts(
         comparison.reference_features, comparison.reference, width
     )
-    predicted_height = _sequence_track_height(*predicted_lanes)
-    reference_height = _sequence_track_height(*reference_lanes)
+    predicted_sites = digest.predicted_sites if digest else ()
+    reference_sites = digest.reference_sites if digest else ()
+    predicted_height = _sequence_track_height(
+        *predicted_lanes,
+        digest_sites=len(predicted_sites),
+        provenance_segments=len(provenance),
+    )
+    reference_height = _sequence_track_height(
+        *reference_lanes,
+        digest_sites=len(reference_sites),
+    )
     legend_rows = math.ceil(len(legend) / 2)
     legend_height = 48 + legend_rows * 24 if legend else 0
     height = 84 + predicted_height + 24 + reference_height + 94 + legend_height + 28
@@ -263,6 +530,8 @@ def render_comparison_png(comparison: SequenceComparison) -> bytes:
         width=width,
         font=font,
         feature_codes=feature_codes,
+        digest_sites=predicted_sites,
+        provenance=provenance,
         empty_message=comparison.prediction_error or "No predicted assembly",
     )
     next_y = _draw_sequence_track(
@@ -275,6 +544,7 @@ def render_comparison_png(comparison: SequenceComparison) -> bytes:
         width=width,
         font=font,
         feature_codes=feature_codes,
+        digest_sites=reference_sites,
     )
     difference_y = next_y + 64
     _draw_difference_track(draw, comparison, y=difference_y, width=width, font=font)
@@ -413,6 +683,8 @@ def _draw_sequence_track(
     width: int,
     font: Any,
     feature_codes: dict[tuple[str, str, str, int], str],
+    digest_sites: tuple[RestrictionSite, ...] = (),
+    provenance: tuple[ProvenanceSegment, ...] = (),
     empty_message: str = "",
 ) -> int:
     left, right = 70, width - 70
@@ -459,7 +731,31 @@ def _draw_sequence_track(
         )
         draw.text((code_x, code_y), code, fill=color, font=font)
 
-    return top + _sequence_track_height(positive_lanes, negative_lanes)
+    next_y = top + _sequence_track_height(positive_lanes, negative_lanes)
+    if digest_sites:
+        _draw_digest_sites(
+            draw,
+            digest_sites,
+            left=left,
+            right=right,
+            sequence_length=len(sequence),
+            axis_y=y,
+            label_y=next_y,
+            font=font,
+        )
+        next_y += 30
+    if provenance:
+        _draw_provenance_track(
+            draw,
+            provenance,
+            left=left,
+            right=right,
+            sequence_length=len(sequence),
+            top=next_y,
+            font=font,
+        )
+        next_y += 26 + len(provenance) * 20
+    return next_y
 
 
 def _draw_scale(
@@ -553,8 +849,81 @@ def _feature_lane_counts(
     return positive, negative
 
 
-def _sequence_track_height(positive_lanes: int, negative_lanes: int) -> int:
-    return 101 + positive_lanes * 24 + negative_lanes * 24
+def _sequence_track_height(
+    positive_lanes: int,
+    negative_lanes: int,
+    *,
+    digest_sites: int = 0,
+    provenance_segments: int = 0,
+) -> int:
+    return (
+        101
+        + positive_lanes * 24
+        + negative_lanes * 24
+        + (30 if digest_sites else 0)
+        + (26 + provenance_segments * 20 if provenance_segments else 0)
+    )
+
+
+def _draw_digest_sites(
+    draw: Any,
+    sites: tuple[RestrictionSite, ...],
+    *,
+    left: int,
+    right: int,
+    sequence_length: int,
+    axis_y: int,
+    label_y: int,
+    font: Any,
+) -> None:
+    scale = (right - left) / max(1, sequence_length)
+    enzyme_colors = {
+        enzyme: _DIGEST_COLORS[index % len(_DIGEST_COLORS)]
+        for index, enzyme in enumerate(dict.fromkeys(site.enzyme for site in sites))
+    }
+    for site in sites:
+        x = left + site.motif_start * scale
+        color = enzyme_colors[site.enzyme]
+        draw.line((x, axis_y - 10, x, label_y + 13), fill=color, width=2)
+        label = f"{site.enzyme} {site.motif_start + 1:,}"
+        bounds = draw.textbbox((0, 0), label, font=font)
+        label_width = bounds[2] - bounds[0]
+        label_x = min(right - label_width, max(left, x + 3))
+        draw.rectangle(
+            (label_x - 2, label_y, label_x + label_width + 2, label_y + 15),
+            fill="#ffffff",
+        )
+        draw.text((label_x, label_y), label, fill=color, font=font)
+
+
+def _draw_provenance_track(
+    draw: Any,
+    segments: tuple[ProvenanceSegment, ...],
+    *,
+    left: int,
+    right: int,
+    sequence_length: int,
+    top: int,
+    font: Any,
+) -> None:
+    draw.text(
+        (left, top),
+        "Submitted-protocol fragment provenance",
+        fill="#0f172a",
+        font=font,
+    )
+    scale = (right - left) / max(1, sequence_length)
+    for index, segment in enumerate(segments):
+        y = top + 20 + index * 20
+        color = _PROVENANCE_COLORS[index % len(_PROVENANCE_COLORS)]
+        for start, end in segment.ranges:
+            start_x = left + start * scale
+            end_x = max(start_x + 2, left + end * scale)
+            draw.rounded_rectangle((start_x, y, end_x, y + 12), 2, fill=color)
+        label = (
+            f"{segment.code}  {', '.join(segment.source_files) or segment.operation}"
+        )
+        draw.text((left + 4, y - 1), label[:80], fill="#0f172a", font=font)
 
 
 def _mapped_feature_key(feature: MappedFeature) -> tuple[str, str, str, int]:
@@ -700,7 +1069,13 @@ def _metric_line(comparison: SequenceComparison) -> str:
     )
 
 
-def _comparison_markdown(comparison: SequenceComparison, encoded_png: str) -> str:
+def _comparison_markdown(
+    comparison: SequenceComparison,
+    encoded_png: str,
+    *,
+    provenance: tuple[ProvenanceSegment, ...] = (),
+    digest: DigestDiagnostic | None = None,
+) -> str:
     lines = [
         "### Cloning sequence comparison",
         "",
@@ -726,6 +1101,41 @@ def _comparison_markdown(comparison: SequenceComparison, encoded_png: str) -> st
         lines.extend(
             ("", f"**Prediction visualization:** {comparison.prediction_error}")
         )
+    if digest:
+        lines.extend(_digest_markdown(digest, comparison))
+    if provenance:
+        lines.extend(
+            (
+                "",
+                "#### Submitted-protocol fragment provenance",
+                "",
+                (
+                    "Coordinates are on the aligned predicted assembly. Overlapping ranges "
+                    "are Gibson homology regions contributed by both adjacent PCR products."
+                ),
+                "",
+                "| ID | Operation | Source file(s) | Fragment length | Predicted coordinates | Orientation |",
+                "| --- | --- | --- | ---: | --- | --- |",
+            )
+        )
+        for segment in provenance:
+            lines.append(
+                "| "
+                + " | ".join(
+                    (
+                        segment.code,
+                        _markdown_cell(segment.operation),
+                        ", ".join(
+                            _markdown_cell(value) for value in segment.source_files
+                        )
+                        or "—",
+                        f"{segment.fragment_length:,} bp",
+                        _format_feature_ranges(segment.ranges),
+                        "+" if segment.strand >= 0 else "−",
+                    )
+                )
+                + " |"
+            )
     feature_legend = _feature_legend(comparison)
     if feature_legend:
         lines.extend(
@@ -813,6 +1223,82 @@ def _comparison_markdown(comparison: SequenceComparison, encoded_png: str) -> st
         )
     )
     return "\n".join(lines)
+
+
+def _digest_markdown(
+    digest: DigestDiagnostic,
+    comparison: SequenceComparison,
+) -> list[str]:
+    lines = [
+        "",
+        "#### Restriction-digest validator diagnostic",
+        "",
+        (
+            f"The scorer digests both assemblies with **{', '.join(digest.enzymes)}**, "
+            "sorts the resulting fragments by length, and requires every paired fragment "
+            f"to have sequence similarity ≥ {digest.threshold:.2f}."
+        ),
+        "",
+        "| Assembly | Enzyme | Recognition site | Motif coordinates | Cut coordinate |",
+        "| --- | --- | --- | ---: | ---: |",
+    ]
+    for assembly, sites in (
+        ("Predicted", digest.predicted_sites),
+        ("Reference", digest.reference_sites),
+    ):
+        for site in sites:
+            motif_end = site.motif_start + len(site.motif)
+            motif_range = f"{site.motif_start + 1:,}–{motif_end:,}"
+            lines.append(
+                f"| {assembly} | {site.enzyme} | `{site.motif}` | "
+                f"{motif_range} | {site.cut_position:,} |"
+            )
+
+    expected = ", ".join(f"{value:,}" for value in digest.expected_lengths) or "n/a"
+    predicted = ", ".join(f"{value:,}" for value in digest.predicted_lengths)
+    loaded = ", ".join(f"{value:,}" for value in digest.reference_lengths_as_loaded)
+    circular = ", ".join(f"{value:,}" for value in digest.circular_reference_lengths)
+    lines.extend(
+        (
+            "",
+            "| Digest interpretation | Fragment lengths (bp, ascending) |",
+            "| --- | --- |",
+            f"| Dataset metadata expectation | {expected} |",
+            f"| Predicted assembly ({'circular' if comparison.predicted_circular else 'linear'}) | {predicted} |",
+            f"| Reference as loaded ({'circular' if comparison.reference_circular else 'linear'}) | {loaded} |",
+            f"| Reference forced circular (diagnostic) | {circular} |",
+        )
+    )
+    if digest.topology_mismatch:
+        lines.extend(
+            (
+                "",
+                (
+                    "**Likely verifier topology error:** the reference FASTA was loaded as "
+                    "linear, but the submitted Gibson product is circular and the dataset's "
+                    "expected fragment sizes exactly match a circular digest. The current "
+                    "scorer therefore compares different fragment counts before sequence "
+                    "similarity can be meaningfully evaluated."
+                ),
+            )
+        )
+    if digest.circular_reference_pairs:
+        lines.extend(
+            (
+                "",
+                "Circular-reference counterfactual:",
+                "",
+                "| Predicted fragment | Reference fragment | Similarity | Passes threshold? |",
+                "| ---: | ---: | ---: | --- |",
+            )
+        )
+        for pair in digest.circular_reference_pairs:
+            lines.append(
+                f"| {pair.predicted_length:,} bp | {pair.reference_length:,} bp | "
+                f"{pair.similarity:.6f} | "
+                f"{'yes' if pair.similarity >= digest.threshold else 'no'} |"
+            )
+    return lines
 
 
 def _format_feature_ranges(ranges: tuple[tuple[int, int], ...]) -> str:
