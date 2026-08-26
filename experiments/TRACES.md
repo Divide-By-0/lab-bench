@@ -4,8 +4,8 @@ Traces for the runs that motivated the changes in this branch. All are Inspect `
 logs; view them with the built-in viewer, no extra tooling:
 
 ```bash
-uv run inspect view --log-dir experiments/logs --recursive --port 7575   # http://127.0.0.1:7575
-uv run inspect log dump experiments/logs/<file>.eval                     # JSON, for grep/jq
+uv run inspect view --log-dir experiments/traces --recursive --port 7575   # http://127.0.0.1:7575
+uv run inspect log dump experiments/traces/<file>.eval                     # JSON, for grep/jq
 ```
 
 Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
@@ -19,6 +19,12 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `cloning_11tasks.eval` | all gibson + golden-gate + hardest restriction-ligation | 3/11 |
 | `cloning_2tasks_2epochs.eval` | 2 never-solved cloning tasks | 0/4 |
 | `cloning_sorcs2_after_session_fix.eval` | `fb8fc27d` after the session/docs fixes | fail |
+| `cloning_6tasks_rerun_6M.eval` | the 6 truncated tasks re-run at **6M** ⚠️ | 2/6 |
+
+> ⚠️ `cloning_6tasks_rerun_6M.eval` was run at `--token-limit 6000000`, above the 2M
+> ceiling the rest of this work uses. **Five of its six samples exceeded 2M**, including
+> both passes, so its results are not valid at the 2M configuration. Kept for reference,
+> excluded from headline numbers.
 
 ## What these traces show
 
