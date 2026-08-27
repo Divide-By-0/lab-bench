@@ -7,11 +7,15 @@ benchmark's "bare" single-turn `generate()`).
 
 from __future__ import annotations
 
+import re
+
 from inspect_ai import Task, task
 from inspect_ai.dataset import Dataset
+from inspect_ai.model import ContentText
 from inspect_ai.scorer import Scorer
 
 from lab_bench_2.dataset import load_lab_bench_2_dataset, load_multi_tags_dataset
+from lab_bench_2.model_cost import register_from_env
 from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import multi_tags_scorer, scorer_for_tag
 from lab_bench_2.solvers import SolverType, sandbox_for_solver, solver_for_type
@@ -37,12 +41,17 @@ SUPPORTED_TAGS = (
 
 EVAL_VERSION = load_version_from_yaml("lab_bench_2")
 
+# Applied at import so it is in place before the first generation. No-op unless
+# LABBENCH2_COST_MODEL is set. See model_cost.py.
+register_from_env()
+
 
 @task
 def lab_bench_2(
     tags: str | list[str] | None = None,
     mode: Mode = "file",
     solver: SolverType = "bare",
+    strip_method_hint: bool = False,
 ) -> Task:
     """LAB-Bench 2 evaluation task.
 
@@ -92,6 +101,10 @@ def lab_bench_2(
             _ensure_supported(selected)
         dataset = load_multi_tags_dataset(selected, mode=mode)
         scorer = multi_tags_scorer()
+    if strip_method_hint:
+        _strip_method_hint(dataset)
+    if solver == "agentic":
+        _strip_attachments_for_sandbox(dataset)
     return Task(
         dataset=dataset,
         solver=solver_for_type(solver),
@@ -99,6 +112,68 @@ def lab_bench_2(
         sandbox=sandbox_for_solver(solver),
         version=EVAL_VERSION,
     )
+
+
+# REASON: strips every phrase that names the assembly method, wherever it appears --
+# trailing ("...carry out this cloning using Gibson assembly") or mid-prompt
+# ("Design a cloning strategy using Gibson Assembly to swap..."). The point is a
+# method-blind variant: the model must infer Gibson vs Golden Gate from the biology
+# (homology arms vs Type IIS overhangs) rather than being told.
+#
+# `for` is included deliberately, which collaterally rewrites 21e4def0's backbone name
+# ("the BsaI-MCS cloning vector for Golden Gate" -> "the BsaI-MCS cloning vector") and
+# bc918101's barcode requirement. Both are acceptable: the files are still findable on
+# disk by name, and leaving the phrase in would defeat the experiment. Note this cannot
+# make a task fully method-blind anyway -- "BsaI-MCS" and "BsmBI" are themselves Type IIS
+# tells -- so read the result as "weaker hint", not "no hint".
+_METHOD_HINT = re.compile(
+    r"\s*(?:using|via|with|by|for)\s+(?:Gibson(?:\s+[Aa]ssembly)?|Golden\s+Gate(?:\s+cloning|\s+[Aa]ssembly)?)",
+    re.IGNORECASE,
+)
+
+
+def _strip_method_hint(dataset: Dataset) -> None:
+    """Remove the phrase that tells the model which assembly method to use."""
+    for sample in dataset:
+        messages = sample.input
+        if isinstance(messages, str):
+            sample.input = _METHOD_HINT.sub("", messages)
+            continue
+        for message in messages:
+            content = getattr(message, "content", None)
+            if isinstance(content, str):
+                message.content = _METHOD_HINT.sub("", content)
+            elif isinstance(content, list):
+                for c in content:
+                    if isinstance(c, ContentText):
+                        c.text = _METHOD_HINT.sub("", c.text)
+
+
+def _strip_attachments_for_sandbox(dataset: Dataset) -> None:
+    """Drop file attachments from prompts when the agentic solver is in use.
+
+    REASON: ``copy_files_to_sandbox()`` already writes every question file into the
+    container, so attaching the same bytes to the prompt is pure duplication. It is
+    not free -- for the seqqa2 tags each attachment is the 1.53 MB M. genitalium
+    GenBank, about 600k input tokens per question, versus a 687-token prompt once the
+    agent reads the file off disk instead.
+
+    It also breaks outright on Vertex: Inspect's Google provider materializes
+    attachments through ``client.files.upload()``, which is Gemini Developer API only,
+    so ``mode=file`` + ``agentic`` raises "This method is only supported in the Gemini
+    Developer client" before a single sample runs.
+
+    The prompt *text* is untouched -- it still names the files, and the agent's system
+    prompt already tells it they are in the working directory.
+    """
+    for sample in dataset:
+        messages = sample.input
+        if isinstance(messages, str):
+            continue
+        for message in messages:
+            content = getattr(message, "content", None)
+            if isinstance(content, list):
+                message.content = [c for c in content if isinstance(c, ContentText)]
 
 
 def _ensure_supported(tags: list[str]) -> None:
