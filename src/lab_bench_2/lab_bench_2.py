@@ -13,6 +13,7 @@ from inspect_ai.model import ContentText
 from inspect_ai.scorer import Scorer
 
 from lab_bench_2.dataset import load_lab_bench_2_dataset, load_multi_tags_dataset
+from lab_bench_2.model_cost import register_from_env
 from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import multi_tags_scorer, scorer_for_tag
 from lab_bench_2.solvers import SolverType, sandbox_for_solver, solver_for_type
@@ -37,6 +38,10 @@ SUPPORTED_TAGS = (
 )
 
 EVAL_VERSION = load_version_from_yaml("lab_bench_2")
+
+# Applied at import so it is in place before the first generation. No-op unless
+# LABBENCH2_COST_MODEL is set. See model_cost.py.
+register_from_env()
 
 
 @task
