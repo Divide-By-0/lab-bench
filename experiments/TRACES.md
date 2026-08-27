@@ -20,6 +20,8 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `cloning_2tasks_2epochs.eval` | 2 never-solved cloning tasks | 0/4 |
 | `cloning_sorcs2_after_session_fix.eval` | `fb8fc27d` after the session/docs fixes | fail |
 | `cloning_6tasks_rerun_6M.eval` | the 6 truncated tasks re-run at **6M** ⚠️ | 2/6 |
+| `gpt56sol_smoke_2tasks_hinted.eval` | `gpt-5.6-sol` max effort, original prompts, 2 tasks | 0/2 |
+| `gpt56sol_8tasks_method_blind.eval` | `gpt-5.6-sol` max effort, **method hint stripped**, 8 tasks | **1/8** |
 
 > ⚠️ `cloning_6tasks_rerun_6M.eval` was run at `--token-limit 6000000`, above the 2M
 > ceiling the rest of this work uses. **Five of its six samples exceeded 2M**, including
@@ -70,3 +72,46 @@ reasons. Report them separately from the rest.
 Record 0 is provably the right template for `61e4b666`: it appears in the reference at offset
 2868 with exactly one mismatch, position 295 C→A — which is the C295A mutation the prompt asks
 for. That patch alone turned a task nothing had ever solved into a pass.
+
+
+## gpt-5.6-sol vs gemini-3.7-flash on cloning
+
+Config: `--reasoning-effort max`, `--cost-limit 0.1` against
+`experiments/novel_token_costs.yaml` (input+output at $1/M, cache at $0, so the limit is
+**100,000 novel tokens**), `--max-tokens 64000`, `--message-limit 60`.
+
+**Every one of the 8 ran to completion — no truncations.** These are the first clean
+verdicts on tasks Gemini could never finish.
+
+| | gemini-3.7-flash | gpt-5.6-sol |
+|---|---|---|
+| novel tokens per cloning sample | 347k – 661k | **22k – 76k** (mean 46k) |
+| tool calls per sample | 46 – 59 | 10 – 31 |
+| samples truncated | 6 of 11 | **0 of 8** |
+
+Roughly **10x cheaper**, and it finishes what Gemini could not.
+
+### Stripping the method hint changed nothing
+
+`-T strip_method_hint=true` removes every phrase naming the assembly method. All 7
+failures still selected the **correct** method from the biology alone:
+
+| task | true method | chose | correct |
+|---|---|---|---|
+| `0a4f4de7` `dff28bd4` `fb8fc27d` `bc918101` | gibson | `gibson(` | yes |
+| `21e4def0` `3a6704ab` `31d22b22` | golden-gate | `goldengate(` | yes |
+
+So the hint was doing no work, and the failures are downstream — junctions, overhangs,
+fragment boundaries — not strategy selection. Caveat: the tasks are only *method-weaker*,
+not method-blind. `BsaI-MCS` and `BsmBI` remain in the golden-gate prompts and are
+unmistakable Type IIS tells.
+
+The single pass, `a4bf037c`, is the odd one: it used `restriction_assemble` on a task
+whose reference is a Gibson assembly, and still matched at >=95%. The scorer compares the
+assembled product, not the route, so more than one strategy can reach the same plasmid.
+
+### Duplicate guard
+
+`tools/check_run_guards.py` flagged `0a4f4de7` and `3a6704ab` as appearing in both the
+smoke and the 8-task run. They have two results each (hinted and method-blind) and must
+not be pooled. Both failed in both conditions, so no conclusion changes.
