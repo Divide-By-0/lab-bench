@@ -1,0 +1,89 @@
+{
+  "generator": "tools/generate_cloning_pilot.py",
+  "destination": {
+    "label": "pCMV-MMLVgag-3xNES-Cas9",
+    "addgene_id": 181752,
+    "input_filename": "addgene-plasmid-181752-sequence-353936.gbk",
+    "sha256": "f7d8fd6b2aa1a7b8694a77cac6652d66d5669d2b81f9c433edcfbd65d430a01a",
+    "length_bp": 10783,
+    "topology": "circular"
+  },
+  "source": {
+    "label": "pCALNL-GFP",
+    "addgene_id": 13770,
+    "input_filename": "addgene-plasmid-13770-sequence-7759.gbk",
+    "sha256": "cada641a2462f018be374032cd73ec3a40b3287e45678ff81fb0b6f06d5f38e0",
+    "length_bp": 6844,
+    "topology": "circular"
+  },
+  "assembly_method": "Gibson",
+  "overlap_length_bp": 20,
+  "tasks": [
+    {
+      "id": "777f42d4-f239-5979-8a6e-e13daceba2a3",
+      "slug": "egfp",
+      "insert_label": "EGFP",
+      "source_feature_location": "join{[3061:3064](+), [3064:3067](+), [3067:3781](+)}",
+      "replacement_interval_zero_based_half_open": [
+        0,
+        6027
+      ],
+      "insert_length_bp": 720,
+      "retained_backbone_length_bp": 4756,
+      "reference_length_bp": 5476,
+      "reference_is_circular": true,
+      "primers_5_to_3": {
+        "backbone_forward": "GATCTTTTTCCCTCTGCCAA",
+        "backbone_reverse": "GTTTTCAGACAAATACAGGA",
+        "insert_forward": "TCCTGTATTTGTCTGAAAACATGGTGAGCAAGGGCGAGGA",
+        "insert_reverse": "TTGGCAGAGGGAAAAAGATCTTACTTGTACAGCTCGTCCA"
+      },
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true
+    },
+    {
+      "id": "a641ec71-1142-5e19-a1c5-354142bcc6c4",
+      "slug": "ampr",
+      "insert_label": "AmpR",
+      "source_feature_location": "join{[6644:6713](-), [5852:6644](-)}",
+      "replacement_interval_zero_based_half_open": [
+        0,
+        6027
+      ],
+      "insert_length_bp": 861,
+      "retained_backbone_length_bp": 4756,
+      "reference_length_bp": 5617,
+      "reference_is_circular": true,
+      "primers_5_to_3": {
+        "backbone_forward": "GATCTTTTTCCCTCTGCCAA",
+        "backbone_reverse": "GTTTTCAGACAAATACAGGA",
+        "insert_forward": "TCCTGTATTTGTCTGAAAACATGAGTATTCAACATTTCCG",
+        "insert_reverse": "TTGGCAGAGGGAAAAAGATCTTACCAATGCTTAATCAGTG"
+      },
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true
+    },
+    {
+      "id": "02e631d2-19f5-50f9-a43a-af5e7440fb7d",
+      "slug": "neor-kanr",
+      "insert_label": "NeoR/KanR",
+      "source_feature_location": "[1827:2622](+)",
+      "replacement_interval_zero_based_half_open": [
+        0,
+        6027
+      ],
+      "insert_length_bp": 795,
+      "retained_backbone_length_bp": 4756,
+      "reference_length_bp": 5551,
+      "reference_is_circular": true,
+      "primers_5_to_3": {
+        "backbone_forward": "GATCTTTTTCCCTCTGCCAA",
+        "backbone_reverse": "GTTTTCAGACAAATACAGGA",
+        "insert_forward": "TCCTGTATTTGTCTGAAAACATGATTGAACAAGATGGATT",
+        "insert_reverse": "TTGGCAGAGGGAAAAAGATCTCAGAAGAACTCGTCAAGAA"
+      },
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true
+    }
+  ]
+}
