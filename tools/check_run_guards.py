@@ -37,7 +37,7 @@ def load(path: Path) -> dict:
     return json.loads(out.stdout)
 
 
-def check(log: dict, budget: int, prior_ids: set[str]) -> list[str]:
+def check(log: dict, budget: int, prior_ids: set[str], metric: str = "novel") -> list[str]:
     fails: list[str] = []
     args = log.get("eval", {}).get("task_args", {})
     samples = log.get("samples", [])
@@ -60,11 +60,16 @@ def check(log: dict, budget: int, prior_ids: set[str]) -> list[str]:
         calls = [tc.get("function") for m in s["messages"] for tc in (m.get("tool_calls") or [])]
 
         # 1. ceiling
-        if total > budget:
+        # REASON: compare against whichever metric the budget is expressed in. When the
+        # run is bounded by --cost-limit with cache priced at 0, the budget is in NOVEL
+        # tokens and checking total_tokens raises false alarms -- cache reads are 3-5x
+        # novel on these runs, so every sample would look like a violation.
+        spent = novel if metric == "novel" else total
+        if spent > budget:
             fails.append(
-                f"{sid}: spent {total:,} tokens, over the {budget:,} budget "
-                f"(novel {novel:,}) -- Inspect checks between generations, so this "
-                f"overshot by one turn"
+                f"{sid}: spent {spent:,} {metric} tokens, over the {budget:,} budget "
+                f"(total {total:,}, novel {novel:,}) -- Inspect checks between "
+                f"generations, so this can overshoot by one turn"
             )
         # 3. tool use
         if not any(c in SANDBOX_TOOLS for c in calls):
@@ -93,17 +98,19 @@ def main() -> int:
     ap.add_argument("--budget", type=int, required=True)
     ap.add_argument("--prior", type=Path, nargs="*", default=[],
                     help="earlier logs to check for duplicate completed samples")
+    ap.add_argument("--metric", choices=["novel", "total"], default="novel",
+                    help="which token count the budget is expressed in (default: novel)")
     a = ap.parse_args()
 
     log = load(a.log)
-    fails = check(log, a.budget, completed_ids(a.prior))
+    fails = check(log, a.budget, completed_ids(a.prior), a.metric)
     n = len(log.get("samples", []))
     if fails:
         print(f"FAIL — {len(fails)} guard violation(s) across {n} sample(s):")
         for f in fails:
             print(f"  - {f}")
         return 1
-    print(f"PASS — {n} sample(s): all within {a.budget:,} tokens, no duplicates, all used sandbox tools")
+    print(f"PASS — {n} sample(s): all within {a.budget:,} {a.metric} tokens, no duplicates, all used sandbox tools")
     return 0
 
 
