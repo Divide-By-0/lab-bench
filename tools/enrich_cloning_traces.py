@@ -205,6 +205,12 @@ async def enrich_sample(
         len(sample.events) - 1,
     )
     neighboring_event = sample.events[score_event_index]
+    if (
+        score is not None
+        and neighboring_event.event == "score"
+        and neighboring_event.scorer == "cloning_scorer"
+    ):
+        neighboring_event.score = score.model_copy(deep=True)
     sample.events.insert(
         score_event_index + 1,
         InfoEvent(

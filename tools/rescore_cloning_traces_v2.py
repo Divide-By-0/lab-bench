@@ -36,6 +36,17 @@ def _answer(sample: EvalSample) -> str:
     return sample.output.completion
 
 
+def _sync_score_event(sample: EvalSample) -> None:
+    """Keep Inspect's event-stream score consistent with ``sample.scores``."""
+    score = (sample.scores or {}).get("cloning_scorer")
+    if score is None:
+        return
+    for event in reversed(sample.events):
+        if event.event == "score" and event.scorer == "cloning_scorer":
+            event.score = score.model_copy(deep=True)
+            return
+
+
 async def rescore_sample(
     sample: EvalSample,
     cache_dir: Path,
@@ -79,6 +90,7 @@ async def rescore_sample(
         "reference_topology_repaired": repaired,
         "original_score_value": original_value,
     }
+    _sync_score_event(sample)
     changed = original_value != score.value
     print(
         f"rescored {sample.id} ({question_id}): {original_value} -> {score.value}; "
