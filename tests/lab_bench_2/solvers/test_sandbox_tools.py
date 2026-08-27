@@ -18,7 +18,8 @@ class TestSandboxTools:
         # then only the sandboxed code-execution tools are present
         names = {ToolDef(t).name for t in result}
         assert all(isinstance(t, Tool) for t in result)
-        assert names == {"python", "bash"}
+        # python_session, not python: the stock tool loses state between calls
+        assert names == {"python_session", "bash"}
 
     def test_adds_web_search_when_external_key_present(
         self, monkeypatch: pytest.MonkeyPatch
@@ -30,4 +31,4 @@ class TestSandboxTools:
         # when
         names = {ToolDef(t).name for t in sandbox_tools()}
         # then web_search joins the code-execution tools
-        assert names == {"python", "bash", "web_search"}
+        assert names == {"python_session", "bash", "web_search"}
