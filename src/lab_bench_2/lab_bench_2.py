@@ -7,6 +7,8 @@ benchmark's "bare" single-turn `generate()`).
 
 from __future__ import annotations
 
+import re
+
 from inspect_ai import Task, task
 from inspect_ai.dataset import Dataset
 from inspect_ai.model import ContentText
@@ -49,6 +51,7 @@ def lab_bench_2(
     tags: str | list[str] | None = None,
     mode: Mode = "file",
     solver: SolverType = "bare",
+    strip_method_hint: bool = False,
 ) -> Task:
     """LAB-Bench 2 evaluation task.
 
@@ -98,6 +101,8 @@ def lab_bench_2(
             _ensure_supported(selected)
         dataset = load_multi_tags_dataset(selected, mode=mode)
         scorer = multi_tags_scorer()
+    if strip_method_hint:
+        _strip_method_hint(dataset)
     if solver == "agentic":
         _strip_attachments_for_sandbox(dataset)
     return Task(
@@ -107,6 +112,41 @@ def lab_bench_2(
         sandbox=sandbox_for_solver(solver),
         version=EVAL_VERSION,
     )
+
+
+# REASON: strips every phrase that names the assembly method, wherever it appears --
+# trailing ("...carry out this cloning using Gibson assembly") or mid-prompt
+# ("Design a cloning strategy using Gibson Assembly to swap..."). The point is a
+# method-blind variant: the model must infer Gibson vs Golden Gate from the biology
+# (homology arms vs Type IIS overhangs) rather than being told.
+#
+# `for` is included deliberately, which collaterally rewrites 21e4def0's backbone name
+# ("the BsaI-MCS cloning vector for Golden Gate" -> "the BsaI-MCS cloning vector") and
+# bc918101's barcode requirement. Both are acceptable: the files are still findable on
+# disk by name, and leaving the phrase in would defeat the experiment. Note this cannot
+# make a task fully method-blind anyway -- "BsaI-MCS" and "BsmBI" are themselves Type IIS
+# tells -- so read the result as "weaker hint", not "no hint".
+_METHOD_HINT = re.compile(
+    r"\s*(?:using|via|with|by|for)\s+(?:Gibson(?:\s+[Aa]ssembly)?|Golden\s+Gate(?:\s+cloning|\s+[Aa]ssembly)?)",
+    re.IGNORECASE,
+)
+
+
+def _strip_method_hint(dataset: Dataset) -> None:
+    """Remove the phrase that tells the model which assembly method to use."""
+    for sample in dataset:
+        messages = sample.input
+        if isinstance(messages, str):
+            sample.input = _METHOD_HINT.sub("", messages)
+            continue
+        for message in messages:
+            content = getattr(message, "content", None)
+            if isinstance(content, str):
+                message.content = _METHOD_HINT.sub("", content)
+            elif isinstance(content, list):
+                for c in content:
+                    if isinstance(c, ContentText):
+                        c.text = _METHOD_HINT.sub("", c.text)
 
 
 def _strip_attachments_for_sandbox(dataset: Dataset) -> None:

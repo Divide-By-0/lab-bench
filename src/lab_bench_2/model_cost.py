@@ -21,7 +21,12 @@ fires -- worse than no limit, because it looks like one. Registering here makes 
 ceiling real.
 
 Env vars (all optional; nothing happens unless LABBENCH2_COST_MODEL is set):
-    LABBENCH2_COST_MODEL        e.g. "openai/gpt-5.6-sol"
+    LABBENCH2_COST_MODEL        comma-separated, e.g. "openai/gpt-5.6-sol"
+    LABBENCH2_COST_FREE_MODELS  comma-separated, priced at 0 so they do not consume the
+                                budget. Inspect refuses --cost-limit unless EVERY model
+                                in the run has cost data, including the grader -- and the
+                                grader is not what we are budgeting (for cloning it never
+                                runs at all, the scorer is deterministic).
     LABBENCH2_COST_INPUT        $/million input tokens          (default 1.0)
     LABBENCH2_COST_OUTPUT       $/million output tokens         (default 1.0)
     LABBENCH2_COST_CACHE_READ   $/million cached-read tokens    (default 0.0)
@@ -36,24 +41,34 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def register_from_env() -> str | None:
-    """Apply pricing from the environment. Returns the model name if applied."""
-    model = os.environ.get("LABBENCH2_COST_MODEL")
-    if not model:
-        return None
+def _split(name: str) -> list[str]:
+    return [m.strip() for m in os.environ.get(name, "").split(",") if m.strip()]
+
+
+def register_from_env() -> list[str]:
+    """Apply pricing from the environment. Returns the models registered."""
+    metered, free = _split("LABBENCH2_COST_MODEL"), _split("LABBENCH2_COST_FREE_MODELS")
+    if not metered and not free:
+        return []
+    done: list[str] = []
     try:
         from inspect_ai.model import ModelCost
         from inspect_ai.model._model_info import set_model_cost
 
-        cost = ModelCost(
+        priced = ModelCost(
             input=float(os.environ.get("LABBENCH2_COST_INPUT", "1.0")),
             output=float(os.environ.get("LABBENCH2_COST_OUTPUT", "1.0")),
             input_cache_read=float(os.environ.get("LABBENCH2_COST_CACHE_READ", "0.0")),
             input_cache_write=float(os.environ.get("LABBENCH2_COST_CACHE_WRITE", "0.0")),
         )
-        set_model_cost(model, cost)
+        zero = ModelCost(input=0.0, output=0.0, input_cache_read=0.0, input_cache_write=0.0)
+        for model, cost in [(m, priced) for m in metered] + [(m, zero) for m in free]:
+            try:
+                set_model_cost(model, cost)
+                done.append(model)
+            except Exception as exc:
+                logger.warning(f"could not register cost for {model}: {exc}")
     except Exception as exc:  # never let pricing break a run
-        logger.warning(f"could not register cost for {model}: {exc}")
-        return None
-    logger.info(f"registered cost for {model}: {cost}")
-    return model
+        logger.warning(f"cost registration unavailable: {exc}")
+    logger.info(f"registered cost for: {done}")
+    return done
