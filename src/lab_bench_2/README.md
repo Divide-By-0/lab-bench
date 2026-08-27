@@ -74,6 +74,7 @@ See `uv run inspect eval --help` for all available options.
 - `tags` (str | list[str] | None): Which LAB-Bench 2 subset(s) to run. Supported tags: ``cloning``, ``dbqa2``, ``figqa2`` (and ``figqa2-img`` / ``figqa2-pdf``), ``litqa3``, ``patentqa``, ``protocolqa2``, ``seqqa2``, ``sourcequality``, ``suppqa2``, ``tableqa2`` (and ``tableqa2-img`` / ``tableqa2-pdf``), ``trialqa``., A single tag (e.g. ``"litqa3"``) runs just that subset and reports one accuracy., A list (e.g. ``["litqa3", "cloning"]``) or ``None`` (the default, meaning every tag) runs the subsets together at the chosen ``mode``, reporting accuracy per tag plus an overall aggregate. (default: `None`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'file'`)
 - `solver` (SolverType): The solver to run. Options: ``bare``: a plain single-turn `generate()`., ``tools``: the server-side agentic configuration. The model is given provider-native, **server-side** tools — WebSearch and CodeExecution — and runs Inspect's tool-use loop., ``agentic``: the client-side agentic configuration. The model is given ``python``/``bash`` (and, with an external provider key, ``web_search``) tools in a Docker sandbox. (default: `'bare'`)
+- `strip_method_hint` (bool): Remove explicit assembly-method wording from cloning prompts while retaining the underlying sequence files and task data. (default: `False`)
 <!-- /Parameters: Automatically Generated -->
 
 ### Reference run configs
@@ -253,12 +254,36 @@ uv run inspect eval lab_bench_2/lab_bench_2 \
 ### Deterministic scorers
 
 The `cloning` tag is not graded by an LLM judge: it is scored deterministically
-by labbench2's reward pipeline, which parses the submitted protocol, executes it
-(including Polymerase Chain Reaction simulation), and compares the result to the
-reference assembly via sequence-similarity and restriction-digest checks.
+by the candidate-aware v2 cloning pipeline, which parses the submitted protocol,
+executes it, and compares every plausible top-level product to the reference
+assembly via sequence-similarity and restriction-digest checks.
 PCR simulation requires that Go be available on the host. Without Go,
 protocol execution fails gracefully: PCR-based samples score 0.0 with an explanatory
 reason rather than crashing the run.
+
+Simulator v2 fixes several reproducibility defects in the pinned upstream behavior:
+
+- PCR retains the upstream engine but recovers unique, exact primer pairs that
+  amplify across a circular sequence origin.
+- Golden Gate builds compatible multi-fragment intermediates and enumerates all
+  plausible circular products. Empty-vector/dropout reassembly remains a possible
+  product, but the scorer no longer assumes that the first returned product is the
+  intended one.
+- Gibson tracks fragments by input position, considers circularization even when
+  another overlapping extension is possible, and deduplicates reverse-complement
+  representations of the same plasmid.
+- Sticky-end restriction assembly enumerates insert-containing products even when
+  the backbone can also self-ligate, instead of returning early with only the
+  empty-vector path.
+
+Multiple products are allowed only at the protocol's top level, where the hidden
+reference can select a matching outcome. A multi-product operation used as an input
+to another operation fails as an ambiguous intermediate because the current DSL has
+no explicit product-selection operator. Archived wrappers for the original pinned
+behavior are retained in `lab_bench_2.cloning_simulators.legacy`.
+
+See [CLONING_SIMULATOR_V2.md](CLONING_SIMULATOR_V2.md) for the simulator audit,
+candidate-selection rationale, and explicit modeling boundaries.
 
 Each newly scored cloning sample also includes a **Cloning sequence comparison**
 Info event in its Inspect transcript. The event contains annotated predicted and
@@ -307,6 +332,17 @@ uv run python tools/enrich_cloning_traces.py path/to/rescored-logs \
   --cache-dir path/to/writable-cache \
   --reference-dir path/to/corrected-references \
   --suffix _reviewed
+```
+
+To rerun every stored cloning submission with simulator v2 and preserve the
+original score in metadata:
+
+```bash
+uv run python tools/rescore_cloning_traces_v2.py path/to/original-logs \
+  path/to/v2-rescored-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --all-cloning-references-circular
 ```
 
 The `seqqa2` tag is also scored deterministically. A
@@ -375,7 +411,7 @@ content-filter block.
 - **Model under test:** `openai/gpt-5.2`. **Grader (LLM-judge tags only):**
   `anthropic/claude-sonnet-4-5` — the eval default; deterministic tags
   (`seqqa2`, `cloning`) use no grader.
-- **Eval version:** `1-A`. **Dataset:** `EdisonScientific/labbench2`, split
+- **Eval version:** `2-A`. **Dataset:** `EdisonScientific/labbench2`, split
   `train`, pinned to revision `27d12d72af24e3f70db8a99df63e567366cbdb80`.
 - **Samples:** each row runs its full set of mode-compatible samples (the `N`
   column); `seqqa2` `retrieve` is the retrieve-compatible subset (~200 of 400).
@@ -402,6 +438,16 @@ uv run inspect eval lab_bench_2 -T tags=protocolqa2 -T mode=file -T solver=agent
 ```
 
 ## Changelog
+
+### [2-A] - 2026-08-27
+
+- Add candidate-aware Golden Gate simulation with multi-fragment assembly.
+- Correct Gibson candidate enumeration and fragment identity tracking.
+- Correct sticky-end assembly when self-ligation competes with insert ligation.
+- Add circular-origin PCR recovery and efficient circular sequence comparison.
+- Score every plausible top-level cloning product while rejecting ambiguous
+  intermediates.
+- Preserve archived access to the pinned upstream simulator behavior.
 
 ### [1-A] - 2026-06-05
 

@@ -17,6 +17,7 @@ Three invariants we want enforced mechanically rather than by remembering:
 
 Exit code 1 if any guard fails.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,12 +33,16 @@ SANDBOX_TOOLS = {"python_session", "python", "bash"}
 def load(path: Path) -> dict:
     out = subprocess.run(
         ["uv", "run", "inspect", "log", "dump", str(path)],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return json.loads(out.stdout)
 
 
-def check(log: dict, budget: int, prior_ids: set[str], metric: str = "novel") -> list[str]:
+def check(
+    log: dict, budget: int, prior_ids: set[str], metric: str = "novel"
+) -> list[str]:
     fails: list[str] = []
     args = log.get("eval", {}).get("task_args", {})
     samples = log.get("samples", [])
@@ -50,14 +55,20 @@ def check(log: dict, budget: int, prior_ids: set[str], metric: str = "novel") ->
     keys = [(s.get("id"), s.get("epoch")) for s in samples]
     for key, n in Counter(keys).items():
         if n > 1:
-            fails.append(f"duplicate sample {key[0]} epoch {key[1]} appears {n}x in this log")
+            fails.append(
+                f"duplicate sample {key[0]} epoch {key[1]} appears {n}x in this log"
+            )
 
     for s in samples:
         sid = s.get("id")
         usage = list((s.get("model_usage") or {}).values())
         total = sum(u.get("total_tokens", 0) for u in usage)
         novel = sum(u.get("input_tokens", 0) + u.get("output_tokens", 0) for u in usage)
-        calls = [tc.get("function") for m in s["messages"] for tc in (m.get("tool_calls") or [])]
+        calls = [
+            tc.get("function")
+            for m in s["messages"]
+            for tc in (m.get("tool_calls") or [])
+        ]
 
         # 1. ceiling
         # REASON: compare against whichever metric the budget is expressed in. When the
@@ -76,7 +87,9 @@ def check(log: dict, budget: int, prior_ids: set[str], metric: str = "novel") ->
             fails.append(f"{sid}: zero sandbox tool calls -- not real agentic use")
         # 2. duplicates against prior logs
         if sid in prior_ids:
-            fails.append(f"{sid}: already has a completed result in a prior log -- duplicate run")
+            fails.append(
+                f"{sid}: already has a completed result in a prior log -- duplicate run"
+            )
     return fails
 
 
@@ -96,10 +109,19 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("log", type=Path)
     ap.add_argument("--budget", type=int, required=True)
-    ap.add_argument("--prior", type=Path, nargs="*", default=[],
-                    help="earlier logs to check for duplicate completed samples")
-    ap.add_argument("--metric", choices=["novel", "total"], default="novel",
-                    help="which token count the budget is expressed in (default: novel)")
+    ap.add_argument(
+        "--prior",
+        type=Path,
+        nargs="*",
+        default=[],
+        help="earlier logs to check for duplicate completed samples",
+    )
+    ap.add_argument(
+        "--metric",
+        choices=["novel", "total"],
+        default="novel",
+        help="which token count the budget is expressed in (default: novel)",
+    )
     a = ap.parse_args()
 
     log = load(a.log)
@@ -110,7 +132,9 @@ def main() -> int:
         for f in fails:
             print(f"  - {f}")
         return 1
-    print(f"PASS — {n} sample(s): all within {a.budget:,} {a.metric} tokens, no duplicates, all used sandbox tools")
+    print(
+        f"PASS — {n} sample(s): all within {a.budget:,} {a.metric} tokens, no duplicates, all used sandbox tools"
+    )
     return 0
 
 

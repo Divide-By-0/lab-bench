@@ -27,6 +27,7 @@ answer impossible to express or impossible to match.
 NOTE: tasks patched here are NO LONGER comparable to published LAB-Bench 2 numbers.
 Report them separately.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -65,7 +66,7 @@ def fix_dcas9() -> str:
     ref = CACHE / "validation" / f"{IDS['dcas9']}_assembled.fa"
     src = CACHE / "cloning" / IDS["dcas9"] / "plv-ef1a-ires-blast.gb"
     donor = str(SeqIO.read(str(src), "genbank").seq).upper()
-    ires, blast = donor[6768:7318], donor[7318:7772]   # IRES, then the BSD cassette
+    ires, blast = donor[6768:7318], donor[7318:7772]  # IRES, then the BSD cassette
     rec = SeqIO.read(str(ref), "fasta")
     seq = str(rec.seq).upper()
     if blast in seq:

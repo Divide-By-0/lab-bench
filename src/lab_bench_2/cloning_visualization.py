@@ -43,6 +43,7 @@ _MIN_FEATURE_LENGTH = 12
 _MIN_APPROXIMATE_FEATURE_LENGTH = 120
 _MIN_APPROXIMATE_FEATURE_IDENTITY = 0.95
 _MAX_FEATURE_OCCURRENCES = 8
+_MIN_PROVENANCE_CORE_LENGTH = 100
 _MIN_DIFFERENCE_WIDTH = 2
 _MAX_SEQUENCE_WINDOW = 80
 _FASTA_LINE_WIDTH = 80
@@ -196,10 +197,15 @@ async def cloning_comparison_markdown(
             expression = extract_between_tags(
                 answer, PROTOCOL_TAG_OPEN, PROTOCOL_TAG_CLOSE
             )
+            from lab_bench_2.cloning_simulators.execution import (
+                execute_cloning_protocol_v2,
+            )
+            from lab_bench_2.cloning_simulators.rewards_v2 import rank_candidates
+
             protocol = CloningProtocol(expression)
-            results = await protocol.run(base_dir)
+            results = await execute_cloning_protocol_v2(expression, base_dir)
             if results:
-                predicted = results[0]
+                predicted = rank_candidates(results, reference)[0].sequence
             else:
                 prediction_error = "The protocol produced no assembled sequence."
         except Exception as exc:  # visualization must not affect evaluation
@@ -313,31 +319,34 @@ async def _protocol_provenance(
 
     async def collect(node: Any, code: str) -> None:
         try:
-            fragments = await node.execute(base_dir)
+            from lab_bench_2.cloning_simulators.execution import execute_operation_v2
+
+            fragments = await execute_operation_v2(node, base_dir)
         except Exception:
             fragments = []
         for fragment_index, fragment in enumerate(fragments, start=1):
             mapped_ranges: tuple[tuple[int, int], ...] = ()
             mapped_strand = 1
-            for strand, candidate in (
+            for strand, fragment_sequence in (
                 (1, fragment.sequence.upper()),
                 (-1, reverse_complement(fragment.sequence.upper())),
             ):
-                start = doubled.find(candidate)
+                mapped_sequence = fragment_sequence
+                start = doubled.find(mapped_sequence)
                 # PCR/Gibson/Golden-Gate products often contain primer tails or
                 # junction bases that are absent from the final assembly. Map
                 # the longest exact internal core so provenance remains visible.
-                if start < 0 and len(candidate) >= 100:
-                    for trim in range(1, min(60, len(candidate) // 2) + 1):
-                        core = candidate[trim : len(candidate) - trim]
+                if start < 0 and len(mapped_sequence) >= _MIN_PROVENANCE_CORE_LENGTH:
+                    for trim in range(1, min(60, len(mapped_sequence) // 2) + 1):
+                        core = mapped_sequence[trim : len(mapped_sequence) - trim]
                         start = doubled.find(core)
                         if start >= 0:
-                            candidate = core
+                            mapped_sequence = core
                             break
                 if 0 <= start < len(predicted_sequence):
                     mapped_ranges = _split_circular_range(
                         start,
-                        start + len(candidate),
+                        start + len(mapped_sequence),
                         len(predicted_sequence),
                     )
                     mapped_strand = strand

@@ -175,18 +175,19 @@ def exact_match_judge_scorer() -> Scorer:
 
 @scorer(metrics=[accuracy(), stderr()])
 def cloning_scorer() -> Scorer:
-    """Score CloningQA answers using labbench2's cloning reward pipeline.
+    """Score CloningQA answers using the candidate-aware v2 cloning pipeline.
 
     Validates cloning protocols through 4 sequential stages:
     1. Format validation — protocol can be parsed
-    2. Execution — protocol runs successfully
-    3. Similarity — output matches reference sequence (threshold: 0.95)
+    2. Execution — protocol runs successfully and enumerates top-level products
+    3. Similarity — any product matches the reference sequence (threshold: 0.95)
     4. Digest — restriction enzyme fragments match
 
     Requires Go 1.21+ on the host for PCR simulation scoring.
     """
     from evals.utils import resolve_file_path
-    from labbench2.cloning.rewards import cloning_reward
+
+    from lab_bench_2.cloning_simulators.rewards_v2 import cloning_reward_v2
 
     async def score(state: TaskState, target: Target) -> Score:
         metadata = state.metadata or {}
@@ -208,7 +209,7 @@ def cloning_scorer() -> Scorer:
             )
 
         answer = state.output.completion
-        score_value, reason = await cloning_reward(
+        score_value, reason = await cloning_reward_v2(
             answer=answer,
             base_dir=Path(files_path_str),
             reference_path=ground_truth_path,

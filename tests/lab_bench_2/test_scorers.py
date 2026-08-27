@@ -346,7 +346,8 @@ class TestCloningScorer:
             events.append((content, source))
 
         monkeypatch.setattr(
-            "labbench2.cloning.rewards.cloning_reward", fake_cloning_reward
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
         )
         monkeypatch.setattr(
             "lab_bench_2.cloning_visualization.cloning_comparison_markdown",
@@ -387,7 +388,8 @@ class TestCloningScorer:
             return 1.0, "Cloning validation passed"
 
         monkeypatch.setattr(
-            "labbench2.cloning.rewards.cloning_reward", fake_cloning_reward
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
         )
         monkeypatch.setattr(
             "evals.utils.resolve_file_path",
@@ -423,7 +425,8 @@ class TestCloningScorer:
             return 0.0, "Accuracy failed: output does not match reference"
 
         monkeypatch.setattr(
-            "labbench2.cloning.rewards.cloning_reward", fake_cloning_reward
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
         )
         monkeypatch.setattr(
             "evals.utils.resolve_file_path", lambda filename, _: reference

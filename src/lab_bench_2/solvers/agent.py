@@ -49,7 +49,8 @@ def build_sandbox_prompt(web_search: bool) -> str:
         "(for example, the catalogue sequence of a named plasmid). Do not use it to "
         "research the task, look for worked solutions, or browse. Everything you need "
         "to compute the answer is in your working directory and /opt/docs."
-        if web_search else ""
+        if web_search
+        else ""
     )
     return dedent(f"""\
     You are a helpful assistant completing a scientific research task. You have \

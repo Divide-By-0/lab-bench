@@ -59,9 +59,13 @@ def register_from_env() -> list[str]:
             input=float(os.environ.get("LABBENCH2_COST_INPUT", "1.0")),
             output=float(os.environ.get("LABBENCH2_COST_OUTPUT", "1.0")),
             input_cache_read=float(os.environ.get("LABBENCH2_COST_CACHE_READ", "0.0")),
-            input_cache_write=float(os.environ.get("LABBENCH2_COST_CACHE_WRITE", "0.0")),
+            input_cache_write=float(
+                os.environ.get("LABBENCH2_COST_CACHE_WRITE", "0.0")
+            ),
         )
-        zero = ModelCost(input=0.0, output=0.0, input_cache_read=0.0, input_cache_write=0.0)
+        zero = ModelCost(
+            input=0.0, output=0.0, input_cache_read=0.0, input_cache_write=0.0
+        )
         for model, cost in [(m, priced) for m in metered] + [(m, zero) for m in free]:
             try:
                 set_model_cost(model, cost)

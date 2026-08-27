@@ -23,6 +23,29 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `gpt56sol_smoke_2tasks_hinted.eval` | `gpt-5.6-sol` max effort, original prompts, 2 tasks | 0/2 |
 | `gpt56sol_8tasks_method_blind.eval` | `gpt-5.6-sol` max effort, **method hint stripped**, 8 tasks | **1/8** |
 
+## Cloning simulator v2 rescoring
+
+The `*_simulator_v2_reviewed.eval` logs preserve the model answers from the runs
+above and rescore them with LAB-Bench 2 version `2-A`. They are not new model
+generations. Each log preserves the old verdict and explanation in score metadata
+and adds an Inspect sequence-comparison event.
+
+| Source run | Original | Simulator v2 | Changed verdicts |
+| --- | ---: | ---: | ---: |
+| `cloning_11tasks` | 3/11 | **6/11** | 3 |
+| `cloning_2tasks_2epochs` | 0/4 | **0/4** | 0 |
+| `cloning_6tasks_rerun_6M` | 2/6 | **3/6** | 1 |
+| `cloning_sorcs2_after_session_fix` | 0/1 | **0/1** | 0 |
+| `gpt56sol_8tasks_method_blind` | 1/8 | **6/8** | 5 |
+| `gpt56sol_smoke_2tasks_hinted` | 0/2 | **2/2** | 2 |
+
+Across these 32 stored submissions, 11 verdicts change from incorrect to correct.
+The method-blind GPT-5.6-sol run includes a reference-matching Gibson result that
+is candidate 3 of 14 under v2, directly demonstrating why product 1 cannot be
+treated as authoritative. The unchanged PCR-based SORCS2 answer now produces an
+amplicon but remains incorrect because its best final sequence similarity is
+0.839761, below the 0.95 threshold.
+
 > ⚠️ `cloning_6tasks_rerun_6M.eval` was run at `--token-limit 6000000`, above the 2M
 > ceiling the rest of this work uses. **Five of its six samples exceeded 2M**, including
 > both passes, so its results are not valid at the 2M configuration. Kept for reference,

@@ -86,6 +86,8 @@ def lab_bench_2(
             - ``agentic``: the client-side agentic configuration. The model is
             given ``python``/``bash`` (and, with an external provider
             key, ``web_search``) tools in a Docker sandbox.
+        strip_method_hint: Remove explicit assembly-method wording from cloning
+            prompts while retaining the underlying sequence files and task data.
     """
     dataset: Dataset
     scorer: Scorer
