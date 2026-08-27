@@ -9,9 +9,12 @@ import pytest
 
 from lab_bench_2.cloning_visualization import (
     SourceFeature,
+    _assembly_part_provenance,
+    _covered_length,
     _digest_diagnostic,
     _feature_legend,
     _nice_tick_interval,
+    _ProvenanceInput,
     _split_circular_range,
     build_sequence_comparison,
     load_source_features,
@@ -133,6 +136,34 @@ def test_feature_key_has_stable_ids_and_both_coordinate_sets() -> None:
 
 def test_splits_provenance_fragment_across_circular_origin() -> None:
     assert _split_circular_range(8, 13, 10) == ((8, 10), (0, 3))
+
+
+def test_assembly_part_provenance_tracks_selected_candidate_rotation() -> None:
+    inputs = [
+        _ProvenanceInput("P1", "backbone", ("vector",), "AAAACCCC", True, "file"),
+        _ProvenanceInput("P2", "insert", ("insert",), "GGGGTTTT", False, "PCR"),
+    ]
+    product = SimpleNamespace(
+        sequence="AAAACCCCGGGGTTTT",
+        _assembly_parts=(
+            SimpleNamespace(source_index=0, orientation=1, start=0, end=8),
+            SimpleNamespace(source_index=1, orientation=1, start=8, end=16),
+        ),
+    )
+
+    result = _assembly_part_provenance(inputs, product, "GGGGTTTTAAAACCCC")
+
+    assert result is not None
+    segments, mask = result
+    assert segments[0].ranges == ((8, 16),)
+    assert segments[1].ranges == ((0, 8),)
+    assert (
+        _covered_length(
+            tuple(value for segment in segments for value in segment.ranges), 16
+        )
+        == 16
+    )
+    assert mask.bit_count() == 16
 
 
 def test_digest_diagnostic_detects_missing_reference_topology() -> None:

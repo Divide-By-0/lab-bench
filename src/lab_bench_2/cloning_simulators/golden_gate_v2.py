@@ -11,6 +11,7 @@ MAX_CANDIDATES = 256
 @dataclass(frozen=True)
 class _OrientedFragment:
     index: int
+    source_index: int
     sequence: str
     left_overhang: int
     right_overhang: int
@@ -29,13 +30,27 @@ class _OrientedFragment:
 class _Assembly:
     sequence: str
     fragment_count: int
+    parts: tuple[_AssemblyPart, ...]
 
 
-def _orientations(fragment: Any, index: int) -> tuple[_OrientedFragment, ...]:
+@dataclass(frozen=True)
+class _AssemblyPart:
+    """Coordinates contributed by one direct assembly input."""
+
+    source_index: int
+    orientation: int
+    start: int
+    end: int
+
+
+def _orientations(
+    fragment: Any, index: int, source_index: int
+) -> tuple[_OrientedFragment, ...]:
     from labbench2.cloning.utils import reverse_complement
 
     forward = _OrientedFragment(
         index=index,
+        source_index=source_index,
         sequence=fragment.sequence.upper(),
         left_overhang=fragment.overhang_5prime,
         right_overhang=fragment.overhang_3prime,
@@ -43,6 +58,7 @@ def _orientations(fragment: Any, index: int) -> tuple[_OrientedFragment, ...]:
     )
     reverse = _OrientedFragment(
         index=index,
+        source_index=source_index,
         sequence=reverse_complement(fragment.sequence.upper()),
         left_overhang=fragment.overhang_3prime,
         right_overhang=fragment.overhang_5prime,
@@ -72,18 +88,29 @@ def _is_duplicate(sequence: str, assemblies: list[_Assembly]) -> bool:
 
 
 def assemble_restriction_fragments_v2(
-    fragments: list[Any], *, max_candidates: int = MAX_CANDIDATES
+    fragments: list[Any],
+    *,
+    source_indices: list[int] | None = None,
+    max_candidates: int = MAX_CANDIDATES,
 ) -> list[_Assembly]:
     """Enumerate circular products from compatible cohesive-ended fragments."""
     if not fragments:
         return []
+    if source_indices is None:
+        source_indices = list(range(len(fragments)))
+    if len(source_indices) != len(fragments):
+        raise ValueError("source_indices must match the number of fragments")
     orientations = {
-        index: _orientations(fragment, index)
+        index: _orientations(fragment, index, source_indices[index])
         for index, fragment in enumerate(fragments)
     }
     assemblies: list[_Assembly] = []
 
-    def collect(sequence: str, fragment_count: int) -> None:
+    def collect(
+        sequence: str,
+        fragment_count: int,
+        parts: tuple[_AssemblyPart, ...],
+    ) -> None:
         if not sequence or _is_duplicate(sequence, assemblies):
             return
         if len(assemblies) >= max_candidates:
@@ -91,17 +118,18 @@ def assemble_restriction_fragments_v2(
                 "Golden Gate assembly exceeded the "
                 f"{max_candidates}-candidate safety limit"
             )
-        assemblies.append(_Assembly(sequence, fragment_count))
+        assemblies.append(_Assembly(sequence, fragment_count, parts))
 
     def extend(
         first: _OrientedFragment,
         current: _OrientedFragment,
         used: frozenset[int],
         assembled: str,
+        parts: tuple[_AssemblyPart, ...],
     ) -> None:
         closure = _compatible(current, first)
         if closure:
-            collect(assembled[:-closure], len(used))
+            collect(assembled[:-closure], len(used), parts)
         for index, choices in orientations.items():
             if index in used:
                 continue
@@ -113,11 +141,33 @@ def assemble_restriction_fragments_v2(
                         candidate,
                         used | {index},
                         assembled + candidate.sequence[overlap:],
+                        parts
+                        + (
+                            _AssemblyPart(
+                                source_index=candidate.source_index,
+                                orientation=candidate.orientation,
+                                start=len(assembled) - overlap,
+                                end=len(assembled) + len(candidate.sequence) - overlap,
+                            ),
+                        ),
                     )
 
     for index, choices in orientations.items():
         for fragment in choices:
-            extend(fragment, fragment, frozenset({index}), fragment.sequence)
+            extend(
+                fragment,
+                fragment,
+                frozenset({index}),
+                fragment.sequence,
+                (
+                    _AssemblyPart(
+                        source_index=fragment.source_index,
+                        orientation=fragment.orientation,
+                        start=0,
+                        end=len(fragment.sequence),
+                    ),
+                ),
+            )
     return assemblies
 
 
@@ -147,21 +197,25 @@ def goldengate_v2(
     from labbench2.cloning.sequence_models import BioSequence, make_pretty_id
 
     enzyme_names = tuple(value.strip() for value in enzymes.split(",") if value.strip())
-    fragments = sequences[:]
+    indexed_fragments = list(enumerate(sequences))
     for enzyme in enzyme_names:
-        fragments = [
-            output for fragment in fragments for output in enzyme_cut(fragment, enzyme)
+        indexed_fragments = [
+            (source_index, output)
+            for source_index, fragment in indexed_fragments
+            for output in enzyme_cut(fragment, enzyme)
         ]
-    fragments = [
-        fragment
-        for fragment in fragments
+    indexed_fragments = [
+        (source_index, fragment)
+        for source_index, fragment in indexed_fragments
         if len(fragment.sequence) >= min_fragment_length
     ]
-    if not fragments:
+    if not indexed_fragments:
         return []
 
     assemblies = assemble_restriction_fragments_v2(
-        fragments, max_candidates=max_candidates
+        [fragment for _, fragment in indexed_fragments],
+        source_indices=[source_index for source_index, _ in indexed_fragments],
+        max_candidates=max_candidates,
     )
     ranked = sorted(
         assemblies,
@@ -171,8 +225,9 @@ def goldengate_v2(
             -len(assembly.sequence),
         ),
     )
-    return [
-        BioSequence(
+    products: list[Any] = []
+    for assembly in ranked:
+        product = BioSequence(
             sequence=assembly.sequence,
             is_circular=True,
             name=make_pretty_id("goldengate-v2"),
@@ -182,5 +237,6 @@ def goldengate_v2(
                 f"{_retained_site_count(assembly.sequence, enzyme_names)}"
             ),
         )
-        for assembly in ranked
-    ]
+        object.__setattr__(product, "_assembly_parts", assembly.parts)
+        products.append(product)
+    return products

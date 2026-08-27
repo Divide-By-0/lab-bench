@@ -88,7 +88,10 @@ def test_golden_gate_v2_builds_three_fragment_intermediate() -> None:
         ),
     ]
     products = assemble_restriction_fragments_v2(fragments)
-    assert any(product.fragment_count == 3 for product in products)
+    product = next(product for product in products if product.fragment_count == 3)
+    assert {part.source_index for part in product.parts} == {0, 1, 2}
+    assert min(part.start for part in product.parts) == 0
+    assert max(part.end for part in product.parts) >= len(product.sequence)
 
 
 def test_gibson_v2_keeps_circle_when_another_extension_is_possible() -> None:
@@ -107,7 +110,11 @@ def test_gibson_v2_tracks_duplicate_names_by_input_position() -> None:
         BioSequence(sequence="CCCCGGGGAAAA", name="same"),
     ]
     products = gibson_v2(fragments, min_overlap=4, max_overlap=4)
-    assert any(product.sequence == "AAAATTTTCCCCGGGG" for product in products)
+    product = next(
+        product for product in products if product.sequence == "AAAATTTTCCCCGGGG"
+    )
+    parts = getattr(product, "_assembly_parts")
+    assert {part.source_index for part in parts} == {0, 1}
 
 
 def test_restriction_v2_does_not_hide_insert_behind_self_ligation() -> None:

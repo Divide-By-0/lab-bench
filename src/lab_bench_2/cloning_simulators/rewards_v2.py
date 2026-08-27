@@ -16,6 +16,19 @@ class CandidateScore:
     sequence: Any
 
 
+@dataclass(frozen=True)
+class CandidateAssessment:
+    """Verifier checks applied to one ranked top-level simulator product."""
+
+    candidate: CandidateScore
+    similarity_pass: bool
+    digest_pass: bool | None
+
+    @property
+    def passes(self) -> bool:
+        return self.similarity_pass and self.digest_pass is not False
+
+
 def _enzymes(validator_params: dict[str, Any]) -> tuple[str, ...]:
     enzymes: list[str] = []
     index = 1
@@ -99,6 +112,35 @@ def _digest_matches(
     )
 
 
+def assess_candidates(
+    candidates: list[Any],
+    reference: Any,
+    validator_params: dict[str, Any] | None = None,
+    threshold: float = 0.95,
+) -> list[CandidateAssessment]:
+    """Apply the scorer's sequence and optional digest checks to every product."""
+    params = validator_params or {}
+    enzymes = _enzymes(params)
+    digest_threshold = float(params.get("edit_distance_threshold", threshold))
+    return [
+        CandidateAssessment(
+            candidate=candidate,
+            similarity_pass=candidate.similarity >= threshold,
+            digest_pass=(
+                _digest_matches(
+                    candidate.sequence,
+                    reference,
+                    enzymes,
+                    digest_threshold,
+                )
+                if enzymes
+                else None
+            ),
+        )
+        for candidate in rank_candidates(candidates, reference)
+    ]
+
+
 async def cloning_reward_v2(
     answer: str,
     base_dir: Path | str,
@@ -140,39 +182,35 @@ async def cloning_reward_v2(
 
     params = validator_params or {}
     reference, topology_repaired = repair_reference_topology(reference, params)
-    ranked = rank_candidates(candidates, reference)
-    passing = [candidate for candidate in ranked if candidate.similarity >= threshold]
-    best = ranked[0]
-    if not passing:
+    assessments = assess_candidates(candidates, reference, params, threshold)
+    sequence_passing = [value for value in assessments if value.similarity_pass]
+    best = assessments[0].candidate
+    if not sequence_passing:
         return (
             0.0,
             "Accuracy failed: no candidate output matches reference "
             f"(best similarity: {best.similarity:.6f}, threshold: {threshold}, "
-            f"candidates: {len(ranked)})",
+            f"candidates: {len(assessments)})",
         )
 
     enzymes = _enzymes(params)
     digest_threshold = float(params.get("edit_distance_threshold", threshold))
-    if enzymes:
-        passing = [
-            candidate
-            for candidate in passing
-            if _digest_matches(candidate.sequence, reference, enzymes, digest_threshold)
-        ]
-        if not passing:
-            return (
-                0.0,
-                "Digest validation failed: no globally matching candidate has "
-                f"matching fragments (enzymes: {list(enzymes)}, threshold: "
-                f"{digest_threshold}, candidates: {len(ranked)})",
-            )
+    passing = [value for value in sequence_passing if value.passes]
+    if enzymes and not passing:
+        return (
+            0.0,
+            "Digest validation failed: no globally matching candidate has "
+            f"matching fragments (enzymes: {list(enzymes)}, threshold: "
+            f"{digest_threshold}, candidates: {len(assessments)})",
+        )
 
-    selected = passing[0]
+    selected = passing[0].candidate
     topology_note = (
         "; repaired missing circular reference topology" if topology_repaired else ""
     )
     return (
         1.0,
-        f"Cloning validation passed using candidate {selected.index + 1}/{len(ranked)} "
+        f"Cloning validation passed using candidate {selected.index + 1}/"
+        f"{len(assessments)} "
         f"(similarity: {selected.similarity:.6f}{topology_note})",
     )

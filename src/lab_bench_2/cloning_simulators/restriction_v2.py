@@ -30,8 +30,9 @@ def restriction_assemble_v2(
     )
     if not assemblies:
         return [first, second]
-    return [
-        BioSequence(
+    products: list[Any] = []
+    for assembly in assemblies:
+        product = BioSequence(
             sequence=assembly.sequence,
             is_circular=True,
             name=make_pretty_id("restriction-assemble-v2"),
@@ -40,5 +41,6 @@ def restriction_assemble_v2(
                 f"{assembly.fragment_count} fragments"
             ),
         )
-        for assembly in assemblies
-    ]
+        object.__setattr__(product, "_assembly_parts", assembly.parts)
+        products.append(product)
+    return products

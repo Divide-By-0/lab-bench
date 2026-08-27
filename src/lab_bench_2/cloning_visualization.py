@@ -47,6 +47,12 @@ _MIN_PROVENANCE_CORE_LENGTH = 100
 _MIN_DIFFERENCE_WIDTH = 2
 _MAX_SEQUENCE_WINDOW = 80
 _FASTA_LINE_WIDTH = 80
+_DEFAULT_ACCURACY_THRESHOLD = 0.95
+_PROVENANCE_SEED_LENGTH = 31
+_PROVENANCE_SEED_STEP = 16
+_MAX_PROVENANCE_SEED_HITS = 128
+_MAX_PROVENANCE_OPTIONS = 32
+_MAX_PROVENANCE_ASSIGNMENTS = 4_096
 _DNA_COMPLEMENT = str.maketrans("ACGTRYMKBDHVN", "TGCAYRKMVHDBN")
 _PROVENANCE_COLORS = ("#0ea5e9", "#a855f7", "#f97316", "#22c55e")
 _DIGEST_COLORS = ("#7c3aed", "#0f766e", "#be123c", "#b45309")
@@ -100,6 +106,22 @@ class SequenceComparison:
     reference_features: tuple[MappedFeature, ...]
     differences: tuple[Difference, ...]
     prediction_error: str | None = None
+    prediction_label: str = "Predicted assembly"
+
+
+@dataclass(frozen=True)
+class CandidateProduct:
+    """One top-level simulator product considered by the v2 verifier."""
+
+    rank: int
+    simulator_index: int
+    length: int
+    circular: bool
+    similarity: float
+    similarity_pass: bool
+    digest_pass: bool | None
+    visualized: bool
+    description: str
 
 
 @dataclass(frozen=True)
@@ -127,6 +149,29 @@ class ProvenanceSegment:
     fragment_length: int
     ranges: tuple[tuple[int, int], ...]
     strand: int
+    lineage: str = ""
+
+
+@dataclass(frozen=True)
+class _ProvenanceInput:
+    """Executed direct input to the submitted top-level assembly operation."""
+
+    code: str
+    operation: str
+    source_files: tuple[str, ...]
+    sequence: str
+    circular: bool
+    lineage: str
+
+
+@dataclass(frozen=True)
+class _ProvenanceMapping:
+    """One possible exact placement of an assembly input on the product."""
+
+    start: int
+    length: int
+    strand: int
+    mask: int
 
 
 @dataclass(frozen=True)
@@ -189,6 +234,8 @@ async def cloning_comparison_markdown(
     predicted: BioSequence | None = None
     prediction_error: str | None = None
     protocol: Any | None = None
+    candidate_products: tuple[CandidateProduct, ...] = ()
+    prediction_label = "Predicted assembly"
 
     if PROTOCOL_TAG_OPEN not in answer or PROTOCOL_TAG_CLOSE not in answer:
         prediction_error = "No executable protocol was submitted."
@@ -200,12 +247,44 @@ async def cloning_comparison_markdown(
             from lab_bench_2.cloning_simulators.execution import (
                 execute_cloning_protocol_v2,
             )
-            from lab_bench_2.cloning_simulators.rewards_v2 import rank_candidates
+            from lab_bench_2.cloning_simulators.rewards_v2 import (
+                assess_candidates,
+            )
 
             protocol = CloningProtocol(expression)
             results = await execute_cloning_protocol_v2(expression, base_dir)
             if results:
-                predicted = rank_candidates(results, reference)[0].sequence
+                assessments = assess_candidates(
+                    results,
+                    reference,
+                    validator_params,
+                    _DEFAULT_ACCURACY_THRESHOLD,
+                )
+                selected_assessment = next(
+                    (assessment for assessment in assessments if assessment.passes),
+                    assessments[0],
+                )
+                selected = selected_assessment.candidate
+                predicted = selected.sequence
+                prediction_label = (
+                    f"Predicted assembly (simulator candidate "
+                    f"{selected.index + 1}/{len(assessments)}"
+                    ")"
+                )
+                candidate_products = tuple(
+                    CandidateProduct(
+                        rank=rank,
+                        simulator_index=assessment.candidate.index + 1,
+                        length=len(assessment.candidate.sequence.sequence),
+                        circular=bool(assessment.candidate.sequence.is_circular),
+                        similarity=assessment.candidate.similarity,
+                        similarity_pass=assessment.similarity_pass,
+                        digest_pass=assessment.digest_pass,
+                        visualized=(assessment.candidate.index == selected.index),
+                        description=(assessment.candidate.sequence.description or ""),
+                    )
+                    for rank, assessment in enumerate(assessments, start=1)
+                )
             else:
                 prediction_error = "The protocol produced no assembled sequence."
         except Exception as exc:  # visualization must not affect evaluation
@@ -216,9 +295,15 @@ async def cloning_comparison_markdown(
         reference=reference,
         source_features=load_source_features(base_dir),
         prediction_error=prediction_error,
+        prediction_label=prediction_label,
     )
     provenance = (
-        await _protocol_provenance(protocol.operation, base_dir, comparison.predicted)
+        await _protocol_provenance(
+            protocol.operation,
+            base_dir,
+            predicted,
+            comparison.predicted,
+        )
         if protocol is not None and comparison.predicted
         else ()
     )
@@ -233,6 +318,7 @@ async def cloning_comparison_markdown(
     return _comparison_markdown(
         comparison,
         encoded,
+        candidates=candidate_products,
         provenance=provenance,
         digest=digest,
     )
@@ -274,6 +360,7 @@ def build_sequence_comparison(
     reference: BioSequence,
     source_features: tuple[SourceFeature, ...] = (),
     prediction_error: str | None = None,
+    prediction_label: str = "Predicted assembly",
 ) -> SequenceComparison:
     """Align origins, transfer annotations, and summarize sequence edits."""
     reference_sequence = reference.sequence.upper()
@@ -303,21 +390,26 @@ def build_sequence_comparison(
         reference_features=tuple(_map_features(reference_sequence, source_features)),
         differences=differences,
         prediction_error=prediction_error,
+        prediction_label=prediction_label,
     )
 
 
 async def _protocol_provenance(
     operation: Any,
     base_dir: Path,
+    predicted_product: Any,
     predicted_sequence: str,
 ) -> tuple[ProvenanceSegment, ...]:
-    """Map top-level assembly inputs back onto the predicted plasmid."""
-    from labbench2.cloning.utils import reverse_complement
+    """Assign direct assembly inputs jointly across the selected product.
 
-    doubled = predicted_sequence + predicted_sequence
-    segments: list[ProvenanceSegment] = []
-
-    async def collect(node: Any, code: str) -> None:
+    Joint assignment matters for repeated payloads: independently searching each
+    amplicon maps every copy to the first identical occurrence. It also lets a
+    circular vector map through its retained arc after a dropout cassette is
+    removed by Golden Gate or restriction cloning.
+    """
+    inputs: list[_ProvenanceInput] = []
+    roots = _assembly_inputs(operation)
+    for node_index, node in enumerate(roots, start=1):
         try:
             from lab_bench_2.cloning_simulators.execution import execute_operation_v2
 
@@ -325,57 +417,270 @@ async def _protocol_provenance(
         except Exception:
             fragments = []
         for fragment_index, fragment in enumerate(fragments, start=1):
-            mapped_ranges: tuple[tuple[int, int], ...] = ()
-            mapped_strand = 1
-            for strand, fragment_sequence in (
-                (1, fragment.sequence.upper()),
-                (-1, reverse_complement(fragment.sequence.upper())),
-            ):
-                mapped_sequence = fragment_sequence
-                start = doubled.find(mapped_sequence)
-                # PCR/Gibson/Golden-Gate products often contain primer tails or
-                # junction bases that are absent from the final assembly. Map
-                # the longest exact internal core so provenance remains visible.
-                if start < 0 and len(mapped_sequence) >= _MIN_PROVENANCE_CORE_LENGTH:
-                    for trim in range(1, min(60, len(mapped_sequence) // 2) + 1):
-                        core = mapped_sequence[trim : len(mapped_sequence) - trim]
-                        start = doubled.find(core)
-                        if start >= 0:
-                            mapped_sequence = core
-                            break
-                if 0 <= start < len(predicted_sequence):
-                    mapped_ranges = _split_circular_range(
-                        start,
-                        start + len(mapped_sequence),
-                        len(predicted_sequence),
-                    )
-                    mapped_strand = strand
-                    break
-            fragment_code = code
+            fragment_code = f"P{node_index}"
             if len(fragments) > 1:
                 fragment_code += f".{fragment_index}"
-            source_files = tuple(
-                sorted(Path(value).stem for value in node.file_references())
-            )
-            segments.append(
-                ProvenanceSegment(
+            inputs.append(
+                _ProvenanceInput(
                     code=fragment_code,
                     operation=_operation_label(node),
-                    source_files=source_files,
-                    fragment_length=len(fragment.sequence),
-                    ranges=mapped_ranges,
-                    strand=mapped_strand,
+                    source_files=tuple(
+                        sorted(Path(value).stem for value in node.file_references())
+                    ),
+                    sequence=fragment.sequence.upper(),
+                    circular=bool(fragment.is_circular),
+                    lineage=_operation_lineage(node),
                 )
             )
-        for child_index, child in enumerate(_operation_children(node), start=1):
-            await collect(child, f"{code}.{child_index}")
 
-    roots = _operation_children(operation)
-    if not roots:
-        roots = (operation,)
-    for node_index, node in enumerate(roots, start=1):
-        await collect(node, f"P{node_index}")
+    exact = _assembly_part_provenance(inputs, predicted_product, predicted_sequence)
+    if exact is not None:
+        segments, covered_mask = exact
+    else:
+        option_sets = [
+            _provenance_mapping_options(value, predicted_sequence) for value in inputs
+        ]
+        choices, covered_mask = _assign_provenance_options(option_sets)
+        segments = [
+            ProvenanceSegment(
+                code=value.code,
+                operation=value.operation,
+                source_files=value.source_files,
+                fragment_length=len(value.sequence),
+                ranges=(
+                    _split_circular_range(
+                        choice.start,
+                        choice.start + choice.length,
+                        len(predicted_sequence),
+                    )
+                    if choice is not None
+                    else ()
+                ),
+                strand=choice.strand if choice is not None else 1,
+                lineage=value.lineage,
+            )
+            for value, choice in zip(inputs, choices, strict=True)
+        ]
+    uncovered = _uncovered_ranges(covered_mask, len(predicted_sequence))
+    if uncovered:
+        segments.append(
+            ProvenanceSegment(
+                code="U",
+                operation="unassigned or junction-derived bases",
+                source_files=(),
+                fragment_length=sum(end - start for start, end in uncovered),
+                ranges=uncovered,
+                strand=0,
+                lineage="No exact direct-fragment attribution",
+            )
+        )
     return tuple(segments)
+
+
+def _assembly_part_provenance(
+    inputs: list[_ProvenanceInput],
+    predicted_product: Any,
+    aligned_sequence: str,
+) -> tuple[list[ProvenanceSegment], int] | None:
+    """Use candidate-specific fragment paths emitted by the v2 assemblers."""
+    parts = getattr(predicted_product, "_assembly_parts", ())
+    original_sequence = str(getattr(predicted_product, "sequence", "")).upper()
+    if (
+        not parts
+        or not original_sequence
+        or len(original_sequence) != len(aligned_sequence)
+    ):
+        return None
+    rotation = (original_sequence + original_sequence).find(aligned_sequence)
+    if not 0 <= rotation < len(original_sequence):
+        return None
+
+    sequence_length = len(aligned_sequence)
+    covered_mask = 0
+    segments: list[ProvenanceSegment] = []
+    for source_index, value in enumerate(inputs):
+        source_parts = [
+            part for part in parts if int(part.source_index) == source_index
+        ]
+        ranges: list[tuple[int, int]] = []
+        for part in source_parts:
+            length = min(int(part.end) - int(part.start), sequence_length)
+            start = (int(part.start) - rotation) % sequence_length
+            part_ranges = _split_circular_range(start, start + length, sequence_length)
+            ranges.extend(part_ranges)
+            covered_mask |= _circular_range_mask(start, length, sequence_length)
+        segments.append(
+            ProvenanceSegment(
+                code=value.code,
+                operation=value.operation,
+                source_files=value.source_files,
+                fragment_length=len(value.sequence),
+                ranges=_merge_ranges(ranges),
+                strand=(int(source_parts[0].orientation) if source_parts else 1),
+                lineage=value.lineage,
+            )
+        )
+    return segments, covered_mask
+
+
+def _merge_ranges(
+    ranges: list[tuple[int, int]],
+) -> tuple[tuple[int, int], ...]:
+    """Merge overlapping linear display ranges."""
+    merged: list[tuple[int, int]] = []
+    for start, end in sorted(set(ranges)):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else:
+            merged.append((start, end))
+    return tuple(merged)
+
+
+def _assembly_inputs(operation: Any) -> tuple[Any, ...]:
+    """Return physical inputs to the top-level assembly, not nested templates."""
+    name = type(operation).__name__
+    if name in {"GibsonOperation", "GoldenGateOperation"}:
+        return tuple(getattr(operation, "sequences", ()))
+    if name == "RestrictionAssembleOperation":
+        return operation.fragment1, operation.fragment2
+    return (operation,)
+
+
+def _operation_lineage(operation: Any) -> str:
+    """Describe nested protocol steps while keeping one physical-fragment row."""
+    label = _operation_label(operation)
+    children = _operation_children(operation)
+    if not children:
+        return label
+    child_labels = " + ".join(_operation_lineage(child) for child in children)
+    return f"{label} ← {child_labels}"
+
+
+def _provenance_mapping_options(
+    fragment: _ProvenanceInput,
+    predicted_sequence: str,
+) -> tuple[_ProvenanceMapping, ...]:
+    """Find long exact placements, including circular arcs and repeated copies."""
+    from labbench2.cloning.utils import reverse_complement
+
+    predicted_length = len(predicted_sequence)
+    fragment_length = len(fragment.sequence)
+    if not predicted_length or not fragment_length:
+        return ()
+    doubled_predicted = predicted_sequence + predicted_sequence
+    seed_length = min(_PROVENANCE_SEED_LENGTH, fragment_length, predicted_length)
+    minimum_length = min(
+        fragment_length,
+        max(seed_length, _MIN_PROVENANCE_CORE_LENGTH),
+    )
+    options: dict[int, _ProvenanceMapping] = {}
+    for strand, oriented in (
+        (1, fragment.sequence),
+        (-1, reverse_complement(fragment.sequence)),
+    ):
+        query = oriented + oriented if fragment.circular else oriented
+        final_seed_start = max(0, len(query) - seed_length)
+        seed_starts = set(range(0, final_seed_start + 1, _PROVENANCE_SEED_STEP))
+        seed_starts.add(final_seed_start)
+        for query_start in seed_starts:
+            seed = query[query_start : query_start + seed_length]
+            predicted_start = doubled_predicted.find(seed)
+            hits = 0
+            while (
+                0 <= predicted_start < predicted_length
+                and hits < _MAX_PROVENANCE_SEED_HITS
+            ):
+                left = 0
+                maximum_span = min(fragment_length, predicted_length)
+                while (
+                    left < query_start
+                    and left < predicted_start
+                    and seed_length + left < maximum_span
+                    and query[query_start - left - 1]
+                    == doubled_predicted[predicted_start - left - 1]
+                ):
+                    left += 1
+                right = seed_length
+                while (
+                    query_start + right < len(query)
+                    and predicted_start + right < len(doubled_predicted)
+                    and left + right < maximum_span
+                    and query[query_start + right]
+                    == doubled_predicted[predicted_start + right]
+                ):
+                    right += 1
+                start = predicted_start - left
+                length = left + right
+                if start < predicted_length and length >= minimum_length:
+                    mask = _circular_range_mask(start, length, predicted_length)
+                    current = options.get(mask)
+                    mapping = _ProvenanceMapping(start, length, strand, mask)
+                    if current is None or mapping.length > current.length:
+                        options[mask] = mapping
+                hits += 1
+                predicted_start = doubled_predicted.find(seed, predicted_start + 1)
+    return tuple(
+        sorted(
+            options.values(),
+            key=lambda value: (-value.length, value.start, -value.strand),
+        )[:_MAX_PROVENANCE_OPTIONS]
+    )
+
+
+def _circular_range_mask(start: int, length: int, sequence_length: int) -> int:
+    """Represent a circular interval as a compact integer bitset."""
+    length = min(length, sequence_length)
+    start %= sequence_length
+    if start + length <= sequence_length:
+        return ((1 << length) - 1) << start
+    first_length = sequence_length - start
+    return (((1 << first_length) - 1) << start) | ((1 << (length - first_length)) - 1)
+
+
+def _assign_provenance_options(
+    option_sets: list[tuple[_ProvenanceMapping, ...]],
+) -> tuple[tuple[_ProvenanceMapping | None, ...], int]:
+    """Choose one placement per fragment to maximize unique plasmid coverage."""
+    states: dict[int, tuple[_ProvenanceMapping | None, ...]] = {0: ()}
+    for options in option_sets:
+        choices: tuple[_ProvenanceMapping | None, ...] = options or (None,)
+        next_states: dict[int, tuple[_ProvenanceMapping | None, ...]] = {}
+        for covered, assignments in states.items():
+            for option in choices:
+                updated = covered | (option.mask if option is not None else 0)
+                next_states.setdefault(updated, assignments + (option,))
+        states = dict(
+            sorted(
+                next_states.items(),
+                key=lambda value: value[0].bit_count(),
+                reverse=True,
+            )[:_MAX_PROVENANCE_ASSIGNMENTS]
+        )
+    covered, assignments = max(states.items(), key=lambda value: value[0].bit_count())
+    return assignments, covered
+
+
+def _uncovered_ranges(mask: int, sequence_length: int) -> tuple[tuple[int, int], ...]:
+    """Return linear display intervals not attributed to a direct fragment."""
+    ranges: list[tuple[int, int]] = []
+    start: int | None = None
+    for index in range(sequence_length + 1):
+        covered = index == sequence_length or bool(mask & (1 << index))
+        if not covered and start is None:
+            start = index
+        elif covered and start is not None:
+            ranges.append((start, index))
+            start = None
+    return tuple(ranges)
+
+
+def _covered_length(ranges: tuple[tuple[int, int], ...], sequence_length: int) -> int:
+    """Count unique covered bases across potentially overlapping ranges."""
+    mask = 0
+    for start, end in ranges:
+        if 0 <= start < end <= sequence_length:
+            mask |= ((1 << (end - start)) - 1) << start
+    return mask.bit_count()
 
 
 def _operation_children(operation: Any) -> tuple[Any, ...]:
@@ -569,7 +874,7 @@ def render_comparison_png(
 
     next_y = _draw_sequence_track(
         draw,
-        title="Predicted assembly",
+        title=comparison.prediction_label,
         sequence=comparison.predicted,
         circular=comparison.predicted_circular,
         features=comparison.predicted_features,
@@ -1010,7 +1315,11 @@ def _draw_provenance_track(
     scale = (right - left) / max(1, sequence_length)
     for index, segment in enumerate(segments):
         y = top + 20 + index * 20
-        color = _PROVENANCE_COLORS[index % len(_PROVENANCE_COLORS)]
+        color = (
+            "#cbd5e1"
+            if segment.code == "U"
+            else _PROVENANCE_COLORS[index % len(_PROVENANCE_COLORS)]
+        )
         for start, end in segment.ranges:
             start_x = left + start * scale
             end_x = max(start_x + 2, left + end * scale)
@@ -1185,6 +1494,7 @@ def _comparison_markdown(
     comparison: SequenceComparison,
     encoded_png: str,
     *,
+    candidates: tuple[CandidateProduct, ...] = (),
     provenance: tuple[ProvenanceSegment, ...] = (),
     digest: DigestDiagnostic | None = None,
 ) -> str:
@@ -1213,21 +1523,76 @@ def _comparison_markdown(
         lines.extend(
             ("", f"**Prediction visualization:** {comparison.prediction_error}")
         )
+    if candidates:
+        lines.extend(
+            (
+                "",
+                "#### Simulator candidate products",
+                "",
+                (
+                    "The v2 verifier considers every top-level product. The image uses "
+                    "the first product that passes the same sequence and digest checks; "
+                    "if none passes, it uses the most reference-similar product."
+                ),
+                "",
+                "| Rank | Simulator candidate | Length | Topology | Similarity | Sequence check | Digest check | Visualized | Product description |",
+                "| ---: | ---: | ---: | --- | ---: | --- | --- | --- | --- |",
+            )
+        )
+        for candidate in candidates:
+            digest_status = (
+                "not requested"
+                if candidate.digest_pass is None
+                else "pass"
+                if candidate.digest_pass
+                else "fail"
+            )
+            lines.append(
+                "| "
+                + " | ".join(
+                    (
+                        str(candidate.rank),
+                        str(candidate.simulator_index),
+                        f"{candidate.length:,} bp",
+                        "circular" if candidate.circular else "linear",
+                        f"{candidate.similarity:.6f}",
+                        "pass" if candidate.similarity_pass else "fail",
+                        digest_status,
+                        "yes" if candidate.visualized else "no",
+                        _markdown_cell(candidate.description) or "—",
+                    )
+                )
+                + " |"
+            )
     if digest:
         lines.extend(_digest_markdown(digest, comparison))
     if provenance:
+        assigned_ranges = tuple(
+            value
+            for segment in provenance
+            if segment.code != "U"
+            for value in segment.ranges
+        )
+        assigned_bases = _covered_length(
+            assigned_ranges, len(comparison.predicted or "")
+        )
+        predicted_length = len(comparison.predicted or "")
+        coverage = assigned_bases / predicted_length if predicted_length else 0.0
         lines.extend(
             (
                 "",
                 "#### Submitted-protocol fragment provenance",
                 "",
                 (
-                    "Coordinates are on the aligned predicted assembly. Overlapping ranges "
-                    "are Gibson homology regions contributed by both adjacent PCR products."
+                    f"Direct-fragment assessable coverage: **{assigned_bases:,}/"
+                    f"{predicted_length:,} bp ({coverage:.2%})**. Coordinates are on the "
+                    "aligned predicted assembly. Repeated fragments are assigned jointly "
+                    "so distinct submitted copies map to distinct product copies. "
+                    "Overlapping ranges can be shared assembly homology."
                 ),
                 "",
-                "| ID | Operation | Source file(s) | Fragment length | Predicted coordinates | Orientation |",
-                "| --- | --- | --- | ---: | --- | --- |",
+                "| ID | Operation | Source file(s) | Fragment length | Predicted coordinates | Orientation | Protocol lineage |",
+                "| --- | --- | --- | ---: | --- | --- | --- |",
             )
         )
         for segment in provenance:
@@ -1243,7 +1608,14 @@ def _comparison_markdown(
                         or "—",
                         f"{segment.fragment_length:,} bp",
                         _format_feature_ranges(segment.ranges),
-                        "+" if segment.strand >= 0 else "−",
+                        (
+                            "n/a"
+                            if segment.strand == 0
+                            else "+"
+                            if segment.strand > 0
+                            else "−"
+                        ),
+                        _markdown_cell(segment.lineage) or "—",
                     )
                 )
                 + " |"
