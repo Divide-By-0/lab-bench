@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import warnings
 from collections import defaultdict
@@ -137,6 +138,7 @@ def build_cloning_inventory(
     *,
     root: Path | None = None,
     include_enzymes: bool = True,
+    external_sources: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Parse sequence attachments and build file, feature, primer, and enzyme indexes."""
     files = discover_sequence_files(inputs)
@@ -148,6 +150,9 @@ def build_cloning_inventory(
     enzyme_index: defaultdict[str, dict[str, list[str]]] = defaultdict(
         lambda: {"zero_cutters": [], "single_cutters": [], "multi_cutters": []}
     )
+    external_role_index: defaultdict[str, set[str]] = defaultdict(set)
+    external_category_index: defaultdict[str, set[str]] = defaultdict(set)
+    external_part_index: defaultdict[str, set[str]] = defaultdict(set)
     entries: list[dict[str, Any]] = []
     errors: list[dict[str, str]] = []
     enzyme_catalog = _neb_enzyme_catalog() if include_enzymes else []
@@ -182,6 +187,27 @@ def build_cloning_inventory(
                 )
                 enzyme_index[name][category].append(display_path)
 
+    external_enrichment = _apply_external_enrichment(entries, external_sources)
+    for entry in entries:
+        for record in entry["records"]:
+            for feature in record["features"]:
+                igem = feature.get("external_function_candidates", {}).get(
+                    "igem_registry", {}
+                )
+                for role in igem.get("roles", []):
+                    external_role_index[str(role["accession"])].add(entry["path"])
+                for category in igem.get("categories", []):
+                    external_category_index[str(category["path"])].add(entry["path"])
+                for part in igem.get("specific_parts", []):
+                    if not part.get("selected"):
+                        continue
+                    external_part_index[str(part["name"])].add(entry["path"])
+                    part_role = part.get("role")
+                    if isinstance(part_role, Mapping) and part_role.get("accession"):
+                        external_role_index[str(part_role["accession"])].add(
+                            entry["path"]
+                        )
+
     no_features = [
         entry["path"] for entry in entries if entry["part_feature_count"] == 0
     ]
@@ -208,6 +234,9 @@ def build_cloning_inventory(
             "files_with_no_part_features": no_features,
             "files_with_no_primers": no_primers,
             "duplicate_sequence_group_count": len(duplicate_sequences),
+            "features_with_external_candidates": external_enrichment[
+                "matched_feature_count"
+            ],
         },
         "files": entries,
         "indexes": {
@@ -217,6 +246,9 @@ def build_cloning_inventory(
             "sequence_sha256_to_files": _sorted_set_mapping(sequence_index),
             "duplicate_sequences": duplicate_sequences,
             "neb_enzyme_to_files": dict(sorted(enzyme_index.items())),
+            "igem_role_to_files": _sorted_set_mapping(external_role_index),
+            "igem_category_to_files": _sorted_set_mapping(external_category_index),
+            "igem_part_to_files": _sorted_set_mapping(external_part_index),
         },
         "neb_enzyme_catalog": enzyme_catalog,
         "errors": errors,
@@ -228,8 +260,134 @@ def build_cloning_inventory(
                 if include_enzymes
                 else "not generated"
             ),
+            "external_enrichment": external_enrichment,
         },
     }
+
+
+def _apply_external_enrichment(
+    entries: Sequence[dict[str, Any]], external_sources: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    if not external_sources:
+        return {
+            "status": "not provided",
+            "matched_feature_count": 0,
+            "method": "none",
+        }
+    sources = external_sources.get("sources")
+    if not isinstance(sources, Mapping):
+        raise ValueError("External source data has no sources mapping")
+    igem = sources.get("igem_registry")
+    if not isinstance(igem, Mapping):
+        return {
+            "status": "iGEM vocabulary absent",
+            "matched_feature_count": 0,
+            "method": "none",
+        }
+    indexes = igem.get("indexes")
+    if not isinstance(indexes, Mapping):
+        raise ValueError("iGEM source data has no indexes mapping")
+    role_index = indexes.get("role_alias_to_terms")
+    category_index = indexes.get("category_alias_to_terms")
+    part_index = indexes.get("feature_signature_to_part_matches", {})
+    if not isinstance(role_index, Mapping) or not isinstance(category_index, Mapping):
+        raise ValueError("iGEM source data has invalid alias indexes")
+    if not isinstance(part_index, Mapping):
+        raise ValueError("iGEM source data has invalid specific-part index")
+
+    matched_count = 0
+    specific_part_candidate_count = 0
+    selected_specific_part_count = 0
+    for entry in entries:
+        for record in entry["records"]:
+            for feature in record["features"]:
+                match_keys = [str(feature.get("normalized_label") or "")]
+                match_keys = [key for key in match_keys if key]
+                roles = _external_terms_for_aliases(role_index, match_keys, "accession")
+                categories = _external_terms_for_aliases(
+                    category_index, match_keys, "uuid"
+                )
+                signature = str(feature.get("feature_signature") or "")
+                raw_parts = part_index.get(signature, [])
+                specific_parts = [
+                    {str(key): value for key, value in part.items()}
+                    for part in raw_parts
+                    if isinstance(part, Mapping)
+                ]
+                selected_parts = [
+                    part for part in specific_parts if part.get("selected")
+                ]
+                if not roles and not categories and not specific_parts:
+                    continue
+                feature["external_function_candidates"] = {
+                    "igem_registry": {
+                        "match_keys": match_keys,
+                        "match_method": (
+                            "specific part search by source label, sequence length, "
+                            "functional-role filter, and sequence/translation evidence; "
+                            "vocabulary lookup by source label only"
+                        ),
+                        "nucleotide_sequence_verified": any(
+                            bool(part.get("evidence", {}).get("nucleotide_exact"))
+                            for part in selected_parts
+                        ),
+                        "translated_peptide_verified": any(
+                            bool(
+                                part.get("evidence", {}).get("translated_peptide_exact")
+                            )
+                            for part in selected_parts
+                        ),
+                        "review_required": not selected_parts
+                        or any(
+                            bool(part.get("review_required")) for part in selected_parts
+                        ),
+                        "roles": roles,
+                        "categories": categories,
+                        "specific_parts": specific_parts,
+                    }
+                }
+                matched_count += 1
+                specific_part_candidate_count += bool(specific_parts)
+                selected_specific_part_count += bool(selected_parts)
+
+    source = igem.get("source")
+    summary = igem.get("summary")
+    source_mapping = source if isinstance(source, Mapping) else {}
+    summary_mapping = summary if isinstance(summary, Mapping) else {}
+    openapi = source_mapping.get("openapi")
+    openapi_mapping = openapi if isinstance(openapi, Mapping) else {}
+    return {
+        "status": "applied",
+        "matched_feature_count": matched_count,
+        "specific_part_candidate_count": specific_part_candidate_count,
+        "specific_part_match_count": selected_specific_part_count,
+        "selected_specific_part_count": selected_specific_part_count,
+        "method": (
+            "source-label vocabulary lookup plus provenance-preserving specific-part "
+            "matches; GenBank structural types are never treated as iGEM roles"
+        ),
+        "igem_api_version": str(source_mapping.get("api_version") or ""),
+        "igem_openapi_sha256": str(openapi_mapping.get("sha256") or ""),
+        "igem_role_count": int(summary_mapping.get("role_count") or 0),
+        "igem_category_count": int(summary_mapping.get("category_count") or 0),
+    }
+
+
+def _external_terms_for_aliases(
+    index: Mapping[str, Any], aliases: Sequence[str], identity_key: str
+) -> list[dict[str, Any]]:
+    terms: dict[str, dict[str, Any]] = {}
+    for alias in aliases:
+        candidates = index.get(alias, [])
+        if not isinstance(candidates, list):
+            continue
+        for candidate in candidates:
+            if not isinstance(candidate, Mapping):
+                continue
+            identity = str(candidate.get(identity_key) or "")
+            if identity:
+                terms[identity] = {str(key): value for key, value in candidate.items()}
+    return sorted(terms.values(), key=lambda term: str(term.get(identity_key) or ""))
 
 
 def _inventory_file(
@@ -279,7 +437,7 @@ def _inventory_file(
 def _inventory_record(record: Any, *, include_enzymes: bool) -> dict[str, Any]:
     sequence = str(record.seq).upper()
     feature_entries = [
-        _inventory_feature(feature)
+        _inventory_feature(record, feature)
         for feature in record.features
         if feature.type.casefold() not in SOURCE_TYPES | PRIMER_TYPES
     ]
@@ -309,10 +467,11 @@ def _inventory_record(record: Any, *, include_enzymes: bool) -> dict[str, Any]:
     return result
 
 
-def _inventory_feature(feature: Any) -> dict[str, Any]:
+def _inventory_feature(record: Any, feature: Any) -> dict[str, Any]:
     qualifiers = _clean_qualifiers(feature.qualifiers)
     label = _first_qualifier(qualifiers, LABEL_QUALIFIERS)
     roles = classify_feature_roles(feature.type, qualifiers)
+    sequence = str(feature.extract(record.seq)).upper()
     return {
         "feature_type": str(feature.type),
         "location": str(feature.location),
@@ -321,10 +480,61 @@ def _inventory_feature(feature: Any) -> dict[str, Any]:
         "strand": feature.location.strand,
         "label": label,
         "normalized_label": normalize_label(label),
+        "feature_sequence_length": len(sequence),
+        "feature_sequence_sha256": hashlib.sha256(sequence.encode("ascii")).hexdigest(),
+        "feature_signature": feature_signature(label, sequence),
         "functional_roles": roles,
         "functional_description": describe_feature(label, roles),
         "qualifiers": qualifiers,
     }
+
+
+def collect_feature_queries(inputs: Sequence[Path]) -> list[dict[str, Any]]:
+    """Extract deduplicated, sequence-bearing feature queries for external search."""
+    from Bio import SeqIO
+
+    queries: dict[str, dict[str, Any]] = {}
+    for path in discover_sequence_files(inputs):
+        file_format = SEQUENCE_FORMATS[path.suffix.lower()]
+        with path.open(encoding="utf-8") as handle:
+            records = SeqIO.parse(handle, file_format)  # type: ignore[no-untyped-call]
+            for record in records:
+                for feature in record.features:
+                    if feature.type.casefold() in SOURCE_TYPES | PRIMER_TYPES:
+                        continue
+                    qualifiers = _clean_qualifiers(feature.qualifiers)
+                    label = _first_qualifier(qualifiers, LABEL_QUALIFIERS)
+                    if not label:
+                        continue
+                    sequence = str(feature.extract(record.seq)).upper()
+                    signature = feature_signature(label, sequence)
+                    queries.setdefault(
+                        signature,
+                        {
+                            "feature_signature": signature,
+                            "label": label,
+                            "normalized_label": normalize_label(label),
+                            "feature_type": str(feature.type),
+                            "functional_roles": classify_feature_roles(
+                                feature.type, qualifiers
+                            ),
+                            "nucleotide_sequence": sequence,
+                            "nucleotide_length": len(sequence),
+                            "translation": _first_qualifier(
+                                qualifiers, ("translation",)
+                            ),
+                            "source_description": _first_qualifier(
+                                qualifiers, ("function", "product", "note")
+                            ),
+                        },
+                    )
+    return [queries[key] for key in sorted(queries)]
+
+
+def feature_signature(label: str, sequence: str) -> str:
+    """Return a stable identity for one labeled feature sequence."""
+    sequence_digest = hashlib.sha256(sequence.upper().encode("ascii")).hexdigest()
+    return f"{normalize_label(label)}:{sequence_digest}"
 
 
 def _inventory_primer(record: Any, feature: Any) -> dict[str, Any]:
@@ -462,15 +672,13 @@ def _neb_restriction_sites(record: Any) -> dict[str, int]:
 
 def _display_path(path: Path, root: Path) -> str:
     try:
-        return path.relative_to(root).as_posix()
+        return os.fspath(path.relative_to(root))
     except ValueError:
         return str(path)
 
 
 def _common_parent(files: Sequence[Path], inputs: Sequence[Path]) -> Path:
     if files:
-        import os
-
         return Path(os.path.commonpath([str(path.parent) for path in files]))
     if inputs:
         first = inputs[0].expanduser().resolve()

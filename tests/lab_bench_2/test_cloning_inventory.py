@@ -8,6 +8,7 @@ from Bio.SeqRecord import SeqRecord
 from lab_bench_2.cloning_inventory import (
     build_cloning_inventory,
     classify_feature_roles,
+    feature_signature,
 )
 
 
@@ -107,3 +108,89 @@ def test_inventory_includes_neb_catalog_and_cut_counts(tmp_path: Path) -> None:
 def test_feature_type_and_function_are_separate() -> None:
     roles = classify_feature_roles("CDS", {"label": ["FLAG-NLS"]})
     assert roles == ["coding_sequence", "epitope_tag", "localization_signal"]
+
+
+def test_external_igem_specific_match_preserves_evidence_and_indexes(
+    tmp_path: Path,
+) -> None:
+    record = SeqRecord(Seq("ATG" * 30), id="record", name="record")
+    record.annotations["molecule_type"] = "DNA"
+    record.features = [
+        SeqFeature(
+            FeatureLocation(0, 30),
+            type="CDS",
+            qualifiers={"label": ["Cas9"]},
+        )
+    ]
+    gbk = tmp_path / "cas9.gbk"
+    SeqIO.write(record, gbk, "genbank")
+    signature = feature_signature("Cas9", "ATG" * 10)
+    source_data = {
+        "sources": {
+            "igem_registry": {
+                "source": {
+                    "api_version": "1.0",
+                    "openapi": {"sha256": "openapi-digest"},
+                },
+                "summary": {"role_count": 1, "category_count": 1},
+                "indexes": {
+                    "role_alias_to_terms": {
+                        "cds": [
+                            {
+                                "accession": "SO:0000316",
+                                "label": "CDS",
+                                "definition": "coding region",
+                                "source": "SO",
+                            }
+                        ]
+                    },
+                    "category_alias_to_terms": {
+                        "cas9": [
+                            {
+                                "uuid": "category-cas9",
+                                "path": "//function/crispr/cas9",
+                                "description": "",
+                            }
+                        ]
+                    },
+                    "feature_signature_to_part_matches": {
+                        signature: [
+                            {
+                                "name": "BBa_TEST_CAS9",
+                                "url": "https://registry.igem.org/parts/bba-test-cas9",
+                                "title": "Cas9",
+                                "description": "RNA-guided nuclease.",
+                                "role": {
+                                    "accession": "SO:0000316",
+                                    "label": "CDS",
+                                },
+                                "selected": True,
+                                "evidence": {"nucleotide_exact": True},
+                            }
+                        ]
+                    },
+                },
+            }
+        }
+    }
+
+    inventory = build_cloning_inventory(
+        [gbk], include_enzymes=False, external_sources=source_data
+    )
+    candidates = inventory["files"][0]["records"][0]["features"][0][
+        "external_function_candidates"
+    ]["igem_registry"]
+
+    assert candidates["nucleotide_sequence_verified"] is True
+    assert candidates["translated_peptide_verified"] is False
+    assert candidates["review_required"] is False
+    assert candidates["roles"] == []
+    assert candidates["categories"][0]["path"] == "//function/crispr/cas9"
+    assert candidates["specific_parts"][0]["name"] == "BBa_TEST_CAS9"
+    assert inventory["indexes"]["igem_category_to_files"] == {
+        "//function/crispr/cas9": ["cas9.gbk"]
+    }
+    assert inventory["indexes"]["igem_part_to_files"] == {"BBa_TEST_CAS9": ["cas9.gbk"]}
+    enrichment = inventory["provenance"]["external_enrichment"]
+    assert enrichment["specific_part_candidate_count"] == 1
+    assert enrichment["selected_specific_part_count"] == 1

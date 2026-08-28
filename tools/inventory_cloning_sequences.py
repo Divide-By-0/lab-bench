@@ -28,23 +28,38 @@ def _arguments() -> argparse.Namespace:
         action="store_true",
         help="Skip the Biopython supplier-N enzyme catalog and site index",
     )
+    parser.add_argument(
+        "--external-sources",
+        type=Path,
+        help=(
+            "JSON created by fetch_cloning_source_data.py; adds provenance-marked "
+            "specific iGEM parts, descriptions, roles, and label-vocabulary "
+            "candidates without replacing source annotations"
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = _arguments()
     try:
+        external_sources = (
+            json.loads(args.external_sources.read_text(encoding="utf-8"))
+            if args.external_sources
+            else None
+        )
         inventory = build_cloning_inventory(
             args.inputs,
             root=args.root,
             include_enzymes=not args.no_enzymes,
+            external_sources=external_sources,
         )
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
             json.dumps(inventory, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-    except (OSError, ValueError) as exc:
+    except (json.JSONDecodeError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
