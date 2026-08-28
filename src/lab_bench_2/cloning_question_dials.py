@@ -123,4 +123,7 @@ def render_cloning_question(spec: CloningQuestionSpec, dials: DifficultyDials) -
             "method, will be assessed"
         )
 
-    return ". ".join(section.rstrip(".") for section in sections) + "."
+    cleaned = [section.rstrip(".") for section in sections]
+    if dials.materials is MaterialDisclosure.INVENTORY:
+        return ". ".join(cleaned[:2]) + ".\n\n" + ". ".join(cleaned[2:]) + "."
+    return ". ".join(cleaned) + "."

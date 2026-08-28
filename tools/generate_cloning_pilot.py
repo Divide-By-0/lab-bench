@@ -37,7 +37,7 @@ from lab_bench_2.cloning_question_dials import (
     render_cloning_question,
 )
 from lab_bench_2.cloning_simulators import execute_cloning_protocol_v2
-from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE
+from lab_bench_2.prompt_composer import CLONING_PROTOCOL_SUFFIX
 
 DESTINATION_FILENAME = "pcmv-mmlvgag-3xnes-cas9.gbk"
 SOURCE_FILENAME = "pcalnl-gfp.gbk"
@@ -50,34 +50,7 @@ REPLACE_END = 6027
 OVERLAP_LENGTH = 20
 ANNEAL_LENGTH = 20
 
-PROTOCOL_SUFFIX = """You need to express the final protocol as a single functional expression in an equation-like syntax inside <protocol> </protocol> tags.
-
-You may use the following operations. All operations return a FASTA or GenBank file. All input files must contain a single sequence (no multi-FASTA or multi-GenBank files). Inputs must be FASTA/GenBank files, plain text files (.txt), or outputs of other operations.
-
-1. pcr(sequence, forward_primer, reverse_primer)
-   - sequence: FASTA/GenBank file or nested operation
-   - forward_primer: a literal string or a .txt file containing the primer
-   - reverse_primer: a literal string or a .txt file containing the primer
-
-2. gibson(seq1, seq2, ..., seqN)
-   - seq1..seqN: sequences (FASTA/GenBank, .txt, or nested operations)
-
-3. goldengate(seq1, seq2, ..., seqN, enzymes='Enz1,Enz2,...')
-   - seq1..seqN: sequences (FASTA/GenBank, .txt, or nested operations)
-   - enzymes: a literal string of enzyme names separated by commas or a .txt file containing them
-
-4. restriction_assemble(fragment1, fragment2)
-   - fragment1: sequence (FASTA/GenBank/.txt) or nested operation
-   - fragment2: sequence (FASTA/GenBank/.txt) or nested operation
-
-5. enzyme_cut(sequence, \"EnzymeName\")
-   - sequence: FASTA/GenBank file or nested operation
-   - EnzymeName: a literal string with the enzyme name (e.g., \"NdeI\", \"XhoI\", \"BamHI\")
-   - Returns the largest fragment from the digest (typically the backbone or main insert)
-
-All operations may be nested arbitrarily.""" + (
-    "\n\n" + CLONING_FILE_REFERENCE_GUIDANCE
-)
+PROTOCOL_SUFFIX = CLONING_PROTOCOL_SUFFIX
 
 
 @dataclass(frozen=True)

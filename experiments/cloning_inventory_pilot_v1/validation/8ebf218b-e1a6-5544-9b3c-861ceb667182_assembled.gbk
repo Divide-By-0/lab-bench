@@ -1,0 +1,183 @@
+LOCUS       topflash-egfp           4051 bp    DNA     circular UNK 01-JAN-1980
+DEFINITION  TCF/LEF-responsive EGFP reporter; circular reference assembly.
+ACCESSION   8ebf218b-e1a6-5544-9b3c-861ceb667182
+VERSION     8ebf218b-e1a6-5544-9b3c-861ceb667182
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+     source          1..4051
+     misc_feature    1..735
+                     /label="native Kozak context plus complete EGFP CDS"
+                     /note="Insert core provenance: Addgene #13031; source
+                     interval [742:1462)"
+     misc_feature    736..4051
+                     /label="retained M50 Super 8x TOPFlash backbone"
+                     /note="Backbone provenance: Addgene #12456; destination
+                     interval [380:2048) replaced"
+     protein_bind    3826..3936
+                     /label="TCF/LEF response-site array"
+                     /note="Manually identified retained feature from Addgene
+                     #12456; original interval [154:265)"
+     misc_feature    3715..3806
+                     /label="pause site"
+                     /note="RNA polymerase II transcriptional pause signal from
+                     the human alpha-2 globin gene"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     promoter        3974..4005
+                     /label="minP"
+                     /note="minimal TATA-box promoter with low basal activity"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     polyA_signal    776..897
+                     /label="SV40 poly(A) signal"
+                     /note="SV40 polyadenylation signal"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     rep_origin      complement(1316..1904)
+                     /direction=LEFT
+                     /label="ori"
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of
+                     replication"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     CDS             complement(join(2075..2866,2867..2935))
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label="AmpR"
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     promoter        complement(2936..3040)
+                     /gene="bla"
+                     /label="AmpR promoter"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     rep_origin      3067..3522
+                     /direction=RIGHT
+                     /label="f1 ori"
+                     /note="f1 bacteriophage origin of replication; arrow
+                     indicates direction of (+) strand synthesis"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     polyA_signal    join(3653..3671,3672..3701)
+                     /note="synthetic polyadenylation signal"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; retained backbone)"
+     regulatory      10..19
+                     /label="Kozak sequence"
+                     /note="vertebrate consensus sequence for strong initiation
+                     of translation (Kozak, 1987)"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; restored or retained context)"
+                     /regulatory_class="other"
+     CDS             16..735
+                     /codon_start=1
+                     /product="the original enhanced GFP (Yang et al., 1996)"
+                     /label="EGFP"
+                     /note="mammalian codon-optimized"
+                     /note="Sequence provenance: pcDNA3-EGFP (Addgene #13031;
+                     insert source)"
+                     /translation="MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTL
+                     KFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDD
+                     GNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIK
+                     VNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLL
+                     EFVTAAGITLGMDELYK"
+     CDS             16..732
+                     /codon_start=1
+                     /product="enhanced GFP"
+                     /label="EGFP"
+                     /translation="MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTL
+                     KFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDD
+                     GNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIK
+                     VNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLL
+                     EFVTAAGITLGMDELYK"
+                     /note="Sequence provenance: pcDNA3-EGFP (Addgene #13031;
+                     insert source)"
+     rep_origin      3067..3495
+                     /direction=RIGHT
+                     /label="f1 ori"
+                     /note="f1 bacteriophage origin of replication; arrow
+                     indicates direction of (+) strand synthesis"
+                     /note="Sequence provenance: pcDNA3-EGFP (Addgene #13031;
+                     insert source)"
+ORIGIN
+        1 gttggtaaag ccaccatggt gagcaagggc gaggagctgt tcaccggggt ggtgcccatc
+       61 ctggtcgagc tggacggcga cgtaaacggc cacaagttca gcgtgtccgg cgagggcgag
+      121 ggcgatgcca cctacggcaa gctgaccctg aagttcatct gcaccaccgg caagctgccc
+      181 gtgccctggc ccaccctcgt gaccaccctg acctacggcg tgcagtgctt cagccgctac
+      241 cccgaccaca tgaagcagca cgacttcttc aagtccgcca tgcccgaagg ctacgtccag
+      301 gagcgcacca tcttcttcaa ggacgacggc aactacaaga cccgcgccga ggtgaagttc
+      361 gagggcgaca ccctggtgaa ccgcatcgag ctgaagggca tcgacttcaa ggaggacggc
+      421 aacatcctgg ggcacaagct ggagtacaac tacaacagcc acaacgtcta tatcatggcc
+      481 gacaagcaga agaacggcat caaggtgaac ttcaagatcc gccacaacat cgaggacggc
+      541 agcgtgcagc tcgccgacca ctaccagcag aacaccccca tcggcgacgg ccccgtgctg
+      601 ctgcccgaca accactacct gagcacccag tccgccctga gcaaagaccc caacgagaag
+      661 cgcgatcaca tggtcctgct ggagttcgtg accgccgccg ggatcactct cggcatggac
+      721 gagctgtaca agtaattcta gagtcggggc ggccggccgc ttcgagcaga catgataaga
+      781 tacattgatg agtttggaca aaccacaact agaatgcagt gaaaaaaatg ctttatttgt
+      841 gaaatttgtg atgctattgc tttatttgta accattataa gctgcaataa acaagttaac
+      901 aacaacaatt gcattcattt tatgtttcag gttcaggggg aggtgtggga ggttttttaa
+      961 agcaagtaaa acctctacaa atgtggtaaa atcgataagg atccgtcgac cgatgccctt
+     1021 gagagccttc aacccagtca gctccttccg gtgggcgcgg ggcatgacta tcgtcgccgc
+     1081 acttatgact gtcttcttta tcatgcaact cgtaggacag gtgccggcag cgctcttccg
+     1141 cttcctcgct cactgactcg ctgcgctcgg tcgttcggct gcggcgagcg gtatcagctc
+     1201 actcaaaggc ggtaatacgg ttatccacag aatcagggga taacgcagga aagaacatgt
+     1261 gagcaaaagg ccagcaaaag gccaggaacc gtaaaaaggc cgcgttgctg gcgtttttcc
+     1321 ataggctccg cccccctgac gagcatcaca aaaatcgacg ctcaagtcag aggtggcgaa
+     1381 acccgacagg actataaaga taccaggcgt ttccccctgg aagctccctc gtgcgctctc
+     1441 ctgttccgac cctgccgctt accggatacc tgtccgcctt tctcccttcg ggaagcgtgg
+     1501 cgctttctca tagctcacgc tgtaggtatc tcagttcggt gtaggtcgtt cgctccaagc
+     1561 tgggctgtgt gcacgaaccc cccgttcagc ccgaccgctg cgccttatcc ggtaactatc
+     1621 gtcttgagtc caacccggta agacacgact tatcgccact ggcagcagcc actggtaaca
+     1681 ggattagcag agcgaggtat gtaggcggtg ctacagagtt cttgaagtgg tggcctaact
+     1741 acggctacac tagaagaaca gtatttggta tctgcgctct gctgaagcca gttaccttcg
+     1801 gaaaaagagt tggtagctct tgatccggca aacaaaccac cgctggtagc ggtggttttt
+     1861 ttgtttgcaa gcagcagatt acgcgcagaa aaaaaggatc tcaagaagat cctttgatct
+     1921 tttctacggg gtctgacgct cagtggaacg aaaactcacg ttaagggatt ttggtcatga
+     1981 gattatcaaa aaggatcttc acctagatcc ttttaaatta aaaatgaagt tttaaatcaa
+     2041 tctaaagtat atatgagtaa acttggtctg acagttacca atgcttaatc agtgaggcac
+     2101 ctatctcagc gatctgtcta tttcgttcat ccatagttgc ctgactcccc gtcgtgtaga
+     2161 taactacgat acgggagggc ttaccatctg gccccagtgc tgcaatgata ccgcgagacc
+     2221 cacgctcacc ggctccagat ttatcagcaa taaaccagcc agccggaagg gccgagcgca
+     2281 gaagtggtcc tgcaacttta tccgcctcca tccagtctat taattgttgc cgggaagcta
+     2341 gagtaagtag ttcgccagtt aatagtttgc gcaacgttgt tgccattgct acaggcatcg
+     2401 tggtgtcacg ctcgtcgttt ggtatggctt cattcagctc cggttcccaa cgatcaaggc
+     2461 gagttacatg atcccccatg ttgtgcaaaa aagcggttag ctccttcggt cctccgatcg
+     2521 ttgtcagaag taagttggcc gcagtgttat cactcatggt tatggcagca ctgcataatt
+     2581 ctcttactgt catgccatcc gtaagatgct tttctgtgac tggtgagtac tcaaccaagt
+     2641 cattctgaga atagtgtatg cggcgaccga gttgctcttg cccggcgtca atacgggata
+     2701 ataccgcgcc acatagcaga actttaaaag tgctcatcat tggaaaacgt tcttcggggc
+     2761 gaaaactctc aaggatctta ccgctgttga gatccagttc gatgtaaccc actcgtgcac
+     2821 ccaactgatc ttcagcatct tttactttca ccagcgtttc tgggtgagca aaaacaggaa
+     2881 ggcaaaatgc cgcaaaaaag ggaataaggg cgacacggaa atgttgaata ctcatactct
+     2941 tcctttttca atattattga agcatttatc agggttattg tctcatgagc ggatacatat
+     3001 ttgaatgtat ttagaaaaat aaacaaatag gggttccgcg cacatttccc cgaaaagtgc
+     3061 cacctgacgc gccctgtagc ggcgcattaa gcgcggcggg tgtggtggtt acgcgcagcg
+     3121 tgaccgctac acttgccagc gccctagcgc ccgctccttt cgctttcttc ccttcctttc
+     3181 tcgccacgtt cgccggcttt ccccgtcaag ctctaaatcg ggggctccct ttagggttcc
+     3241 gatttagtgc tttacggcac ctcgacccca aaaaacttga ttagggtgat ggttcacgta
+     3301 gtgggccatc gccctgatag acggtttttc gccctttgac gttggagtcc acgttcttta
+     3361 atagtggact cttgttccaa actggaacaa cactcaaccc tatctcggtc tattcttttg
+     3421 atttataagg gattttgccg atttcggcct attggttaaa aaatgagctg atttaacaaa
+     3481 aatttaacgc gaattttaac aaaatattaa cgcttacaat ttgccattcg ccattcaggc
+     3541 tgcgcaactg ttgggaaggg cgatcggtgc gggcctcttc gctattacgc cagcccaagc
+     3601 taccatgata agtaagtaat attaaggtac gggaggtact tggagcggcc gcaataaaat
+     3661 atctttattt tcattacatc tgtgtgttgg ttttttgtgt gaatcgatag tactaacata
+     3721 cgctctccat caaaacaaaa cgaaacaaaa caaactagca aaataggctg tccccagtgc
+     3781 aagtgcaggt gccagaacat ttctctatcg ataggtaccg agctcttacg cgagatcaaa
+     3841 gggggtaaga tcaaaggggg taagatcaaa ggggcgcgag atcaaagggg gtaagatcaa
+     3901 agggggtaag atcaaagggg gtaagatcaa aggggcgcgc ccgcgtgcta gcccgggctc
+     3961 gagatctaga ctctagaggg tatataatgg aagctcgaat tccagcttgg cattccggta
+     4021 ctgttggtaa aaagcttggc attccggtac t
+//
