@@ -53,13 +53,6 @@
         "copies": 1
       },
       {
-        "id": "ampr",
-        "description": "bacterial ampicillin resistance protein",
-        "source_features": {"file": "addgene-12456", "label": "AmpR", "feature_type": "CDS"},
-        "match": "protein",
-        "copies": 1
-      },
-      {
         "id": "origin",
         "description": "bacterial replication origin",
         "source_features": {"file": "addgene-12456", "label": "ori", "feature_type": "rep_origin"},

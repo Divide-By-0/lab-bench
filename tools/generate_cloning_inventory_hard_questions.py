@@ -23,6 +23,7 @@ from lab_bench_2.cloning_simulators import execute_cloning_protocol_v2
 from lab_bench_2.prompt_composer import CLONING_PROTOCOL_SUFFIX
 
 VERSION = "inventory-hard-1.1"
+INTENT_CHALLENGE_VERSION = "inventory-intent-challenge-1.0"
 TASK_ID_SEED_VERSION = "inventory-hard-1.0"
 OUTPUT_DEFAULT = Path("experiments/cloning_inventory_hard_v1")
 IGEM_ELEMENTS_DEFAULT = OUTPUT_DEFAULT / "igem_element_sources"
@@ -104,6 +105,18 @@ class HardTask:
     components: tuple[Component, ...]
     inventory_ids: tuple[int, ...]
     manual_features: tuple[ManualFeature, ...] = ()
+
+
+@dataclass(frozen=True)
+class IntentChallenge:
+    """A matched, intent-level prompt plus reviewer-only difficulty rationale."""
+
+    slug: str
+    tier: int
+    request: str
+    intent_inferences: tuple[str, ...]
+    sequence_traps: tuple[str, ...]
+    fairness_note: str
 
 
 TASKS = (
@@ -408,6 +421,168 @@ TASKS = (
     ),
 )
 
+
+INTENT_CHALLENGES = (
+    IntentChallenge(
+        slug="wnt-egfp-p2a-puro",
+        tier=2,
+        request=(
+            "We need a live-cell construct for enriching and tracking mammalian "
+            "cells only while canonical Wnt/beta-catenin transcription is active. "
+            "Use a fluorescence-only readout rather than a luminescent one. The "
+            "pathway-responsive transcript should provide green fluorescence and "
+            "puromycin resistance from one compact open reading frame, but those "
+            "activities must come from separate proteins"
+        ),
+        intent_inferences=(
+            "select a pathway-responsive rather than constitutive backbone",
+            "infer a green reporter and puromycin-resistance coding sequence",
+            "choose an inventory-supported way to make two proteins from one transcript",
+        ),
+        sequence_traps=(
+            "retain the TCF/LEF response array and its minimal promoter",
+            "remove the original luciferase coding sequence",
+            "omit the reporter stop at the linked coding junction and keep one frame",
+        ),
+        fairness_note=(
+            "Every scored requirement follows from pathway dependence, the two "
+            "requested phenotypes, or the one-transcript/separate-protein constraint."
+        ),
+    ),
+    IntentChallenge(
+        slug="lenti-mcherry-neor-two-locus",
+        tier=2,
+        request=(
+            "We need a third-generation lentiviral transfer construct for stable "
+            "labeling of mammalian cells with a monomeric red fluorescent protein "
+            "and enrichment with G418. Reporter intensity must remain interpretable "
+            "independently of selection-marker expression, so each should have its "
+            "own transcription unit. The vector should add no other fluorescent or "
+            "mammalian drug-selection phenotype"
+        ),
+        intent_inferences=(
+            "identify a lentiviral transfer rather than packaging plasmid",
+            "map monomeric red fluorescence and G418 resistance to inventory parts",
+            "preserve independent reporter and selector expression cassettes",
+        ),
+        sequence_traps=(
+            "retain the packaging signal, RRE, and self-inactivating LTR architecture",
+            "distinguish a mammalian G418 cassette from bacterial kanamycin selection",
+            "remove the displaced reporter and mammalian selector coding sequences",
+        ),
+        fairness_note=(
+            "The viral architecture is inherent to a functional third-generation "
+            "transfer vector; separate transcription units are requested explicitly."
+        ),
+    ),
+    IntentChallenge(
+        slug="cre-tdtomato-p2a-puro",
+        tier=3,
+        request=(
+            "Build a ubiquitous mammalian lineage-tracing construct that remains "
+            "off until Cre removes a transcriptional stop. Once activated, it "
+            "should produce only a bright red signal and puromycin resistance from "
+            "one compact open reading frame while leaving the two products "
+            "physically separate"
+        ),
+        intent_inferences=(
+            "identify a Cre-dependent lox-stop-lox reporter backbone",
+            "choose the brighter available red reporter and a puromycin marker",
+            "infer an inventory-supported polycistronic architecture",
+        ),
+        sequence_traps=(
+            "retain both loxP sites and the intervening stop cassette in the right order",
+            "remove the original post-recombination reporter",
+            "preserve an uninterrupted reporter-to-cleavage-peptide-to-selector frame",
+        ),
+        fairness_note=(
+            "Cre dependence, brightness, selection, and separate products are all "
+            "experimental requirements; no arbitrary enzyme or junction is prescribed."
+        ),
+    ),
+    IntentChallenge(
+        slug="cas9-p2a-mcherry-kanr",
+        tier=3,
+        request=(
+            "We need a single transient mammalian plasmid that accepts an sgRNA and "
+            "expresses its nuclease, with monomeric red fluorescence reporting "
+            "nuclease expression from the same transcript without making a "
+            "fluorescent fusion protein. It must propagate under kanamycin, and our "
+            "facility does not permit beta-lactam-resistance plasmids"
+        ),
+        intent_inferences=(
+            "infer the nuclease and guide-expression architecture from the sgRNA use case",
+            "choose a monomeric red reporter and a cotranslational separation strategy",
+            "select bacterial kanamycin resistance and eliminate beta-lactam resistance",
+        ),
+        sequence_traps=(
+            "retain both the U6 guide cassette and the mammalian nuclease cassette",
+            "remove the nuclease stop before the linked peptide while preserving its frame",
+            "install the bacterial marker in expression orientation without retaining AmpR",
+        ),
+        fairness_note=(
+            "The negative resistance constraint models a plausible facility rule; "
+            "all other checks are required by guide editing or expression coupling."
+        ),
+    ),
+    IntentChallenge(
+        slug="t7-histev-tdtomato-kanr",
+        tier=3,
+        request=(
+            "We need an IPTG-inducible E. coli construct for high-level production "
+            "of a bright red fluorescent protein. The product should support "
+            "immobilized-metal affinity purification and clean protease removal of "
+            "its N-terminal affinity/expression leader, without a bulky solubility-"
+            "fusion partner. Maintain the plasmid under kanamycin; beta-lactam-"
+            "resistance DNA cannot be used in this project"
+        ),
+        intent_inferences=(
+            "select a T7 bacterial expression backbone rather than a mammalian vector",
+            "infer the fluorescent protein, affinity handle, and protease-cleavage site",
+            "choose bacterial kanamycin resistance and remove beta-lactam resistance",
+        ),
+        sequence_traps=(
+            "retain the T7 promoter, gene-10 translation context, and T7 terminator",
+            "transfer only the useful donor coding interval rather than its arabinose system",
+            "keep the complete leader and reporter in frame while excluding MBP",
+        ),
+        fairness_note=(
+            "The host, induction system, purification workflow, and antibiotic "
+            "policy are ordinary experimental constraints and uniquely narrow the inventory."
+        ),
+    ),
+    IntentChallenge(
+        slug="lenti-guide-mcherry-p2a-neor",
+        tier=3,
+        request=(
+            "Our mammalian cells already express the genome-editing nuclease. Build "
+            "a third-generation lentiviral construct that delivers only an sgRNA, "
+            "marks transduced cells with a monomeric red signal, and permits G418 "
+            "selection. The two phenotypes should come from one compact open reading "
+            "frame but separate proteins. No nuclease or second mammalian drug-"
+            "selection phenotype may remain in the payload"
+        ),
+        intent_inferences=(
+            "identify a guide-capable lentiviral transfer backbone",
+            "map monomeric red fluorescence and G418 selection to inventory parts",
+            "infer a linked-but-separated expression architecture while deleting nuclease",
+        ),
+        sequence_traps=(
+            "retain the U6 guide cassette plus lentiviral packaging and SIN-LTR elements",
+            "remove both the nuclease and the displaced mammalian selector",
+            "preserve one coding frame across reporter, cleavage peptide, and G418 marker",
+        ),
+        fairness_note=(
+            "The absence of nuclease follows from the pre-engineered cell line and is "
+            "stated; the remaining checks are necessary for guide delivery and selection."
+        ),
+    ),
+)
+
+INTENT_CHALLENGE_BY_SLUG = {
+    challenge.slug: challenge for challenge in INTENT_CHALLENGES
+}
+
 REAGENT_TASK_SLUGS = (
     "wnt-egfp-p2a-puro",
     "lenti-mcherry-neor-two-locus",
@@ -594,7 +769,9 @@ def _segment_length(segment: Segment, record: SeqRecord) -> int:
     sequence_length = len(str(record.seq))
     length = (segment.end - segment.start) % sequence_length
     if length == 0:
-        raise ValueError(f"A segment cannot span zero or one complete plasmid: {segment}")
+        raise ValueError(
+            f"A segment cannot span zero or one complete plasmid: {segment}"
+        )
     return length
 
 
@@ -612,10 +789,14 @@ def _segment_sequence(segment: Segment, record: SeqRecord) -> str:
 def _component_parts(
     component: Component, records: dict[int, SeqRecord]
 ) -> tuple[str, str, str]:
-    template = _segment_sequence(component.template, records[component.template.source_id])
+    template = _segment_sequence(
+        component.template, records[component.template.source_id]
+    )
     prefix = ""
     if component.prefix is not None:
-        prefix = _segment_sequence(component.prefix, records[component.prefix.source_id])
+        prefix = _segment_sequence(
+            component.prefix, records[component.prefix.source_id]
+        )
     return prefix + template, prefix, template
 
 
@@ -767,8 +948,7 @@ def _manual_feature(
         qualifiers={
             "label": [feature.label],
             "note": [
-                f"Manually identified sequence from Addgene "
-                f"#{feature.source.source_id}"
+                f"Manually identified sequence from Addgene #{feature.source.source_id}"
             ],
         },
     )
@@ -913,6 +1093,51 @@ def _question_record(
     }
 
 
+def _intent_challenge_record(
+    task: HardTask,
+    task_id: str,
+    igem_parts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    challenge = INTENT_CHALLENGE_BY_SLUG[task.slug]
+    record = _question_record(task, task_id, igem_parts)
+    record["version"] = INTENT_CHALLENGE_VERSION
+    record["question"] = f"{challenge.request.rstrip('.')}.\n\n{TASK_INVENTORY_SUFFIX}"
+    record["difficulty"] = {
+        "name": "intent_driven_sequence_traps",
+        "tier": challenge.tier,
+        "method": "model_chooses",
+        "materials": "addgene_and_igem_inventory",
+        "backbone": "model_chooses",
+        "architecture": "model_infers_from_experimental_intent",
+        "component_count": len(task.components),
+        "intent_inference_count": len(challenge.intent_inferences),
+        "sequence_trap_count": len(challenge.sequence_traps),
+        "igem_plasmid_count": len(igem_parts),
+        "igem_element_count": len(igem_parts),
+        "enzyme_count": len(ENZYME_REAGENTS),
+    }
+    return record
+
+
+def _intent_challenge_review(
+    task: HardTask,
+    task_id: str,
+) -> dict[str, Any]:
+    challenge = INTENT_CHALLENGE_BY_SLUG[task.slug]
+    return {
+        "id": task_id,
+        "slug": task.slug,
+        "reviewer_title": task.title,
+        "tier": challenge.tier,
+        "question_before_shared_inventory_suffix": challenge.request.rstrip(".") + ".",
+        "intent_inferences": list(challenge.intent_inferences),
+        "sequence_traps": list(challenge.sequence_traps),
+        "canonical_solution": task.solution_summary.rstrip(".") + ".",
+        "fairness_note": challenge.fairness_note,
+        "reference_and_functional_spec_reused_from": "questions.jsonl",
+    }
+
+
 def _reagent_question_record(
     task: HardTask,
     task_id: str,
@@ -975,9 +1200,7 @@ def _write_enzyme_inventory(task_dir: Path) -> list[dict[str, str]]:
         (task_dir / filename).write_text(enzyme + "\n")
         enzyme_rows.append({"filename": filename, "enzyme": enzyme})
     index_lines = ["filename\tenzyme"]
-    index_lines.extend(
-        f"{row['filename']}\t{row['enzyme']}" for row in enzyme_rows
-    )
+    index_lines.extend(f"{row['filename']}\t{row['enzyme']}" for row in enzyme_rows)
     (task_dir / "enzyme_inventory.tsv").write_text("\n".join(index_lines) + "\n")
     return enzyme_rows
 
@@ -1043,8 +1266,7 @@ def _write_reagent_inventory(
 
     index_lines = ["filename\treagent_class\tvalue"]
     index_lines.extend(
-        f"{row['filename']}\tprimer\t{row['sequence_5_to_3']}"
-        for row in primer_rows
+        f"{row['filename']}\tprimer\t{row['sequence_5_to_3']}" for row in primer_rows
     )
     index_lines.extend(
         f"{row['filename']}\tenzyme\t{row['enzyme']}" for row in enzyme_rows
@@ -1082,12 +1304,29 @@ def _write_clean_readme(output: Path) -> None:
         for task in TASKS
         if task.slug in REAGENT_TASK_SLUGS
     )
+    intent_rows = "\n".join(
+        "| "
+        + " | ".join(
+            (
+                task.title,
+                str(INTENT_CHALLENGE_BY_SLUG[task.slug].tier),
+                INTENT_CHALLENGE_BY_SLUG[task.slug].request.rstrip(".") + ".",
+                "; ".join(INTENT_CHALLENGE_BY_SLUG[task.slug].intent_inferences),
+                "; ".join(INTENT_CHALLENGE_BY_SLUG[task.slug].sequence_traps),
+            )
+        )
+        + " |"
+        for task in TASKS
+    )
     lines = [
         "# Hard mixed-inventory cloning pilot",
         "",
         "This package preserves the easier `cloning_inventory_pilot_v1` set and "
         "adds six genuinely harder underlying constructs. These are not merely "
         "prompt-redacted versions of two-fragment swaps.",
+        "A separate matched set, `questions_intent_challenge.jsonl`, keeps those "
+        "six constructs and inventories fixed while replacing the component-level "
+        "requests with experimental-intent prompts.",
         "",
         "Each JSONL record points to its complete inventory through the `files` "
         "field. Base-task inventories are under `cloning/<task-id>/`; fixed-reagent "
@@ -1105,6 +1344,7 @@ def _write_clean_readme(output: Path) -> None:
         "| Question set | Tasks | Addgene plasmids/task | iGEM carrier plasmids/task | iGEM element records/task | Primers/task | Enzymes/task |",
         "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
         f"| Base questions | 6 | 12 | 8 | 8 | 0 | {len(ENZYME_REAGENTS)} |",
+        f"| Matched intent challenge | 6 | 12 | 8 | 8 | 0 | {len(ENZYME_REAGENTS)} |",
         reagent_rows,
         "",
         "The enzyme stock is non-empty for every task and contains: "
@@ -1121,8 +1361,8 @@ def _write_clean_readme(output: Path) -> None:
         "- The exact products require three to five PCR-derived components.",
         "- All six tasks require frame-sensitive coding or tag junctions; three require "
         "two coding changes, and two require reverse-orienting a bacterial marker.",
-        "- The prompt describes the biological outcome without naming the source "
-        "plasmids, assembly method, coordinates, junctions, or component count.",
+        "- The matched intent prompts additionally avoid naming the reporter genes, "
+        "resistance genes, peptide mechanism, or displaced starting parts.",
         "",
         "The verifier still compares the assembled circular product with one exact "
         "reference. Because the prompts are now less prescriptive, that score should "
@@ -1183,6 +1423,25 @@ def _write_clean_readme(output: Path) -> None:
         "| --- | --- | --- |",
         question_rows,
         "",
+        "## Matched intent challenge",
+        "",
+        "This is a controlled prompt-hardening experiment, not six new gold "
+        "constructs. Each record has the same task ID, files, sources, exact reference, "
+        "and functional constraint specification as its base counterpart. Only the "
+        "question and difficulty metadata change. This makes a base-versus-intent "
+        "score comparison interpretable.",
+        "",
+        "The model must infer the backbone class, functional parts, expression "
+        "architecture, and assembly method. The so-called traps are not secret wishes: "
+        "they are sequence-level consequences of requirements stated in the prompt, "
+        "such as preserving a transfer vector's packaging elements, removing an "
+        "unwanted resistance gene, or avoiding a stop codon inside a linked ORF. "
+        "Reviewer metadata is also saved in `intent_challenge_design_v1.json`.",
+        "",
+        "| Reviewer name | Tier | Question shown before the shared suffix | Inference required | Sequence-level traps |",
+        "| --- | ---: | --- | --- | --- |",
+        intent_rows,
+        "",
         "## Regeneration",
         "",
         "```bash",
@@ -1199,12 +1458,15 @@ def _write_clean_readme(output: Path) -> None:
         "```bash",
         "inspect eval src/lab_bench_2/lab_bench_2.py@lab_bench_2 \\",
         "  -T tags=cloning -T mode=file -T solver=agentic \\",
-        "  -T dataset_path=\"$PWD/experiments/cloning_inventory_hard_v1/questions.jsonl\" \\",
+        '  -T dataset_path="$PWD/experiments/cloning_inventory_hard_v1/questions.jsonl" \\',
         "  --model openai/gpt-5.6-sol --reasoning-effort max",
         "```",
         "",
         "To run the three-task primer/enzyme inventory subset, replace "
         "`questions.jsonl` above with `questions_reagent_inventory.jsonl`.",
+        "To run the matched intent set, use `questions_intent_challenge.jsonl` "
+        "instead. Use a distinct Inspect log name when comparing the two sets because "
+        "their deliberately matched sample IDs are the same.",
     ]
     (output / "README.md").write_text("\n".join(lines) + "\n")
 
@@ -1216,7 +1478,9 @@ async def generate(
     output: Path,
 ) -> None:
     used_ids = sorted({item for task in TASKS for item in task.inventory_ids})
-    input_paths = {addgene_id: _input_path(input_dir, addgene_id) for addgene_id in used_ids}
+    input_paths = {
+        addgene_id: _input_path(input_dir, addgene_id) for addgene_id in used_ids
+    }
     records = {
         addgene_id: SeqIO.read(path, "genbank")
         for addgene_id, path in input_paths.items()
@@ -1234,6 +1498,8 @@ async def generate(
     (output / "canonical_reagent_protocols").mkdir(exist_ok=True)
 
     questions: list[dict[str, Any]] = []
+    intent_questions: list[dict[str, Any]] = []
+    intent_review: list[dict[str, Any]] = []
     reagent_questions: list[dict[str, Any]] = []
     task_manifest: list[dict[str, Any]] = []
     reagent_manifest: list[dict[str, Any]] = []
@@ -1250,7 +1516,9 @@ async def generate(
         task_dir = output / "cloning" / task_id
         task_dir.mkdir(parents=True, exist_ok=True)
         for addgene_id in task.inventory_ids:
-            shutil.copy2(input_paths[addgene_id], task_dir / f"addgene-{addgene_id}.gbk")
+            shutil.copy2(
+                input_paths[addgene_id], task_dir / f"addgene-{addgene_id}.gbk"
+            )
         _copy_igem_inventory(igem_parts, task_dir)
         _write_enzyme_inventory(task_dir)
 
@@ -1336,6 +1604,8 @@ async def generate(
             )
 
         questions.append(_question_record(task, task_id, igem_parts))
+        intent_questions.append(_intent_challenge_record(task, task_id, igem_parts))
+        intent_review.append(_intent_challenge_review(task, task_id))
         task_manifest.append(
             {
                 "id": task_id,
@@ -1359,6 +1629,23 @@ async def generate(
     (output / "questions.jsonl").write_text(
         "".join(json.dumps(question, sort_keys=True) + "\n" for question in questions)
     )
+    (output / "questions_intent_challenge.jsonl").write_text(
+        "".join(
+            json.dumps(question, sort_keys=True) + "\n" for question in intent_questions
+        )
+    )
+    (output / "intent_challenge_design_v1.json").write_text(
+        json.dumps(
+            {
+                "version": INTENT_CHALLENGE_VERSION,
+                "design": "matched prompt-only hardening experiment",
+                "shared_inventory_suffix": TASK_INVENTORY_SUFFIX,
+                "tasks": intent_review,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
     (output / "questions_reagent_inventory.jsonl").write_text(
         "".join(
             json.dumps(question, sort_keys=True) + "\n"
@@ -1371,6 +1658,14 @@ async def generate(
         "question_set": {
             "path": "questions.jsonl",
             "difficulty": "hard_inventory_multifragment",
+        },
+        "intent_challenge_question_set": {
+            "path": "questions_intent_challenge.jsonl",
+            "difficulty": "intent_driven_sequence_traps",
+            "version": INTENT_CHALLENGE_VERSION,
+            "task_count": len(intent_questions),
+            "matched_question_set": "questions.jsonl",
+            "reviewer_design": "intent_challenge_design_v1.json",
         },
         "reagent_inventory_question_set": {
             "path": "questions_reagent_inventory.jsonl",

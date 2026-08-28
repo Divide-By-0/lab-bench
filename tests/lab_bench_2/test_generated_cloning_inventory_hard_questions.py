@@ -26,16 +26,17 @@ TASKS: tuple[dict[str, Any], ...] = tuple(MANIFEST["tasks"])
 QUESTIONS = [
     json.loads(line) for line in (PILOT / "questions.jsonl").read_text().splitlines()
 ]
+INTENT_QUESTIONS = [
+    json.loads(line)
+    for line in (PILOT / "questions_intent_challenge.jsonl").read_text().splitlines()
+]
+INTENT_DESIGN = json.loads((PILOT / "intent_challenge_design_v1.json").read_text())
 REAGENT_QUESTIONS = [
     json.loads(line)
     for line in (PILOT / "questions_reagent_inventory.jsonl").read_text().splitlines()
 ]
-REAGENT_TASKS: tuple[dict[str, Any], ...] = tuple(
-    MANIFEST["reagent_inventory_tasks"]
-)
-CONSTRAINT_SPECS = json.loads(
-    (PILOT / "construct_constraints_v1.json").read_text()
-)
+REAGENT_TASKS: tuple[dict[str, Any], ...] = tuple(MANIFEST["reagent_inventory_tasks"])
+CONSTRAINT_SPECS = json.loads((PILOT / "construct_constraints_v1.json").read_text())
 
 
 def _reference(task: dict[str, Any]) -> SeqRecord:
@@ -60,9 +61,7 @@ def _translation_has_one_terminal_stop(sequence: str) -> None:
 def test_hard_manifest_and_questions_are_consistent() -> None:
     assert len(TASKS) == 6
     assert len(QUESTIONS) == 6
-    assert {task["id"] for task in TASKS} == {
-        question["id"] for question in QUESTIONS
-    }
+    assert {task["id"] for task in TASKS} == {question["id"] for question in QUESTIONS}
     assert {task["canonical_component_count"] for task in TASKS} == {3, 4, 5}
 
     for task in TASKS:
@@ -103,6 +102,69 @@ def test_prompts_do_not_disclose_plasmid_names_sources_or_method() -> None:
         assert "PCR-derived assembly components" not in text
         assert len(text) < 700
         assert all(term not in text for term in hidden_terms)
+
+
+def test_intent_challenge_is_matched_but_removes_component_level_leakage() -> None:
+    assert len(INTENT_QUESTIONS) == len(QUESTIONS) == 6
+    assert MANIFEST["intent_challenge_question_set"] == {
+        "path": "questions_intent_challenge.jsonl",
+        "difficulty": "intent_driven_sequence_traps",
+        "version": "inventory-intent-challenge-1.0",
+        "task_count": 6,
+        "matched_question_set": "questions.jsonl",
+        "reviewer_design": "intent_challenge_design_v1.json",
+    }
+
+    banned_component_terms = (
+        "EGFP",
+        "mCherry",
+        "tdTomato",
+        "NeoR",
+        "PuroR",
+        "P2A",
+        "TOPFlash",
+        "pLJM1",
+        "pCALNL",
+        "pX330",
+        "lentiCRISPR",
+        "MBP",
+        "Gibson",
+        "Golden Gate",
+        "restriction assembly",
+    )
+    for base, intent in zip(QUESTIONS, INTENT_QUESTIONS, strict=True):
+        LabBenchQuestion.model_validate(intent)
+        assert intent["id"] == base["id"]
+        assert intent["files"] == base["files"]
+        assert intent["sources"] == base["sources"]
+        assert intent["mode"] == base["mode"]
+        assert intent["prompt_suffix"] == base["prompt_suffix"]
+        assert intent["question"] != base["question"]
+        assert intent["version"] == "inventory-intent-challenge-1.0"
+        assert intent["difficulty"]["name"] == "intent_driven_sequence_traps"
+        assert intent["difficulty"]["architecture"] == (
+            "model_infers_from_experimental_intent"
+        )
+        assert intent["difficulty"]["intent_inference_count"] == 3
+        assert intent["difficulty"]["sequence_trap_count"] == 3
+        assert "replace" not in intent["question"].lower()
+        assert all(term not in intent["question"] for term in banned_component_terms)
+        assert "Do not synthesize genes de novo" in intent["question"]
+
+
+def test_intent_challenge_has_auditable_reviewer_rationale() -> None:
+    assert INTENT_DESIGN["version"] == "inventory-intent-challenge-1.0"
+    assert INTENT_DESIGN["design"] == "matched prompt-only hardening experiment"
+    assert len(INTENT_DESIGN["tasks"]) == 6
+    assert {task["id"] for task in INTENT_DESIGN["tasks"]} == {
+        task["id"] for task in TASKS
+    }
+    for task in INTENT_DESIGN["tasks"]:
+        assert task["tier"] in {2, 3}
+        assert len(task["intent_inferences"]) == 3
+        assert len(task["sequence_traps"]) == 3
+        assert task["fairness_note"]
+        assert task["reference_and_functional_spec_reused_from"] == "questions.jsonl"
 
 
 def test_reagent_inventory_subset_is_matched_and_opaque() -> None:
@@ -181,9 +243,7 @@ def test_selected_igem_inventory_is_qc_valid_and_hash_matched() -> None:
     }
     assert all(part["is_valid"] and part["qc_status"] == "Correct" for part in parts)
     task_dirs = [PILOT / "cloning" / task["id"] for task in TASKS]
-    task_dirs.extend(
-        PILOT / "reagent_inventory" / task["id"] for task in REAGENT_TASKS
-    )
+    task_dirs.extend(PILOT / "reagent_inventory" / task["id"] for task in REAGENT_TASKS)
     for task_dir in task_dirs:
         for part in parts:
             plasmid_path = task_dir / part["plasmid_filename"]
@@ -206,17 +266,13 @@ async def test_stocked_primer_protocol_produces_exact_reference(
     task: dict[str, Any],
 ) -> None:
     task_id = task["id"]
-    protocol = (
-        PILOT / "canonical_reagent_protocols" / f"{task_id}.txt"
-    ).read_text()
+    protocol = (PILOT / "canonical_reagent_protocols" / f"{task_id}.txt").read_text()
     expression = protocol.split("<protocol>", 1)[1].split("</protocol>", 1)[0]
     products = await execute_cloning_protocol_v2(
         expression,
         PILOT / "reagent_inventory" / task_id,
     )
-    reference = BioSequence.from_fasta(
-        PILOT / "validation" / f"{task_id}_assembled.fa"
-    )
+    reference = BioSequence.from_fasta(PILOT / "validation" / f"{task_id}_assembled.fa")
 
     assert '"' not in expression
     assert expression.count("primer-") == task["canonical_primer_count"]
@@ -237,9 +293,7 @@ async def test_canonical_protocol_produces_one_exact_circular_product(
         expression,
         PILOT / "cloning" / task_id,
     )
-    reference = BioSequence.from_fasta(
-        PILOT / "validation" / f"{task_id}_assembled.fa"
-    )
+    reference = BioSequence.from_fasta(PILOT / "validation" / f"{task_id}_assembled.fa")
 
     assert len(products) == 1
     assert products[0].is_circular
@@ -270,15 +324,11 @@ def test_frame_sensitive_open_reading_frames_are_intact() -> None:
     # The Wnt construct begins with 15 bp of native initiation context.
     _translation_has_one_terminal_stop(records["wnt-egfp-p2a-puro"][15 : 15 + 1371])
     # The retained pLJM1 junction supplies the mCherry fusion stop.
-    _translation_has_one_terminal_stop(
-        records["lenti-mcherry-neor-two-locus"][:828]
-    )
+    _translation_has_one_terminal_stop(records["lenti-mcherry-neor-two-locus"][:828])
     _translation_has_one_terminal_stop(
         records["lenti-mcherry-neor-two-locus"][1476 : 1476 + 795]
     )
-    _translation_has_one_terminal_stop(
-        records["cre-tdtomato-p2a-puro"][:2082]
-    )
+    _translation_has_one_terminal_stop(records["cre-tdtomato-p2a-puro"][:2082])
     # Cas9 begins in the final backbone component and crosses the circular origin.
     cas9 = records["cas9-p2a-mcherry-kanr"]
     _translation_has_one_terminal_stop(_circular_slice(cas9, 4958, 5037))
@@ -287,12 +337,12 @@ def test_frame_sensitive_open_reading_frames_are_intact() -> None:
     t7 = records["t7-histev-tdtomato-kanr"]
     _translation_has_one_terminal_stop(t7[3926 : 3926 + 1527])
     _translation_has_one_terminal_stop(t7[:816])
-    _translation_has_one_terminal_stop(
-        records["lenti-guide-mcherry-p2a-neor"][:1560]
-    )
+    _translation_has_one_terminal_stop(records["lenti-guide-mcherry-p2a-neor"][:1560])
 
 
-def test_functional_constraint_specs_accept_references_and_reject_missing_parts() -> None:
+def test_functional_constraint_specs_accept_references_and_reject_missing_parts() -> (
+    None
+):
     assert set(CONSTRAINT_SPECS) == {task["id"] for task in TASKS}
 
     for task in TASKS:
@@ -314,14 +364,10 @@ def test_functional_constraint_specs_accept_references_and_reject_missing_parts(
             if module.min_copies > 0
         )
 
-        start, end = task["components"][0][
-            "reference_interval_zero_based_half_open"
-        ]
+        start, end = task["components"][0]["reference_interval_zero_based_half_open"]
         reference_sequence = str(reference.seq)
         mutant = (
-            reference_sequence[:start]
-            + "A" * (end - start)
-            + reference_sequence[end:]
+            reference_sequence[:start] + "A" * (end - start) + reference_sequence[end:]
         )
         rejected = evaluate_construct_constraints(
             mutant,
@@ -348,8 +394,7 @@ def test_neor_constraints_accept_the_supplied_alternate_allele(
     neor_feature = next(
         feature
         for feature in donor.features
-        if feature.type == "CDS"
-        and feature.qualifiers.get("label") == ["NeoR/KanR"]
+        if feature.type == "CDS" and feature.qualifiers.get("label") == ["NeoR/KanR"]
     )
     alternate_neor = str(neor_feature.extract(donor.seq))
     if remove_initial_methionine:
@@ -424,23 +469,42 @@ def test_hard_questions_load_as_a_local_file_dataset() -> None:
         assert (inventory / "enzyme_inventory.tsv").is_file()
 
 
+def test_intent_challenge_loads_as_a_local_file_dataset() -> None:
+    intent_dataset = load_local_cloning_dataset(
+        PILOT / "questions_intent_challenge.jsonl", mode="file"
+    )
+    base_dataset = load_local_cloning_dataset(PILOT / "questions.jsonl", mode="file")
+
+    assert len(intent_dataset) == 6
+    assert [sample.id for sample in intent_dataset] == [
+        sample.id for sample in base_dataset
+    ]
+    assert [sample.metadata["id"] for sample in intent_dataset if sample.metadata] == [
+        question["id"] for question in QUESTIONS
+    ]
+
+
 def test_igem_files_are_exposed_in_file_and_inject_modes() -> None:
-    file_sample = load_local_cloning_dataset(
-        PILOT / "questions.jsonl", mode="file"
-    )[0]
+    file_sample = load_local_cloning_dataset(PILOT / "questions.jsonl", mode="file")[0]
     assert isinstance(file_sample.input, list)
     assert isinstance(file_sample.input[0].content, list)
     attached_names = {
         getattr(item, "filename", None) for item in file_sample.input[0].content
     }
-    assert sum(
-        isinstance(name, str) and name.startswith("igem-")
-        for name in attached_names
-    ) == 16
-    assert sum(
-        isinstance(name, str) and name.startswith("enzyme-")
-        for name in attached_names
-    ) == 16
+    assert (
+        sum(
+            isinstance(name, str) and name.startswith("igem-")
+            for name in attached_names
+        )
+        == 16
+    )
+    assert (
+        sum(
+            isinstance(name, str) and name.startswith("enzyme-")
+            for name in attached_names
+        )
+        == 16
+    )
 
     inject_sample = load_local_cloning_dataset(
         PILOT / "questions.jsonl", mode="inject"

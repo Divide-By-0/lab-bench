@@ -5,6 +5,14 @@
     "path": "questions.jsonl",
     "difficulty": "hard_inventory_multifragment"
   },
+  "intent_challenge_question_set": {
+    "path": "questions_intent_challenge.jsonl",
+    "difficulty": "intent_driven_sequence_traps",
+    "version": "inventory-intent-challenge-1.0",
+    "task_count": 6,
+    "matched_question_set": "questions.jsonl",
+    "reviewer_design": "intent_challenge_design_v1.json"
+  },
   "reagent_inventory_question_set": {
     "path": "questions_reagent_inventory.jsonl",
     "difficulty": "hard_reagent_inventory",
