@@ -5,6 +5,16 @@
     "path": "questions.jsonl",
     "difficulty": "hard_inventory_multifragment"
   },
+  "reagent_inventory_question_set": {
+    "path": "questions_reagent_inventory.jsonl",
+    "difficulty": "hard_reagent_inventory",
+    "task_count": 3,
+    "task_slugs": [
+      "wnt-egfp-p2a-puro",
+      "lenti-mcherry-neor-two-locus",
+      "cas9-p2a-mcherry-kanr"
+    ]
+  },
   "inventory": [
     {
       "addgene_id": 1864,
@@ -157,6 +167,152 @@
       "sha256": "f7d8fd6b2aa1a7b8694a77cac6652d66d5669d2b81f9c433edcfbd65d430a01a",
       "length_bp": 10783,
       "topology": "circular"
+    }
+  ],
+  "igem_inventory": [
+    {
+      "plate_well": "1-A1",
+      "part_id": "BBa_B0012",
+      "plasmid_id": "BBa_J428091",
+      "part_type": "terminator",
+      "part_role": "Terminator",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "GCTT",
+      "flanking_3": "CGCT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j428091",
+      "length_bp": 2432,
+      "sha256": "d0c7745b3f06a245a42e777537289589df88c297b5c72d9d2c1235fd1f302b1a",
+      "filename": "igem-1-A1_BBa_J428091.gbk"
+    },
+    {
+      "plate_well": "1-A2",
+      "part_id": "HapR",
+      "plasmid_id": "BBa_J428012",
+      "part_type": "cds",
+      "part_role": "CDS",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "AATG",
+      "flanking_3": "GCTT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j428012",
+      "length_bp": 2658,
+      "sha256": "05b909704dfb2f27c641a42464b3865a224345114c477d7ce83e39925bc6dc60",
+      "filename": "igem-1-A2_BBa_J428012.gbk"
+    },
+    {
+      "plate_well": "1-A3",
+      "part_id": "eCFP",
+      "plasmid_id": "BBa_E0020",
+      "part_type": "cds",
+      "part_role": "CDS",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "AATG",
+      "flanking_3": "GCTT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-e0020",
+      "length_bp": 2769,
+      "sha256": "fc53900420bbd8865e8b7b0d01b1288197691471a803cf2c7b56c4ab5cbd47a3",
+      "filename": "igem-1-A3_BBa_E0020.gbk"
+    },
+    {
+      "plate_well": "1-A4",
+      "part_id": "SrpR",
+      "plasmid_id": "BBa_J428020",
+      "part_type": "cds",
+      "part_role": "CDS",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "AATG",
+      "flanking_3": "GCTT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j428020",
+      "length_bp": 2688,
+      "sha256": "d26b7b2a3e85365803e937ea1b6f19f457e8562bb5141b974ba71ed7ebccfeb5",
+      "filename": "igem-1-A4_BBa_J428020.gbk"
+    },
+    {
+      "plate_well": "1-A5",
+      "part_id": "BBa_J23100",
+      "plasmid_id": "BBa_J23100",
+      "part_type": "promoter",
+      "part_role": "Promoter",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "GGAG",
+      "flanking_3": "TACT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j23100",
+      "length_bp": 2424,
+      "sha256": "032778e3c1b7e706dae15a3ff101bfc4a0251f727551eac31b671f32778e08b2",
+      "filename": "igem-1-A5_BBa_J23100.gbk"
+    },
+    {
+      "plate_well": "1-A7",
+      "part_id": "BCD1",
+      "plasmid_id": "BBa_J428034",
+      "part_type": "rbs",
+      "part_role": "Ribosome Entry Site",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "TACT",
+      "flanking_3": "AATG",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j428034",
+      "length_bp": 2473,
+      "sha256": "748a4dca8f017afbb39fe09b1407a146e61634b0e683d6a4ea9babf9cffa6675",
+      "filename": "igem-1-A7_BBa_J428034.gbk"
+    },
+    {
+      "plate_well": "1-A12",
+      "part_id": "pJUMP29-1A(lacZ)",
+      "plasmid_id": "BBa_J428330",
+      "part_type": "plasmid backbone",
+      "part_role": "Plasmid Vector",
+      "assembly_format": "Type IIS L1 Cloning Plasmid",
+      "flanking_site": "BsmBI",
+      "flanking_5": "GGAG",
+      "flanking_3": "AATG",
+      "resistance": "Kanamycin",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-j428330",
+      "length_bp": 3371,
+      "sha256": "ce3531e10a85f7abb1614078c1777efd99f680a89b82101b7d446cdfa9b5c978",
+      "filename": "igem-1-A12_BBa_J428330.gbk"
+    },
+    {
+      "plate_well": "1-A21",
+      "part_id": "LacI-AM",
+      "plasmid_id": "BBa_K2680537",
+      "part_type": "cds",
+      "part_role": "CDS",
+      "assembly_format": "Type IIS L0 Part",
+      "flanking_site": "BsaI",
+      "flanking_5": "AATG",
+      "flanking_3": "GCTT",
+      "resistance": "Chloramphenicol",
+      "qc_status": "Correct",
+      "is_valid": true,
+      "part_url": "https://registry.igem.org/parts/bba-k2680537",
+      "length_bp": 3128,
+      "sha256": "84d6b791185e409057137574fb69d205d06238a91319d5ee519d45ea63245abc",
+      "filename": "igem-1-A21_BBa_K2680537.gbk"
     }
   ],
   "tasks": [
@@ -867,6 +1023,482 @@
           "template": "addgene-52961.gbk",
           "forward_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGAACGCGTTAAGTCGACAATCAACCT",
           "reverse_5_to_3": "GGTGGCAGCGCTCTAGAACCGGTC"
+        }
+      ]
+    }
+  ],
+  "reagent_inventory_tasks": [
+    {
+      "id": "4568bc10-71e1-5ce5-92f1-1f2c772d96cb",
+      "slug": "wnt-egfp-p2a-puro",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "igem_part_count": 8,
+      "primer_count": 12,
+      "canonical_primer_count": 6,
+      "decoy_primer_count": 6,
+      "primers": [
+        {
+          "filename": "primer-01.txt",
+          "sequence_5_to_3": "CTTGTACAGCTCGTCCATGCCGCC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-02.txt",
+          "sequence_5_to_3": "GGTAAGCTCCGGTGGATCCCCCTG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-03.txt",
+          "sequence_5_to_3": "TCAGAAGAACTCGTCAAGAAGGCG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-04.txt",
+          "sequence_5_to_3": "CAATAACATTGAAAAAGGAAGAGTATGAGCCATATTCAACGGGAAACG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-05.txt",
+          "sequence_5_to_3": "CTTTTTCTTTTTTGCCTGGCCGGC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-06.txt",
+          "sequence_5_to_3": "GGTGGCAGCGCTCTAGAACCGGTC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-07.txt",
+          "sequence_5_to_3": "CTCGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "canonical": true,
+          "canonical_uses": [
+            "P2A-PuroR with terminal stop:forward"
+          ]
+        },
+        {
+          "filename": "primer-08.txt",
+          "sequence_5_to_3": "CTTGTACAGCTCGTCCATGCCGAG",
+          "canonical": true,
+          "canonical_uses": [
+            "native TOPFlash initiation context plus EGFP without stop:reverse"
+          ]
+        },
+        {
+          "filename": "primer-09.txt",
+          "sequence_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGATTCTAGAGTCGGGGCGGCCGGCCG",
+          "canonical": true,
+          "canonical_uses": [
+            "retained TOPFlash backbone:forward"
+          ]
+        },
+        {
+          "filename": "primer-10.txt",
+          "sequence_5_to_3": "AGTACCGGAATGCCAAGCTTTTTA",
+          "canonical": true,
+          "canonical_uses": [
+            "retained TOPFlash backbone:reverse"
+          ]
+        },
+        {
+          "filename": "primer-11.txt",
+          "sequence_5_to_3": "TCAGGCACCGGGCTTGCGGGTCAT",
+          "canonical": true,
+          "canonical_uses": [
+            "P2A-PuroR with terminal stop:reverse"
+          ]
+        },
+        {
+          "filename": "primer-12.txt",
+          "sequence_5_to_3": "TAAAAAGCTTGGCATTCCGGTACTGTTGGTAAAGCCACCATGGTGAGCAAGGGCGAGGAGCTG",
+          "canonical": true,
+          "canonical_uses": [
+            "native TOPFlash initiation context plus EGFP without stop:forward"
+          ]
+        }
+      ],
+      "enzymes": [
+        {
+          "filename": "enzyme-01.txt",
+          "enzyme": "BamHI"
+        },
+        {
+          "filename": "enzyme-02.txt",
+          "enzyme": "BsaI"
+        },
+        {
+          "filename": "enzyme-03.txt",
+          "enzyme": "BsmBI"
+        },
+        {
+          "filename": "enzyme-04.txt",
+          "enzyme": "EcoRI"
+        },
+        {
+          "filename": "enzyme-05.txt",
+          "enzyme": "HindIII"
+        },
+        {
+          "filename": "enzyme-06.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-07.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-08.txt",
+          "enzyme": "XhoI"
+        }
+      ]
+    },
+    {
+      "id": "b3ac8f3a-9b51-544d-a1ae-c9e6cc34d6c6",
+      "slug": "lenti-mcherry-neor-two-locus",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "igem_part_count": 8,
+      "primer_count": 16,
+      "canonical_primer_count": 8,
+      "decoy_primer_count": 8,
+      "primers": [
+        {
+          "filename": "primer-01.txt",
+          "sequence_5_to_3": "GACCGGTTCTAGAGCGCTGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-02.txt",
+          "sequence_5_to_3": "CGGTCCAGGATTCTCTTCGACATC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-03.txt",
+          "sequence_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGATTCTAGAGTCGGGGCGGCCGGCCG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-04.txt",
+          "sequence_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGACGCCCGCCCCACGACCCGCAGCGC",
+          "canonical": true,
+          "canonical_uses": [
+            "retained lentiviral backbone:forward"
+          ]
+        },
+        {
+          "filename": "primer-05.txt",
+          "sequence_5_to_3": "GCCGGCCAGGCAAAAAAGAAAAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-06.txt",
+          "sequence_5_to_3": "CTTGTACAGCTCGTCCATGCCGCC",
+          "canonical": true,
+          "canonical_uses": [
+            "mCherry without terminal stop:reverse"
+          ]
+        },
+        {
+          "filename": "primer-07.txt",
+          "sequence_5_to_3": "GGTGGCGACCGGTAGCGCTAGCGG",
+          "canonical": true,
+          "canonical_uses": [
+            "retained lentiviral backbone:reverse"
+          ]
+        },
+        {
+          "filename": "primer-08.txt",
+          "sequence_5_to_3": "CTCGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-09.txt",
+          "sequence_5_to_3": "CCGCTAGCGCTACCGGTCGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+          "canonical": true,
+          "canonical_uses": [
+            "mCherry without terminal stop:forward"
+          ]
+        },
+        {
+          "filename": "primer-10.txt",
+          "sequence_5_to_3": "TCAGAAGAACTCGTCAAGAAGGCG",
+          "canonical": true,
+          "canonical_uses": [
+            "complete NeoR/KanR CDS:reverse"
+          ]
+        },
+        {
+          "filename": "primer-11.txt",
+          "sequence_5_to_3": "GGCGGCATGGACGAGCTGTACAAGTCCGGACTCAGATCTCGAGCTCAA",
+          "canonical": true,
+          "canonical_uses": [
+            "retained reporter-to-marker interval:forward"
+          ]
+        },
+        {
+          "filename": "primer-12.txt",
+          "sequence_5_to_3": "GGTGGCAGCGCTCTAGAACCGGTC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-13.txt",
+          "sequence_5_to_3": "CAGGGGGATCCACCGGAGCTTACCATGATTGAACAAGATGGATTGCAC",
+          "canonical": true,
+          "canonical_uses": [
+            "complete NeoR/KanR CDS:forward"
+          ]
+        },
+        {
+          "filename": "primer-14.txt",
+          "sequence_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGAACGCGTTAAGTCGACAATCAACCT",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-15.txt",
+          "sequence_5_to_3": "TTACTTGTACAGCTCGTCCATGCC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-16.txt",
+          "sequence_5_to_3": "GGTAAGCTCCGGTGGATCCCCCTG",
+          "canonical": true,
+          "canonical_uses": [
+            "retained reporter-to-marker interval:reverse"
+          ]
+        }
+      ],
+      "enzymes": [
+        {
+          "filename": "enzyme-01.txt",
+          "enzyme": "BamHI"
+        },
+        {
+          "filename": "enzyme-02.txt",
+          "enzyme": "BsaI"
+        },
+        {
+          "filename": "enzyme-03.txt",
+          "enzyme": "BsmBI"
+        },
+        {
+          "filename": "enzyme-04.txt",
+          "enzyme": "EcoRI"
+        },
+        {
+          "filename": "enzyme-05.txt",
+          "enzyme": "HindIII"
+        },
+        {
+          "filename": "enzyme-06.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-07.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-08.txt",
+          "enzyme": "XhoI"
+        }
+      ]
+    },
+    {
+      "id": "de0083c7-8e33-5886-b09a-b6f17963ec69",
+      "slug": "cas9-p2a-mcherry-kanr",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "igem_part_count": 8,
+      "primer_count": 20,
+      "canonical_primer_count": 10,
+      "decoy_primer_count": 10,
+      "primers": [
+        {
+          "filename": "primer-01.txt",
+          "sequence_5_to_3": "GATGTCGAAGAGAATCCTGGACCGATGGTGAGCAAGGGCGAGGAGGAT",
+          "canonical": true,
+          "canonical_uses": [
+            "complete mCherry CDS:forward"
+          ]
+        },
+        {
+          "filename": "primer-02.txt",
+          "sequence_5_to_3": "GGTGGCGACCGGTGGATCCCGGGC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-03.txt",
+          "sequence_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGAAGCGGCCGCACTCCTCAGGTGCAG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-04.txt",
+          "sequence_5_to_3": "CAATAATATTGAAAAAGGAAGAGTATGAGCCATATTCAACGGGAAACG",
+          "canonical": true,
+          "canonical_uses": [
+            "complete KanR CDS in expression orientation:forward"
+          ]
+        },
+        {
+          "filename": "primer-05.txt",
+          "sequence_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGATTCTAGAGTCGGGGCGGCCGGCCG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-06.txt",
+          "sequence_5_to_3": "GGCGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-07.txt",
+          "sequence_5_to_3": "TCAGAAGAACTCGTCAAGAAGGCG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-08.txt",
+          "sequence_5_to_3": "CTTGTACAGCTCGTCCATGCCGCC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-09.txt",
+          "sequence_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGAACGCGTTAAGTCGACAATCAACCT",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-10.txt",
+          "sequence_5_to_3": "GGCGGCATGGACGAGCTGTACAAGTCCGGACTCAGATCTCGAGCTCAA",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-11.txt",
+          "sequence_5_to_3": "GATGTCGAAGAGAATCCTGGACCGATGATTGAACAAGATGGATTGCAC",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-12.txt",
+          "sequence_5_to_3": "GGTGGCGACCGGTAGCGCTAGCGG",
+          "canonical": false,
+          "canonical_uses": []
+        },
+        {
+          "filename": "primer-13.txt",
+          "sequence_5_to_3": "TTGATGCTCGATGAGTTTTTCTAACTGTCAGACCAAGTTTACTCATAT",
+          "canonical": true,
+          "canonical_uses": [
+            "retained origin-U6-CAG-Cas9 backbone:forward"
+          ]
+        },
+        {
+          "filename": "primer-14.txt",
+          "sequence_5_to_3": "TTACTTGTACAGCTCGTCCATGCC",
+          "canonical": true,
+          "canonical_uses": [
+            "complete mCherry CDS:reverse"
+          ]
+        },
+        {
+          "filename": "primer-15.txt",
+          "sequence_5_to_3": "GCCGGCCAGGCAAAAAAGAAAAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "canonical": true,
+          "canonical_uses": [
+            "P2A:forward"
+          ]
+        },
+        {
+          "filename": "primer-16.txt",
+          "sequence_5_to_3": "ACTCTTCCTTTTTCAATATTATTG",
+          "canonical": true,
+          "canonical_uses": [
+            "retained Cas9-polyA-to-AmpR-promoter interval:reverse"
+          ]
+        },
+        {
+          "filename": "primer-17.txt",
+          "sequence_5_to_3": "CTTTTTCTTTTTTGCCTGGCCGGC",
+          "canonical": true,
+          "canonical_uses": [
+            "retained origin-U6-CAG-Cas9 backbone:reverse"
+          ]
+        },
+        {
+          "filename": "primer-18.txt",
+          "sequence_5_to_3": "GGCATGGACGAGCTGTACAAGTAATAAGAATTCCTAGAGCTCGCTGAT",
+          "canonical": true,
+          "canonical_uses": [
+            "retained Cas9-polyA-to-AmpR-promoter interval:forward"
+          ]
+        },
+        {
+          "filename": "primer-19.txt",
+          "sequence_5_to_3": "CGGTCCAGGATTCTCTTCGACATC",
+          "canonical": true,
+          "canonical_uses": [
+            "P2A:reverse"
+          ]
+        },
+        {
+          "filename": "primer-20.txt",
+          "sequence_5_to_3": "TTAGAAAAACTCATCGAGCATCAA",
+          "canonical": true,
+          "canonical_uses": [
+            "complete KanR CDS in expression orientation:reverse"
+          ]
+        }
+      ],
+      "enzymes": [
+        {
+          "filename": "enzyme-01.txt",
+          "enzyme": "BamHI"
+        },
+        {
+          "filename": "enzyme-02.txt",
+          "enzyme": "BsaI"
+        },
+        {
+          "filename": "enzyme-03.txt",
+          "enzyme": "BsmBI"
+        },
+        {
+          "filename": "enzyme-04.txt",
+          "enzyme": "EcoRI"
+        },
+        {
+          "filename": "enzyme-05.txt",
+          "enzyme": "HindIII"
+        },
+        {
+          "filename": "enzyme-06.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-07.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-08.txt",
+          "enzyme": "XhoI"
         }
       ]
     }

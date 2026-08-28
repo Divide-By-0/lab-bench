@@ -22,6 +22,13 @@ TASKS: tuple[dict[str, Any], ...] = tuple(MANIFEST["tasks"])
 QUESTIONS = [
     json.loads(line) for line in (PILOT / "questions.jsonl").read_text().splitlines()
 ]
+REAGENT_QUESTIONS = [
+    json.loads(line)
+    for line in (PILOT / "questions_reagent_inventory.jsonl").read_text().splitlines()
+]
+REAGENT_TASKS: tuple[dict[str, Any], ...] = tuple(
+    MANIFEST["reagent_inventory_tasks"]
+)
 
 
 def _reference(task: dict[str, Any]) -> SeqRecord:
@@ -78,6 +85,102 @@ def test_prompts_do_not_disclose_plasmid_names_sources_or_method() -> None:
         assert "filenames deliberately provide only accession numbers" in text
         assert "Choose any supported assembly method" in text
         assert all(term not in text for term in hidden_terms)
+
+
+def test_reagent_inventory_subset_is_matched_and_opaque() -> None:
+    assert len(REAGENT_QUESTIONS) == len(REAGENT_TASKS) == 3
+    assert {question["id"] for question in REAGENT_QUESTIONS} == {
+        task["id"] for task in REAGENT_TASKS
+    }
+    assert {task["canonical_primer_count"] // 2 for task in REAGENT_TASKS} == {
+        3,
+        4,
+        5,
+    }
+
+    for question, task in zip(REAGENT_QUESTIONS, REAGENT_TASKS, strict=True):
+        LabBenchQuestion.model_validate(question)
+        assert question["difficulty"]["name"] == "hard_reagent_inventory"
+        assert question["difficulty"]["novel_primers_allowed"] is False
+        assert question["difficulty"]["igem_part_count"] == 8
+        assert "Eight additional QC-valid iGEM kit plasmids" in question["question"]
+        assert task["primer_count"] == 2 * task["canonical_primer_count"]
+        assert task["decoy_primer_count"] == task["canonical_primer_count"]
+        assert len(task["enzymes"]) == 8
+
+        task_dir = PILOT / question["files"]
+        primer_files = sorted(task_dir.glob("primer-*.txt"))
+        enzyme_files = sorted(task_dir.glob("enzyme-*.txt"))
+        igem_files = sorted(task_dir.glob("igem-*.gbk"))
+        assert len(primer_files) == task["primer_count"]
+        assert len(enzyme_files) == 8
+        assert len(igem_files) == task["igem_part_count"] == 8
+        assert all(
+            SeqIO.read(path, "genbank").annotations.get("topology") == "circular"
+            for path in igem_files
+        )
+        assert not list(task_dir.glob("igem-*.fasta"))
+        assert not list(task_dir.glob("*.json"))
+        assert all(path.read_text().strip().isalpha() for path in primer_files)
+        assert {path.read_text().strip() for path in enzyme_files} == {
+            "BamHI",
+            "BsaI",
+            "BsmBI",
+            "EcoRI",
+            "HindIII",
+            "NdeI",
+            "NotI",
+            "XhoI",
+        }
+        index_lines = (task_dir / "reagent_inventory.tsv").read_text().splitlines()
+        assert len(index_lines) == 1 + len(primer_files) + len(enzyme_files)
+        assert len((task_dir / "igem_inventory.tsv").read_text().splitlines()) == 9
+
+
+def test_selected_igem_inventory_is_qc_valid_and_hash_matched() -> None:
+    parts = MANIFEST["igem_inventory"]
+
+    assert len(parts) == 8
+    assert {part["part_type"] for part in parts} >= {
+        "cds",
+        "plasmid backbone",
+        "promoter",
+        "rbs",
+        "terminator",
+    }
+    assert all(part["is_valid"] and part["qc_status"] == "Correct" for part in parts)
+    for task in REAGENT_TASKS:
+        task_dir = PILOT / "reagent_inventory" / task["id"]
+        for part in parts:
+            path = task_dir / part["filename"]
+            assert hashlib.sha256(path.read_bytes()).hexdigest() == part["sha256"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "task", REAGENT_TASKS, ids=lambda task: f"reagents-{task['slug']}"
+)
+async def test_stocked_primer_protocol_produces_exact_reference(
+    task: dict[str, Any],
+) -> None:
+    task_id = task["id"]
+    protocol = (
+        PILOT / "canonical_reagent_protocols" / f"{task_id}.txt"
+    ).read_text()
+    expression = protocol.split("<protocol>", 1)[1].split("</protocol>", 1)[0]
+    products = await execute_cloning_protocol_v2(
+        expression,
+        PILOT / "reagent_inventory" / task_id,
+    )
+    reference = BioSequence.from_fasta(
+        PILOT / "validation" / f"{task_id}_assembled.fa"
+    )
+
+    assert '"' not in expression
+    assert expression.count("primer-") == task["canonical_primer_count"]
+    assert len(products) == 1
+    assert products[0].is_circular
+    assert sequence_similarity_v2(products[0], reference) == 1.0
 
 
 @pytest.mark.asyncio
@@ -185,3 +288,19 @@ def test_hard_questions_load_as_a_local_file_dataset() -> None:
 
     assert len(dataset) == 6
     assert all(sample.metadata is not None for sample in dataset)
+
+
+def test_reagent_questions_and_readme_are_reviewable() -> None:
+    dataset = load_local_cloning_dataset(
+        PILOT / "questions_reagent_inventory.jsonl", mode="file"
+    )
+    readme = (PILOT / "README.md").read_text()
+
+    assert len(dataset) == 3
+    assert "## Reagent-inventory questions for review (3 of 6)" in readme
+    reagent_slugs = {task["slug"] for task in REAGENT_TASKS}
+    for task in TASKS:
+        if task["slug"] not in reagent_slugs:
+            continue
+        assert task["title"] in readme
+    assert "questions_reagent_inventory.jsonl" in readme

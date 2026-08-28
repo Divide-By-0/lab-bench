@@ -1,0 +1,8 @@
+<protocol>
+gibson(
+  pcr(addgene-27705.gbk, primer-09.txt, primer-06.txt),
+  pcr(addgene-19319.gbk, primer-11.txt, primer-16.txt),
+  pcr(addgene-13031.gbk, primer-13.txt, primer-10.txt),
+  pcr(addgene-19319.gbk, primer-04.txt, primer-07.txt)
+)
+</protocol>
