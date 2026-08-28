@@ -7,6 +7,7 @@ from Bio.SeqRecord import SeqRecord
 
 from lab_bench_2.cloning_inventory import (
     build_cloning_inventory,
+    classify_feature_role_evidence,
     classify_feature_roles,
     feature_signature,
 )
@@ -108,6 +109,22 @@ def test_inventory_includes_neb_catalog_and_cut_counts(tmp_path: Path) -> None:
 def test_feature_type_and_function_are_separate() -> None:
     roles = classify_feature_roles("CDS", {"label": ["FLAG-NLS"]})
     assert roles == ["coding_sequence", "epitope_tag", "localization_signal"]
+
+
+def test_role_evidence_names_exact_source_rule_and_avoids_promoter_marker() -> None:
+    evidence = classify_feature_role_evidence(
+        "CDS", {"label": ["AmpR"], "note": ["confers ampicillin resistance"]}
+    )
+    selection = next(item for item in evidence if item["role"] == "selection_marker")
+    assert selection["evidence"][0] == {
+        "method": "curated_qualifier_pattern",
+        "qualifier": "label",
+        "source_value": "AmpR",
+        "matched_term": "ampr",
+    }
+    assert classify_feature_roles("promoter", {"label": ["AmpR promoter"]}) == [
+        "promoter"
+    ]
 
 
 def test_external_igem_specific_match_preserves_evidence_and_indexes(

@@ -470,7 +470,8 @@ def _inventory_record(record: Any, *, include_enzymes: bool) -> dict[str, Any]:
 def _inventory_feature(record: Any, feature: Any) -> dict[str, Any]:
     qualifiers = _clean_qualifiers(feature.qualifiers)
     label = _first_qualifier(qualifiers, LABEL_QUALIFIERS)
-    roles = classify_feature_roles(feature.type, qualifiers)
+    role_evidence = classify_feature_role_evidence(feature.type, qualifiers)
+    roles = [item["role"] for item in role_evidence]
     sequence = str(feature.extract(record.seq)).upper()
     return {
         "feature_type": str(feature.type),
@@ -484,6 +485,7 @@ def _inventory_feature(record: Any, feature: Any) -> dict[str, Any]:
         "feature_sequence_sha256": hashlib.sha256(sequence.encode("ascii")).hexdigest(),
         "feature_signature": feature_signature(label, sequence),
         "functional_roles": roles,
+        "functional_role_evidence": role_evidence,
         "functional_description": describe_feature(label, roles),
         "qualifiers": qualifiers,
     }
@@ -557,15 +559,31 @@ def classify_feature_roles(
     feature_type: str, qualifiers: Mapping[str, list[str]]
 ) -> list[str]:
     """Map a structural GenBank feature to zero or more functional roles."""
+    return [
+        item["role"]
+        for item in classify_feature_role_evidence(feature_type, qualifiers)
+    ]
+
+
+def classify_feature_role_evidence(
+    feature_type: str, qualifiers: Mapping[str, list[str]]
+) -> list[dict[str, Any]]:
+    """Map a GenBank feature to roles and retain the exact rule evidence."""
     feature_type_lower = feature_type.casefold()
-    text = " ".join(
-        value for key in TEXT_QUALIFIERS for value in qualifiers.get(key, [])
-    ).casefold()
-    roles: set[str] = set()
+    evidence_by_role: defaultdict[str, list[dict[str, str]]] = defaultdict(list)
+
+    def add_structural(role: str) -> None:
+        evidence_by_role[role].append(
+            {
+                "method": "genbank_feature_type",
+                "feature_type": feature_type,
+            }
+        )
+
     if feature_type_lower == "cds":
-        roles.add("coding_sequence")
+        add_structural("coding_sequence")
     if feature_type_lower in PRIMER_TYPES:
-        roles.add("primer_binding_site")
+        add_structural("primer_binding_site")
     structural_roles = {
         "promoter": "promoter",
         "enhancer": "enhancer",
@@ -577,11 +595,34 @@ def classify_feature_roles(
     }
     role = structural_roles.get(feature_type_lower)
     if role:
-        roles.add(role)
+        add_structural(role)
     for candidate, patterns in ROLE_PATTERNS:
-        if any(_contains_term(text, pattern) for pattern in patterns):
-            roles.add(candidate)
-    return sorted(roles)
+        if candidate == "selection_marker" and feature_type_lower in {
+            "enhancer",
+            "intron",
+            "polya_signal",
+            "promoter",
+            "protein_bind",
+            "rep_origin",
+            "terminator",
+        }:
+            continue
+        for qualifier in TEXT_QUALIFIERS:
+            for source_value in qualifiers.get(qualifier, []):
+                for pattern in patterns:
+                    if _contains_term(source_value.casefold(), pattern):
+                        evidence_by_role[candidate].append(
+                            {
+                                "method": "curated_qualifier_pattern",
+                                "qualifier": qualifier,
+                                "source_value": source_value,
+                                "matched_term": pattern,
+                            }
+                        )
+    return [
+        {"role": role_name, "evidence": evidence_by_role[role_name]}
+        for role_name in sorted(evidence_by_role)
+    ]
 
 
 def describe_feature(label: str, roles: Sequence[str]) -> str:
