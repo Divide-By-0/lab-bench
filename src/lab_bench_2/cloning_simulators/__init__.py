@@ -3,6 +3,7 @@
 from lab_bench_2.cloning_simulators.execution import (
     execute_cloning_protocol_v2,
     execute_operation_v2,
+    normalize_quoted_file_references,
 )
 from lab_bench_2.cloning_simulators.gibson_v2 import gibson_v2
 from lab_bench_2.cloning_simulators.golden_gate_v2 import goldengate_v2
@@ -14,6 +15,7 @@ __all__ = [
     "execute_operation_v2",
     "gibson_v2",
     "goldengate_v2",
+    "normalize_quoted_file_references",
     "restriction_assemble_v2",
     "simulate_pcr_v2",
 ]

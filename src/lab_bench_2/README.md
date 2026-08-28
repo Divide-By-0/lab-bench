@@ -305,11 +305,11 @@ uv run python tools/enrich_cloning_traces.py path/to/logs path/to/enriched-logs 
 For local cloning datasets, the backfill utility uses the `files_path` and
 `reference_path` stored in each sample instead of downloading public benchmark
 assets. Pass `--replace-existing` to refresh panels after visualization code
-changes. If the official parser fails only because exact local sequence filenames
-were quoted, the panel also shows a clearly labeled visualization-only retry with
-those filenames unquoted. This diagnostic never changes the submitted answer or
-official score; quoted primer strings and names that do not resolve to local files
-are not modified.
+changes. Version 2-B accepts both bare filenames and quoted strings that exactly
+resolve to files inside the sample directory. The prompt shows both forms and
+identifies the bare form as canonical. Quoted primer strings, nonexistent files,
+and paths outside the sample directory remain literal strings and are not
+rewritten.
 
 The backfill utility downloads the public cloning inputs and hidden reference
 assemblies, leaves the source logs unchanged, and requires the same Go toolchain
@@ -448,6 +448,15 @@ uv run inspect eval lab_bench_2 -T tags=protocolqa2 -T mode=file -T solver=agent
 ```
 
 ## Changelog
+
+### [2-B] - 2026-08-27
+
+- Accept bare or quoted cloning-protocol filenames when they resolve to exact
+  files inside the sample directory.
+- Add a concrete cloning DSL example to the prompt distinguishing filenames
+  from quoted primer and enzyme strings.
+- Preserve the original strict verdict and explanation when rescoring stored
+  traces under the syntax-normalized policy.
 
 ### [2-A] - 2026-08-27
 

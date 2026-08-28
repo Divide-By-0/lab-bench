@@ -60,25 +60,26 @@ file mode, `openai/gpt-5.6-sol`, maximum reasoning effort, and an OrbStack Docke
 context. The $0.10 cost guard used $1 per million uncached input/output tokens
 and $0 for cache reads, imposing a 100,000-novel-token ceiling per sample.
 
-| Task | Inspect sample | Official result | Novel tokens | Tool calls | Diagnostic sequence result |
-| --- | --- | --- | ---: | ---: | --- |
-| CMV-EGFP | `labbench2_c7ea2dd4` | pass | 30,144 | 10 | exact, 1.000000 |
-| CMV-AmpR | `labbench2_524243f7` | fail | 29,031 | 13 | exact after filename-only syntax repair |
-| CMV-NeoR/KanR | `labbench2_4ea2fad5` | fail | 17,199 | 9 | exact after filename-only syntax repair |
+| Task | Inspect sample | Original strict result | 2-B normalized result | Novel tokens | Sequence result |
+| --- | --- | --- | --- | ---: | --- |
+| CMV-EGFP | `labbench2_c7ea2dd4` | pass | pass | 30,144 | exact, 1.000000 |
+| CMV-AmpR | `labbench2_524243f7` | fail | pass | 29,031 | exact, 1.000000 |
+| CMV-NeoR/KanR | `labbench2_4ea2fad5` | fail | pass | 17,199 | exact, 1.000000 |
 
 The two failures quoted the `.gbk` arguments to `pcr`. In this DSL, an unquoted
 token ending in `.gbk` is a file reference, while a quoted token is literal DNA.
-The strict verifier therefore rejected both protocols before assembly. For
-review only, the enriched trace unquotes strings that exactly match files in the
-sample directory and reruns the protocol for the visualization. Both repaired
-assemblies are circular, have the expected length, and match their references
-exactly. This does not alter their official incorrect verdicts.
+The strict 2-A verifier therefore rejected both protocols before assembly.
+Version 2-B accepts a quoted string as a file reference only when it resolves to
+an existing file inside the sample directory. Both rescored assemblies are
+circular, have the expected length, and match their references exactly. The
+reviewed result is therefore **3/3**, while the original 2-A trace remains **1/3**.
 
 The raw and reviewed traces are
 `experiments/traces/gpt56sol_cloning_pilot_3tasks.eval` and
 `experiments/traces/gpt56sol_cloning_pilot_3tasks_reviewed.eval`. The reviewed
-copy retains the original messages and scores and adds the diagnostic maps to
-the transcript and scoring explanation.
+copy retains the original messages, verdicts, and error explanations in score
+metadata; it reports the 2-B syntax-normalized scores and adds the sequence maps
+to the transcript and scoring explanation.
 
 The essential run arguments were:
 

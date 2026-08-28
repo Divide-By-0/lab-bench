@@ -23,7 +23,7 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `gpt56sol_smoke_2tasks_hinted.eval` | `gpt-5.6-sol` max effort, original prompts, 2 tasks | 0/2 |
 | `gpt56sol_8tasks_method_blind.eval` | `gpt-5.6-sol` max effort, **method hint stripped**, 8 tasks | **1/8** |
 | `gpt56sol_cloning_pilot_3tasks.eval` | three local Addgene 181752 × 13770 replacement tasks | **1/3** official |
-| `gpt56sol_cloning_pilot_3tasks_reviewed.eval` | same run with reviewer-only filename-syntax recovery maps | **1/3** official; 3/3 exact diagnostic assemblies |
+| `gpt56sol_cloning_pilot_3tasks_reviewed.eval` | same answers rescored under 2-B quoted-filename normalization | **3/3**; all exact assemblies |
 
 ## Cloning simulator v2 rescoring
 

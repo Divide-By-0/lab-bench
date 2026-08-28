@@ -15,7 +15,7 @@ from rescore_cloning_traces import GCS_BUCKET, corrected_reference
 
 from lab_bench_2.cloning_simulators.rewards_v2 import cloning_reward_v2
 
-SIMULATOR_TASK_VERSION = "2-A"
+SIMULATOR_TASK_VERSION = "2-B"
 
 
 def parse_args() -> argparse.Namespace:
@@ -60,8 +60,23 @@ async def rescore_sample(
         return False
     question_id = str(sample.metadata["id"])
     cache_root = cache_dir / GCS_BUCKET
-    base_dir = cache_root / "cloning" / question_id
-    source_reference = cache_root / "validation" / f"{question_id}_assembled.fa"
+    local_files_path = sample.metadata.get("files_path")
+    base_dir = (
+        Path(str(local_files_path))
+        if local_files_path
+        else cache_root / "cloning" / question_id
+    )
+    local_reference_path = sample.metadata.get("reference_path")
+    source_reference = (
+        Path(str(local_reference_path))
+        if local_reference_path
+        else cache_root / "validation" / f"{question_id}_assembled.fa"
+    )
+    if not base_dir.is_dir() or not source_reference.is_file():
+        raise FileNotFoundError(
+            f"Cannot rescore {question_id}: files={base_dir}, "
+            f"reference={source_reference}"
+        )
     reference_path, repaired, repair_reason = corrected_reference(
         source_reference,
         reference_dir / source_reference.name,
@@ -87,8 +102,10 @@ async def rescore_sample(
         "cloning_score": value,
         "simulator_version": "v2",
         "rescored": True,
+        "quoted_local_filenames_accepted": True,
         "reference_topology_repaired": repaired,
         "original_score_value": original_value,
+        "original_score_explanation": original_explanation,
     }
     _sync_score_event(sample)
     changed = original_value != score.value
@@ -165,13 +182,17 @@ async def rescore_logs(args: argparse.Namespace) -> None:
                 "original_task_version": original_version,
                 "original_metrics": original_metrics,
                 "reused_recorded_model_answers": True,
+                "quoted_local_filenames_accepted": True,
             },
         }
         destination = (
             args.output_dir / f"{source_path.stem}{args.suffix}{source_path.suffix}"
         )
         write_eval_log(log, destination)
-        print(f"wrote {destination} ({passed}/{count} correct, version 2-A)")
+        print(
+            f"wrote {destination} "
+            f"({passed}/{count} correct, version {SIMULATOR_TASK_VERSION})"
+        )
     print(f"complete: rescored {samples} cloning samples; {changes} scores changed")
 
 

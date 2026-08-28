@@ -19,7 +19,7 @@ from inspect_ai.dataset import Dataset, MemoryDataset, Sample, hf_dataset
 from inspect_ai.model import ChatMessage, ChatMessageUser, Content, ContentText
 
 from lab_bench_2 import attachment_builder, file_downloader, prompt_composer
-from lab_bench_2.prompt_composer import Mode
+from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE, Mode
 from utils.sample_ids import create_stable_id
 
 if TYPE_CHECKING:
@@ -90,11 +90,20 @@ def _record_to_sample(
         elif mode == "retrieve":
             metadata["expected_file_stems"] = [f.stem for f in files]
 
+    prompt_suffix = question.prompt_suffix or ""
+    if (
+        question.tag == "cloning"
+        and CLONING_FILE_REFERENCE_GUIDANCE not in prompt_suffix
+    ):
+        prompt_suffix = "\n\n".join(
+            value for value in (prompt_suffix, CLONING_FILE_REFERENCE_GUIDANCE) if value
+        )
+
     question_text = prompt_composer.compose(
         question.question,
         mode=mode,
         files=files,
-        prompt_suffix=question.prompt_suffix,
+        prompt_suffix=prompt_suffix,
     )
 
     sample_input: str | list[ChatMessage]

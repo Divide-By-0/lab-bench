@@ -18,6 +18,13 @@ RETRIEVE_INSTRUCTION_TEMPLATE = (
     "(not full paths) with any valid extension (e.g., .gb, .fa, .fasta): {file_list}"
 )
 
+CLONING_FILE_REFERENCE_GUIDANCE = """Cloning protocol filename syntax:
+- The canonical form for a sequence file is a bare filename, such as `vector.gbk`.
+- A quoted filename such as `"vector.gbk"` is also accepted when it exactly matches an available task file.
+- Primer sequences and enzyme names remain quoted strings.
+
+Example: `gibson(pcr(vector.gbk, "ACGT...", "TGCA..."), pcr("insert.gbk", "GCTA...", "TAGC..."))`"""
+
 
 def compose(
     question_text: str,

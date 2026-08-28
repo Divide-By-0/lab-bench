@@ -158,6 +158,10 @@ async def cloning_reward_v2(
     from labbench2.cloning.sequence_models import BioSequence
     from labbench2.cloning.utils import extract_between_tags
 
+    from lab_bench_2.cloning_simulators.execution import (
+        normalize_quoted_file_references,
+    )
+
     try:
         if PROTOCOL_TAG_OPEN not in answer or PROTOCOL_TAG_CLOSE not in answer:
             return 0.0, "Format invalid: no protocol tags found"
@@ -167,7 +171,12 @@ async def cloning_reward_v2(
         return 0.0, f"Format invalid: {exc}"
 
     try:
-        candidates = await execute_cloning_protocol_v2(expression, Path(base_dir))
+        normalized_expression, normalized_files = normalize_quoted_file_references(
+            expression, Path(base_dir)
+        )
+        candidates = await execute_cloning_protocol_v2(
+            normalized_expression, Path(base_dir)
+        )
         if not candidates:
             return 0.0, "Execution failed: protocol did not produce output"
     except Exception as exc:
@@ -208,9 +217,14 @@ async def cloning_reward_v2(
     topology_note = (
         "; repaired missing circular reference topology" if topology_repaired else ""
     )
+    syntax_note = (
+        f"; accepted quoted filename references: {list(normalized_files)}"
+        if normalized_files
+        else ""
+    )
     return (
         1.0,
         f"Cloning validation passed using candidate {selected.index + 1}/"
         f"{len(assessments)} "
-        f"(similarity: {selected.similarity:.6f}{topology_note})",
+        f"(similarity: {selected.similarity:.6f}{topology_note}{syntax_note})",
     )

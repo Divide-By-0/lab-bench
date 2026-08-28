@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
 from labbench2.cloning.sequence_models import BioSequence
 
 from lab_bench_2.cloning_simulators import pcr_v2
+from lab_bench_2.cloning_simulators.execution import (
+    execute_cloning_protocol_v2,
+    normalize_quoted_file_references,
+)
 from lab_bench_2.cloning_simulators.gibson_v2 import gibson_v2
 from lab_bench_2.cloning_simulators.golden_gate_v2 import (
     assemble_restriction_fragments_v2,
@@ -13,6 +18,29 @@ from lab_bench_2.cloning_simulators.golden_gate_v2 import (
 from lab_bench_2.cloning_simulators.restriction_v2 import restriction_assemble_v2
 from lab_bench_2.cloning_simulators.rewards_v2 import cloning_reward_v2
 from lab_bench_2.cloning_simulators.sequence_similarity_v2 import sequence_similarity_v2
+
+
+def test_normalizes_only_exact_local_quoted_file_references(tmp_path: Path) -> None:
+    sample_dir = tmp_path / "sample"
+    sample_dir.mkdir()
+    (sample_dir / "vector.gbk").touch()
+    (tmp_path / "outside.gbk").touch()
+    expression = 'pcr("vector.gbk", "ACGT", "not-a-file.gbk"), "../outside.gbk"'
+
+    normalized, filenames = normalize_quoted_file_references(expression, sample_dir)
+
+    assert normalized == ('pcr(vector.gbk, "ACGT", "not-a-file.gbk"), "../outside.gbk"')
+    assert filenames == ("vector.gbk",)
+
+
+@pytest.mark.asyncio
+async def test_protocol_accepts_quoted_exact_local_filenames(tmp_path: Path) -> None:
+    (tmp_path / "a.fa").write_text(">a\nAAAATTTTCCCC\n", encoding="utf-8")
+    (tmp_path / "b.fa").write_text(">b\nCCCCGGGGAAAA\n", encoding="utf-8")
+
+    products = await execute_cloning_protocol_v2('gibson("a.fa", "b.fa")', tmp_path)
+
+    assert any(product.sequence == "AAAATTTTCCCC" for product in products)
 
 
 @pytest.mark.asyncio
@@ -165,3 +193,27 @@ async def test_reward_accepts_matching_nonfirst_candidate(
     )
     assert score == 1.0
     assert "candidate 2/2" in reason
+
+
+@pytest.mark.asyncio
+async def test_reward_reports_accepted_quoted_filename(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from lab_bench_2.cloning_simulators import rewards_v2
+
+    async def execute(*args: Any, **kwargs: Any) -> list[BioSequence]:
+        return [BioSequence(sequence="CCCC", is_circular=True)]
+
+    monkeypatch.setattr(rewards_v2, "execute_cloning_protocol_v2", execute)
+    (tmp_path / "a.gb").touch()
+    reference = tmp_path / "reference.fa"
+    reference.write_text(">reference (circular)\nCCCC\n", encoding="utf-8")
+
+    score, reason = await cloning_reward_v2(
+        answer='<protocol>gibson("a.gb", b.gb)</protocol>',
+        base_dir=tmp_path,
+        reference_path=reference,
+    )
+
+    assert score == 1.0
+    assert "accepted quoted filename references: ['a.gb']" in reason

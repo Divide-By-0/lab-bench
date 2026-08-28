@@ -29,6 +29,7 @@ from Bio.SeqRecord import SeqRecord
 from lab_bench_2.cloning_simulators import (  # type: ignore[import-untyped]
     execute_cloning_protocol_v2,
 )
+from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE
 
 DESTINATION_FILENAME = "pcmv-mmlvgag-3xnes-cas9.gbk"
 SOURCE_FILENAME = "pcalnl-gfp.gbk"
@@ -66,7 +67,9 @@ You may use the following operations. All operations return a FASTA or GenBank f
    - EnzymeName: a literal string with the enzyme name (e.g., \"NdeI\", \"XhoI\", \"BamHI\")
    - Returns the largest fragment from the digest (typically the backbone or main insert)
 
-All operations may be nested arbitrarily."""
+All operations may be nested arbitrarily.""" + (
+    "\n\n" + CLONING_FILE_REFERENCE_GUIDANCE
+)
 
 
 @dataclass(frozen=True)

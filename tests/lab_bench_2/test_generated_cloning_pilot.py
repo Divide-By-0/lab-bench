@@ -9,6 +9,7 @@ from labbench2.cloning.cloning_protocol import CloningProtocol
 from labbench2.cloning.sequence_models import BioSequence
 
 from lab_bench_2.dataset import load_local_cloning_dataset
+from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE
 
 PILOT = Path(__file__).parents[2] / "experiments" / "cloning_pilot_181752_13770"
 EXPECTED = {
@@ -70,6 +71,10 @@ def test_pilot_question_records_and_manifest_are_consistent() -> None:
     assert {task["id"] for task in manifest["tasks"]} == set(EXPECTED)
     assert all(question.type == "gibson" for question in questions)
     assert all(question.validator_params == "{}" for question in questions)
+    assert all(
+        CLONING_FILE_REFERENCE_GUIDANCE in question.prompt_suffix
+        for question in questions
+    )
     assert all(task["canonical_exact_circular_match"] for task in manifest["tasks"])
 
 
