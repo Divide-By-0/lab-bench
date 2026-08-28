@@ -26,9 +26,17 @@ from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, SimpleLocation
 from Bio.SeqRecord import SeqRecord
 
-from lab_bench_2.cloning_simulators import (  # type: ignore[import-untyped]
-    execute_cloning_protocol_v2,
+from lab_bench_2.cloning_question_dials import (
+    BASELINE,
+    DIFFICULTY_PROFILES,
+    INVENTORY_FUNCTIONAL,
+    METHOD_BLIND,
+    CloningQuestionSpec,
+    DifficultyDials,
+    InventoryItem,
+    render_cloning_question,
 )
+from lab_bench_2.cloning_simulators import execute_cloning_protocol_v2
 from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE
 
 DESTINATION_FILENAME = "pcmv-mmlvgag-3xnes-cas9.gbk"
@@ -254,19 +262,71 @@ def _reference_record(
     return record
 
 
-def _question(task_id: str, insert: InsertSpec) -> dict[str, Any]:
-    question = (
-        f"I want to make a compact mammalian expression plasmid expressing "
-        f"{insert.prompt_name}. Use {DESTINATION_LABEL} (Addgene "
-        f"#{DESTINATION_ADDGENE_ID}) as the backbone. Replace the complete "
-        f"MMLV-Gag-3xNES-Cas9 fusion coding sequence, from its start codon "
-        f"through its stop codon, with the complete {insert.prompt_name} coding "
-        f"sequence (CDS) "
-        f"from {SOURCE_LABEL} (Addgene #{SOURCE_ADDGENE_ID}), including the "
-        f"insert's native stop codon. Preserve the backbone's existing CMV "
-        f"promoter, beta-globin poly(A) signal, bacterial origin, and selectable "
-        f"marker. Design the components and steps using Gibson assembly."
+def _question_spec(insert: InsertSpec) -> CloningQuestionSpec:
+    return CloningQuestionSpec(
+        goal=(
+            "I want to make a compact mammalian expression plasmid expressing "
+            f"{insert.prompt_name}"
+        ),
+        named_backbone_instruction=(
+            f"Use {DESTINATION_LABEL} (Addgene #{DESTINATION_ADDGENE_ID}) as the "
+            "backbone"
+        ),
+        exact_architecture=(
+            (
+                "Replace the complete MMLV-Gag-3xNES-Cas9 fusion coding sequence, "
+                "from its start codon through its stop codon, with the complete "
+                f"{insert.prompt_name} coding sequence (CDS) from {SOURCE_LABEL} "
+                f"(Addgene #{SOURCE_ADDGENE_ID}), including the insert's native "
+                "stop codon"
+            ),
+            (
+                "Preserve the backbone's existing CMV promoter, beta-globin "
+                "poly(A) signal, bacterial origin, and selectable marker"
+            ),
+        ),
+        inventory=(
+            InventoryItem(
+                name=DESTINATION_LABEL,
+                accession=f"Addgene #{DESTINATION_ADDGENE_ID}",
+                filename=DESTINATION_FILENAME,
+                description=(
+                    "a circular mammalian expression plasmid containing a strong "
+                    "constitutive promoter, a large retroviral/Cas9 fusion ORF, a "
+                    "mammalian polyadenylation signal, a bacterial origin, and a "
+                    "bacterial selectable marker"
+                ),
+            ),
+            InventoryItem(
+                name=SOURCE_LABEL,
+                accession=f"Addgene #{SOURCE_ADDGENE_ID}",
+                filename=SOURCE_FILENAME,
+                description=(
+                    "a circular plasmid with annotated complete EGFP, AmpR/bla, "
+                    "and NeoR/KanR coding sequences among its available parts"
+                ),
+            ),
+        ),
+        functional_requirements=(
+            f"constitutive mammalian expression of one intact {insert.prompt_name} "
+            "coding sequence with its own start and stop codons",
+            "a mammalian transcription-termination and polyadenylation signal",
+            "a bacterial origin of replication and bacterial selection",
+            "no remaining MMLV-Gag-3xNES-Cas9 fusion coding sequence",
+        ),
+        preservation_rule=(
+            "Make the smallest sequence change needed to a selected inventory "
+            "backbone: preserve its sequence outside the replaced mammalian "
+            "protein-coding region rather than redesigning the other elements"
+        ),
+        assembly_method="Gibson",
     )
+
+
+def _question(
+    task_id: str, insert: InsertSpec, dials: DifficultyDials = BASELINE
+) -> dict[str, Any]:
+    question = render_cloning_question(_question_spec(insert), dials)
     return {
         "id": task_id,
         "tag": "cloning",
@@ -283,6 +343,7 @@ def _question(task_id: str, insert: InsertSpec) -> dict[str, Any]:
         "validator_params": "{}",
         "answer_regex": "",
         "mode": {"inject": True, "file": True, "retrieve": True},
+        **({"difficulty": dials.metadata()} if dials != BASELINE else {}),
     }
 
 
@@ -316,7 +377,9 @@ async def _generate(destination_path: Path, source_path: Path, output: Path) -> 
     (output / "canonical_protocols").mkdir(exist_ok=True)
 
     backbone = destination_sequence[REPLACE_END:]
-    questions: list[dict[str, Any]] = []
+    question_sets: dict[str, list[dict[str, Any]]] = {
+        profile.name: [] for profile in DIFFICULTY_PROFILES
+    }
     tasks: list[dict[str, Any]] = []
     for insert_spec in INSERTS:
         source_feature, insert_sequence = _complete_cds(source, insert_spec.label)
@@ -357,7 +420,8 @@ async def _generate(destination_path: Path, source_path: Path, output: Path) -> 
                 f"{len(products)} products and matches {exact_products}"
             )
 
-        questions.append(_question(task_id, insert_spec))
+        for profile in DIFFICULTY_PROFILES:
+            question_sets[profile.name].append(_question(task_id, insert_spec, profile))
         tasks.append(
             {
                 "id": task_id,
@@ -378,10 +442,18 @@ async def _generate(destination_path: Path, source_path: Path, output: Path) -> 
             }
         )
 
-    questions_path = output / "questions.jsonl"
-    questions_path.write_text(
-        "".join(json.dumps(question, sort_keys=True) + "\n" for question in questions)
-    )
+    question_paths = {
+        BASELINE.name: output / "questions.jsonl",
+        METHOD_BLIND.name: output / "questions_method_blind.jsonl",
+        INVENTORY_FUNCTIONAL.name: output / "questions_inventory_functional.jsonl",
+    }
+    for profile_name, questions_path in question_paths.items():
+        questions_path.write_text(
+            "".join(
+                json.dumps(question, sort_keys=True) + "\n"
+                for question in question_sets[profile_name]
+            )
+        )
     manifest = {
         "generator": "tools/generate_cloning_pilot.py",
         "destination": {
@@ -402,6 +474,13 @@ async def _generate(destination_path: Path, source_path: Path, output: Path) -> 
         },
         "assembly_method": "Gibson",
         "overlap_length_bp": OVERLAP_LENGTH,
+        "question_sets": {
+            profile.name: {
+                "path": question_paths[profile.name].name,
+                "dials": profile.metadata(),
+            }
+            for profile in DIFFICULTY_PROFILES
+        },
         "tasks": tasks,
     }
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")

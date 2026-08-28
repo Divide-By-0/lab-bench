@@ -19,6 +19,11 @@ The inserted CDS includes its native start and stop codons.
 ## Contents
 
 - `questions.jsonl` contains upload-ready LabBench2 question records.
+- `questions_method_blind.jsonl` removes the prescribed Gibson method while
+  retaining the named backbone, source, and exact replacement architecture.
+- `questions_inventory_functional.jsonl` presents the files as an inventory,
+  states functional requirements instead of exact parts, and leaves material,
+  architecture, and method selection to the model.
 - `cloning/<task-id>/` contains the two renamed input GenBank files.
 - `validation/<task-id>_assembled.fa` is the sequence-only scoring reference.
 - `validation/<task-id>_assembled.gbk` is a circular, annotated review copy.
@@ -33,6 +38,24 @@ reference relative to `questions.jsonl`. To deploy them, upload each
 `cloning/<task-id>/` directory and the corresponding validation FASTA under the
 same conventions as the existing CloningQA data.
 
+## Difficulty dials
+
+The three JSONL files are matched variants: they contain the same task IDs,
+files, and hidden reference sequences. Only the information in the question is
+changed.
+
+| Question set | Method | Materials | Architecture |
+| --- | --- | --- | --- |
+| `questions.jsonl` | Gibson named | Roles named | Exact replacement |
+| `questions_method_blind.jsonl` | Model chooses | Roles named | Exact replacement |
+| `questions_inventory_functional.jsonl` | Model chooses | Inventory | Functional requirements |
+
+The inventory-functional wording still requires the smallest change to the
+selected backbone and preservation outside the replaced mammalian ORF. This
+keeps the intended final sequence sufficiently constrained for the existing
+single-reference verifier. Broader functional design prompts should wait until
+the evaluator can accept multiple biologically valid reference constructs.
+
 ## Generation and validation
 
 Regenerate the package from the downloaded Addgene files with:
@@ -46,7 +69,9 @@ uv run --extra lab_bench_2 python tools/generate_cloning_pilot.py \
 The generator builds each reference by direct sequence replacement, separately
 designs a canonical two-fragment Gibson protocol, executes that protocol with
 simulator v2, and fails unless there is exactly one exact circular match. No
-digest validator parameters are added.
+digest validator parameters are added. It also renders all three matched
+question sets from the difficulty profiles in
+`src/lab_bench_2/cloning_question_dials.py`.
 
 The source files used for this checked-in generation had these SHA-256 hashes:
 

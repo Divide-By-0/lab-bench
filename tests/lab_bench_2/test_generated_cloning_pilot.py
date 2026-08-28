@@ -9,6 +9,10 @@ from evals.models import LabBenchQuestion
 from labbench2.cloning.cloning_protocol import CloningProtocol
 from labbench2.cloning.sequence_models import BioSequence
 
+from lab_bench_2.cloning_question_dials import (
+    INVENTORY_FUNCTIONAL,
+    METHOD_BLIND,
+)
 from lab_bench_2.cloning_simulators.execution import execute_cloning_protocol_v2
 from lab_bench_2.cloning_simulators.sequence_similarity_v2 import sequence_similarity_v2
 from lab_bench_2.dataset import load_local_cloning_dataset
@@ -19,6 +23,11 @@ EXPECTED = {
     "777f42d4-f239-5979-8a6e-e13daceba2a3": ("EGFP", 5476),
     "a641ec71-1142-5e19-a1c5-354142bcc6c4": ("AmpR", 5617),
     "02e631d2-19f5-50f9-a43a-af5e7440fb7d": ("NeoR/KanR", 5551),
+}
+QUESTION_FILES = {
+    "baseline": "questions.jsonl",
+    METHOD_BLIND.name: "questions_method_blind.jsonl",
+    INVENTORY_FUNCTIONAL.name: "questions_inventory_functional.jsonl",
 }
 
 
@@ -79,6 +88,44 @@ def test_pilot_question_records_and_manifest_are_consistent() -> None:
         for question in questions
     )
     assert all(task["canonical_exact_circular_match"] for task in manifest["tasks"])
+    assert {
+        name: profile["path"] for name, profile in manifest["question_sets"].items()
+    } == QUESTION_FILES
+
+
+def test_pilot_difficulty_variants_are_matched_and_adjust_expected_dials() -> None:
+    question_sets = {
+        name: [json.loads(line) for line in (PILOT / filename).read_text().splitlines()]
+        for name, filename in QUESTION_FILES.items()
+    }
+    baseline_by_id = {
+        question["id"]: question for question in question_sets["baseline"]
+    }
+
+    for profile_name, questions in question_sets.items():
+        assert {question["id"] for question in questions} == set(EXPECTED)
+        for question in questions:
+            baseline = baseline_by_id[question["id"]]
+            assert question["files"] == baseline["files"]
+            assert question["sources"] == baseline["sources"]
+            assert question["validator_params"] == baseline["validator_params"]
+            if profile_name != "baseline":
+                assert question["difficulty"]["name"] == profile_name
+
+    method_blind = "\n".join(
+        question["question"] for question in question_sets[METHOD_BLIND.name]
+    )
+    assert "using Gibson assembly" not in method_blind
+    assert "Choose an appropriate assembly method" in method_blind
+    assert "as the backbone" in method_blind
+
+    inventory = "\n".join(
+        question["question"] for question in question_sets[INVENTORY_FUNCTIONAL.name]
+    )
+    assert "no backbone or insert source has been preselected" in inventory
+    assert "The finished construct must provide" in inventory
+    assert "Replace the complete" not in inventory
+    assert "using Gibson assembly" not in inventory
 
 
 def test_pilot_contains_exact_copies_of_the_two_addgene_fixtures() -> None:
@@ -113,8 +160,9 @@ async def test_pydna_simulators_reproduce_addgene_pilot_reference(
     assert {part.source_index for part in products[0]._assembly_parts} == {0, 1}
 
 
-def test_pilot_loads_as_local_file_mode_dataset() -> None:
-    dataset = load_local_cloning_dataset(PILOT / "questions.jsonl", mode="file")
+@pytest.mark.parametrize("question_file", QUESTION_FILES.values())
+def test_pilot_loads_as_local_file_mode_dataset(question_file: str) -> None:
+    dataset = load_local_cloning_dataset(PILOT / question_file, mode="file")
 
     assert len(dataset) == 3
     for sample in dataset:

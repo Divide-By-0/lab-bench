@@ -18,6 +18,35 @@
   },
   "assembly_method": "Gibson",
   "overlap_length_bp": 20,
+  "question_sets": {
+    "baseline": {
+      "path": "questions.jsonl",
+      "dials": {
+        "name": "baseline",
+        "method": "named",
+        "materials": "roles_named",
+        "architecture": "exact"
+      }
+    },
+    "method_blind": {
+      "path": "questions_method_blind.jsonl",
+      "dials": {
+        "name": "method_blind",
+        "method": "model_chooses",
+        "materials": "roles_named",
+        "architecture": "exact"
+      }
+    },
+    "inventory_functional": {
+      "path": "questions_inventory_functional.jsonl",
+      "dials": {
+        "name": "inventory_functional",
+        "method": "model_chooses",
+        "materials": "inventory",
+        "architecture": "functional"
+      }
+    }
+  },
   "tasks": [
     {
       "id": "777f42d4-f239-5979-8a6e-e13daceba2a3",
