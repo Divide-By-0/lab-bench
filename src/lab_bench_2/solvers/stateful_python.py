@@ -26,7 +26,7 @@ from inspect_ai.util import sandbox
 
 STATE_PATH = "/tmp/_labbench_session.pkl"
 
-_WRAPPER = '''
+_WRAPPER = """
 import sys, io, traceback
 _UNPICKLABLE = []
 try:
@@ -71,7 +71,7 @@ except BaseException:
 print(_buf.getvalue(), end="")
 if _UNPICKLABLE:
     print(f"\\n[session] not carried forward: {{', '.join(sorted(_UNPICKLABLE))}}")
-'''
+"""
 
 
 @tool

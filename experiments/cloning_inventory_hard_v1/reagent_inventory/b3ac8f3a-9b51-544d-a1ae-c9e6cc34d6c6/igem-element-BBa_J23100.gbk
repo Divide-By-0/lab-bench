@@ -1,0 +1,14 @@
+LOCUS       BBa_J23100                35 bp    DNA     linear   SYN 08-SEP-2021
+DEFINITION  constitutive promoter family member.
+ACCESSION   BBa_J23100
+VERSION     BBa_J23100
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..35
+                     /mol_type="genomic DNA"
+     promoter        1..35
+                     /label="Promoter"
+                     /note="SO:0000167 Promoter"
+ORIGIN
+        1 ttgacggcta gctcagtcct aggtacagtg ctagc
+//

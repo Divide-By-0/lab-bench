@@ -1,0 +1,14 @@
+[
+  {
+    "id": "open_design_heparg_three_plasmid_reporters",
+    "title": "Matched-response three-plasmid hepatocyte reporter system",
+    "files_directory": "hepatocyte_reporter_system",
+    "question": "Design and construct a three-plasmid inducible reporter system for the human hepatocyte model and flow cytometer described in assay_context.json. Each plasmid must use a different promoter architecture responding to the same input, and the activity of each plasmid must be independently measurable. Across the stated induction range, the promoters' EC50 values and saturating outputs must satisfy the quantitative matching rules in the context file. Select fluorescent reporters that can be distinguished on the specified instrument, accounting for excitation, emission, and spectral spillover. No starting plasmid or sequence inventory is supplied: find suitable public components and exact sequence records online. For every final plasmid, provide an actual sequence-resolved construction protocol using Gibson assembly, Golden Gate assembly, restriction-enzyme assembly, or a combination. Include stable source accessions or URLs, downloaded source filenames and checksums, fragment boundaries, complete primer sequences, junctions or overhangs, enzymes where applicable, and the expected final circular sequence and feature map. A conceptual design alone is not sufficient."
+  },
+  {
+    "id": "open_design_astrocyte_apoe4_abca1",
+    "title": "Stable inducible astrocyte transgene with a paired knockout",
+    "files_directory": "astrocyte_integration_knockout",
+    "question": "Design and construct the complete plasmid set needed to generate the human astrocyte line described in cell_line_context.json: stable inducible expression of the specified transgene together with loss of function of the specified endogenous target. Use the supplied tetracycline-response promoter sequence, but choose and source the remaining integration, expression, editing, selection, and validation components. Design the guide RNAs against the stated genome build and explain how the proposed clone would be distinguished from transient plasmid maintenance, partial editing, or integration-cassette disruption. For every donor, transfer, guide, editing, or helper plasmid that must be newly built, provide an actual sequence-resolved construction protocol using Gibson assembly, Golden Gate assembly, restriction-enzyme assembly, or a combination. Include stable source accessions or URLs, downloaded source filenames and checksums, fragment boundaries, complete primer sequences, junctions or overhangs, enzymes where applicable, and expected final circular sequences and feature maps. A conceptual design alone is not sufficient."
+  }
+]

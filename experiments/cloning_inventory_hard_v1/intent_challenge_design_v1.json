@@ -1,0 +1,127 @@
+{
+  "version": "inventory-intent-challenge-1.0",
+  "design": "matched prompt-only hardening experiment",
+  "shared_inventory_suffix": "All available Addgene plasmids, iGEM carrier plasmids and element records, and stocked enzymes are in the attached task inventory. Do not synthesize genes de novo; obtain the gene sequences you need from that inventory.",
+  "tasks": [
+    {
+      "id": "4568bc10-71e1-5ce5-92f1-1f2c772d96cb",
+      "slug": "wnt-egfp-p2a-puro",
+      "reviewer_title": "TCF/LEF EGFP-P2A-PuroR reporter",
+      "tier": 2,
+      "question_before_shared_inventory_suffix": "We need a live-cell construct for enriching and tracking mammalian cells only while canonical Wnt/beta-catenin transcription is active. Use a fluorescence-only readout rather than a luminescent one. The pathway-responsive transcript should provide green fluorescence and puromycin resistance from one compact open reading frame, but those activities must come from separate proteins.",
+      "intent_inferences": [
+        "select a pathway-responsive rather than constitutive backbone",
+        "infer a green reporter and puromycin-resistance coding sequence",
+        "choose an inventory-supported way to make two proteins from one transcript"
+      ],
+      "sequence_traps": [
+        "retain the TCF/LEF response array and its minimal promoter",
+        "remove the original luciferase coding sequence",
+        "omit the reporter stop at the linked coding junction and keep one frame"
+      ],
+      "canonical_solution": "Identify the TOPFlash reporter backbone, replace luciferase with EGFP-P2A-PuroR, and assemble three PCR products while keeping the coding junction in frame.",
+      "fairness_note": "Every scored requirement follows from pathway dependence, the two requested phenotypes, or the one-transcript/separate-protein constraint.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    },
+    {
+      "id": "b3ac8f3a-9b51-544d-a1ae-c9e6cc34d6c6",
+      "slug": "lenti-mcherry-neor-two-locus",
+      "reviewer_title": "Lentiviral mCherry with G418 selection",
+      "tier": 2,
+      "question_before_shared_inventory_suffix": "We need a third-generation lentiviral transfer construct for stable labeling of mammalian cells with a monomeric red fluorescent protein and enrichment with G418. Reporter intensity must remain interpretable independently of selection-marker expression, so each should have its own transcription unit. The vector should add no other fluorescent or mammalian drug-selection phenotype.",
+      "intent_inferences": [
+        "identify a lentiviral transfer rather than packaging plasmid",
+        "map monomeric red fluorescence and G418 resistance to inventory parts",
+        "preserve independent reporter and selector expression cassettes"
+      ],
+      "sequence_traps": [
+        "retain the packaging signal, RRE, and self-inactivating LTR architecture",
+        "distinguish a mammalian G418 cassette from bacterial kanamycin selection",
+        "remove the displaced reporter and mammalian selector coding sequences"
+      ],
+      "canonical_solution": "Identify the pLJM1 transfer vector, replace EGFP with mCherry and replace the independently expressed PuroR CDS with NeoR; the canonical build uses four PCR products.",
+      "fairness_note": "The viral architecture is inherent to a functional third-generation transfer vector; separate transcription units are requested explicitly.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    },
+    {
+      "id": "9ca455db-61aa-5243-b0f5-676ecdbd2896",
+      "slug": "cre-tdtomato-p2a-puro",
+      "reviewer_title": "Cre-dependent tdTomato-P2A-PuroR reporter",
+      "tier": 3,
+      "question_before_shared_inventory_suffix": "Build a ubiquitous mammalian lineage-tracing construct that remains off until Cre removes a transcriptional stop. Once activated, it should produce only a bright red signal and puromycin resistance from one compact open reading frame while leaving the two products physically separate.",
+      "intent_inferences": [
+        "identify a Cre-dependent lox-stop-lox reporter backbone",
+        "choose the brighter available red reporter and a puromycin marker",
+        "infer an inventory-supported polycistronic architecture"
+      ],
+      "sequence_traps": [
+        "retain both loxP sites and the intervening stop cassette in the right order",
+        "remove the original post-recombination reporter",
+        "preserve an uninterrupted reporter-to-cleavage-peptide-to-selector frame"
+      ],
+      "canonical_solution": "Identify the lox-stop-lox conditional reporter, preserve its Cre-control architecture, and replace GFP with tdTomato-P2A-PuroR using three PCR products.",
+      "fairness_note": "Cre dependence, brightness, selection, and separate products are all experimental requirements; no arbitrary enzyme or junction is prescribed.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    },
+    {
+      "id": "de0083c7-8e33-5886-b09a-b6f17963ec69",
+      "slug": "cas9-p2a-mcherry-kanr",
+      "reviewer_title": "Cas9-P2A-mCherry with kanamycin propagation",
+      "tier": 3,
+      "question_before_shared_inventory_suffix": "We need a single transient mammalian plasmid that accepts an sgRNA and expresses its nuclease, with monomeric red fluorescence reporting nuclease expression from the same transcript without making a fluorescent fusion protein. It must propagate under kanamycin, and our facility does not permit beta-lactam-resistance plasmids.",
+      "intent_inferences": [
+        "infer the nuclease and guide-expression architecture from the sgRNA use case",
+        "choose a monomeric red reporter and a cotranslational separation strategy",
+        "select bacterial kanamycin resistance and eliminate beta-lactam resistance"
+      ],
+      "sequence_traps": [
+        "retain both the U6 guide cassette and the mammalian nuclease cassette",
+        "remove the nuclease stop before the linked peptide while preserving its frame",
+        "install the bacterial marker in expression orientation without retaining AmpR"
+      ],
+      "canonical_solution": "Identify the pX330 CAG-Cas9/sgRNA backbone, append P2A-mCherry to the Cas9 reading frame, and replace AmpR with the correctly oriented KanR CDS; the canonical build uses five PCR products.",
+      "fairness_note": "The negative resistance constraint models a plausible facility rule; all other checks are required by guide editing or expression coupling.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    },
+    {
+      "id": "c5a544f6-2728-5fcc-b8ab-23a84af0ef19",
+      "slug": "t7-histev-tdtomato-kanr",
+      "reviewer_title": "T7 6xHis-TEV-tdTomato with kanamycin propagation",
+      "tier": 3,
+      "question_before_shared_inventory_suffix": "We need an IPTG-inducible E. coli construct for high-level production of a bright red fluorescent protein. The product should support immobilized-metal affinity purification and clean protease removal of its N-terminal affinity/expression leader, without a bulky solubility-fusion partner. Maintain the plasmid under kanamycin; beta-lactam-resistance DNA cannot be used in this project.",
+      "intent_inferences": [
+        "select a T7 bacterial expression backbone rather than a mammalian vector",
+        "infer the fluorescent protein, affinity handle, and protease-cleavage site",
+        "choose bacterial kanamycin resistance and remove beta-lactam resistance"
+      ],
+      "sequence_traps": [
+        "retain the T7 promoter, gene-10 translation context, and T7 terminator",
+        "transfer only the useful donor coding interval rather than its arabinose system",
+        "keep the complete leader and reporter in frame while excluding MBP"
+      ],
+      "canonical_solution": "Identify the T7 MBP destination, replace MBP with the donor's 6xHis/T7-tag/TEV-tdTomato segment, and replace AmpR with correctly oriented KanR using four PCR products.",
+      "fairness_note": "The host, induction system, purification workflow, and antibiotic policy are ordinary experimental constraints and uniquely narrow the inventory.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    },
+    {
+      "id": "4214dfb9-eb38-5b69-992c-37f5ad4e6f32",
+      "slug": "lenti-guide-mcherry-p2a-neor",
+      "reviewer_title": "Guide-vector mCherry-P2A-NeoR replacement",
+      "tier": 3,
+      "question_before_shared_inventory_suffix": "Our mammalian cells already express the genome-editing nuclease. Build a third-generation lentiviral construct that delivers only an sgRNA, marks transduced cells with a monomeric red signal, and permits G418 selection. The two phenotypes should come from one compact open reading frame but separate proteins. No nuclease or second mammalian drug-selection phenotype may remain in the payload.",
+      "intent_inferences": [
+        "identify a guide-capable lentiviral transfer backbone",
+        "map monomeric red fluorescence and G418 selection to inventory parts",
+        "infer a linked-but-separated expression architecture while deleting nuclease"
+      ],
+      "sequence_traps": [
+        "retain the U6 guide cassette plus lentiviral packaging and SIN-LTR elements",
+        "remove both the nuclease and the displaced mammalian selector",
+        "preserve one coding frame across reporter, cleavage peptide, and G418 marker"
+      ],
+      "canonical_solution": "Identify lentiCRISPR v2 and replace its Cas9-P2A-PuroR coding region with mCherry-P2A-NeoR while retaining the guide and lentiviral architecture; the canonical build uses four PCR products.",
+      "fairness_note": "The absence of nuclease follows from the pre-engineered cell line and is stated; the remaining checks are necessary for guide delivery and selection.",
+      "reference_and_functional_spec_reused_from": "questions.jsonl"
+    }
+  ]
+}

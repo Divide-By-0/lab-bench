@@ -1,0 +1,32 @@
+LOCUS       BBa_K2680537            1082 bp    DNA     linear   SYN 08-SEP-2021
+DEFINITION  LacI-AM.
+ACCESSION   BBa_K2680537
+VERSION     BBa_K2680537
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..1082
+                     /mol_type="genomic DNA"
+     CDS             1..1082
+                     /label="CDS"
+                     /note="SO:0000316 CDS"
+ORIGIN
+        1 atgaaaccag taacgttata cgatgtcgca gagtatgccg gtgtctctta tatgaccgtt
+       61 tcccgcgtgg tgaaccaggc cagccacgtt tctgcgaaaa cgcgggaaaa agtggaagcg
+      121 gcgatggtgg agctgaatta cattcccaac cgcgtggcac aacaactggc gggcaaacag
+      181 tcgttgctga ttggcgttgc cacctccagt ctggccctgc acgcgccgtc gcaaattgtc
+      241 gcggcgatta aatctcgcgc cgatcaactg ggtgccagcg tggtggtgtc gatggtagaa
+      301 cgaagcggcg tcgaagcctg taaagcggcg gtgcacaatc ttctcgcgca acgcgtcagt
+      361 gggctgatca ttaactatcc gctggatgac caggatgcca ttgctgtgga agctgcctgc
+      421 actaatgttc cggcgttatt tcttgatgtc tctgaccaga cacccatcaa cagtattatt
+      481 tactcccatg aggacggtac gcgactgggc gtggagcatc tggtcgcatt gggtcaccag
+      541 caaatcgcgc tgttagcggg cccattaagt tctgtctcgg cgcgtctgcg tctggctggc
+      601 tggcataaat atctcactcg caatcaaatt cagccgatag cggaacggga aggcgactgg
+      661 agtgccatgt ccggttttca acaaaccatg caaatgctga atgagggcat cgttcccact
+      721 gcgatgctgg ttgccaacga tcagatggcg ctgggcgcaa tgcgcgccat taccgagtcc
+      781 gggctgcgcg ttggtgcgga tatctcggta gtgggatacg acgataccga agatagctca
+      841 tgttatatcc cgccgttaac caccatcaaa caggattttc gcctgctggg gcaaaccagc
+      901 gtggaccgct tgctgcaact ctctcagggc caggcggtga agggcaatca gctgttgcca
+      961 gtctcactgg tgaaaagaaa aaccaccctg gcgcccaata cgcaaaccgc ctctccccgc
+     1021 gcgttggccg attcattaat gcagctggca cgacaggttt cccgactgga aagcgggcag
+     1081 tg
+//

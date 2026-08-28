@@ -1,0 +1,6 @@
+<protocol>
+gibson(
+    pcr(pcmv-mmlvgag-3xnes-cas9.gbk, "GATCTTTTTCCCTCTGCCAA", "GTTTTCAGACAAATACAGGA"),
+    pcr(pcalnl-gfp.gbk, "TCCTGTATTTGTCTGAAAACATGAGTATTCAACATTTCCG", "TTGGCAGAGGGAAAAAGATCTTACCAATGCTTAATCAGTG")
+)
+</protocol>

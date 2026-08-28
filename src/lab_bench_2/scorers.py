@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from pathlib import Path
 from typing import Any, cast
@@ -28,6 +29,8 @@ from inspect_ai.util import json_schema
 from pydantic import ValidationError
 
 from lab_bench_2 import seqqa2_answer_parser
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_GRADER_MODEL = "anthropic/claude-sonnet-4-5"
 GRADER_ROLE = "grader"
@@ -172,18 +175,19 @@ def exact_match_judge_scorer() -> Scorer:
 
 @scorer(metrics=[accuracy(), stderr()])
 def cloning_scorer() -> Scorer:
-    """Score CloningQA answers using labbench2's cloning reward pipeline.
+    """Score CloningQA answers using the candidate-aware v2 cloning pipeline.
 
     Validates cloning protocols through 4 sequential stages:
     1. Format validation — protocol can be parsed
-    2. Execution — protocol runs successfully
-    3. Similarity — output matches reference sequence (threshold: 0.95)
+    2. Execution — protocol runs successfully and enumerates top-level products
+    3. Similarity — any product matches the reference sequence (threshold: 0.95)
     4. Digest — restriction enzyme fragments match
 
     Requires Go 1.21+ on the host for PCR simulation scoring.
     """
     from evals.utils import resolve_file_path
-    from labbench2.cloning.rewards import cloning_reward
+
+    from lab_bench_2.cloning_simulators.rewards_v2 import cloning_reward_v2
 
     async def score(state: TaskState, target: Target) -> Score:
         metadata = state.metadata or {}
@@ -197,15 +201,20 @@ def cloning_scorer() -> Scorer:
             )
 
         ground_truth_filename = f"{question_id}_assembled.fa"
-        ground_truth_path = resolve_file_path(ground_truth_filename, None)
-        if ground_truth_path is None:
+        local_reference = metadata.get("reference_path")
+        ground_truth_path = (
+            Path(str(local_reference))
+            if local_reference
+            else resolve_file_path(ground_truth_filename, None)
+        )
+        if ground_truth_path is None or not ground_truth_path.is_file():
             return Score(
                 value=INCORRECT,
                 explanation=f"Ground truth file not found: {ground_truth_filename}",
             )
 
         answer = state.output.completion
-        score_value, reason = await cloning_reward(
+        score_value, reason = await cloning_reward_v2(
             answer=answer,
             base_dir=Path(files_path_str),
             reference_path=ground_truth_path,
@@ -213,6 +222,31 @@ def cloning_scorer() -> Scorer:
                 dict[str, Any], metadata.get("validator_params") or {}
             ),
         )
+
+        # Add a reviewer-facing annotated comparison to the Inspect transcript.
+        # This is deliberately best-effort: visualization must never change a
+        # benchmark score or turn a completed evaluation into an error.
+        try:
+            from inspect_ai.log import transcript
+
+            from lab_bench_2.cloning_visualization import (
+                cloning_comparison_markdown,
+            )
+
+            comparison = await cloning_comparison_markdown(
+                answer=answer,
+                base_dir=Path(files_path_str),
+                reference_path=ground_truth_path,
+                validator_params=cast(
+                    dict[str, Any], metadata.get("validator_params") or {}
+                ),
+            )
+            transcript().info(comparison, source="cloning sequence comparison")
+        except Exception:
+            logger.warning(
+                "Unable to render cloning sequence comparison",
+                exc_info=True,
+            )
 
         return Score(
             value=CORRECT if score_value >= 1.0 else INCORRECT,

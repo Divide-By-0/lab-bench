@@ -22,11 +22,64 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `cloning_6tasks_rerun_6M.eval` | the 6 truncated tasks re-run at **6M** ⚠️ | 2/6 |
 | `gpt56sol_smoke_2tasks_hinted.eval` | `gpt-5.6-sol` max effort, original prompts, 2 tasks | 0/2 |
 | `gpt56sol_8tasks_method_blind.eval` | `gpt-5.6-sol` max effort, **method hint stripped**, 8 tasks | **1/8** |
+| `gpt56sol_cloning_pilot_3tasks.eval` | three local Addgene 181752 × 13770 replacement tasks | **1/3** official |
+| `gpt56sol_cloning_pilot_3tasks_reviewed.eval` | same answers rescored under 2-B quoted-filename normalization | **3/3**; all exact assemblies |
+| `gpt56sol_cloning_inventory_hard_6tasks.eval` | six hard mixed Addgene/iGEM inventory tasks, model-selected methods | **4/6** |
+| `gpt56sol_cloning_inventory_hard_6tasks_functional_v3_reviewed.eval` | same six answers, pydna simulator pipeline and functional verifier v3-B | **6/6**; 2 verdicts changed |
+| `gpt56sol_8tasks_method_blind_constraint_v3_reviewed.eval` | same method-blind answers, constraint verifier v3-B | **8/8** |
+| `gpt56sol_cloning_pilot_3tasks_constraint_v3_reviewed.eval` | same pilot answers, constraint verifier v3-B | **3/3** |
+| `gpt56sol_smoke_2tasks_hinted_constraint_v3_reviewed.eval` | same smoke answers, constraint verifier v3-B | **2/2** |
+
+## Cloning simulator v2 rescoring
+
+The `*_simulator_v2_reviewed.eval` logs preserve the model answers from the runs
+above and rescore them with LAB-Bench 2 version `2-A`. They are not new model
+generations. Each log preserves the old verdict and explanation in score metadata
+and adds an Inspect sequence-comparison event.
+
+| Source run | Original | Simulator v2 | Changed verdicts |
+| --- | ---: | ---: | ---: |
+| `cloning_11tasks` | 3/11 | **6/11** | 3 |
+| `cloning_2tasks_2epochs` | 0/4 | **0/4** | 0 |
+| `cloning_6tasks_rerun_6M` | 2/6 | **3/6** | 1 |
+| `cloning_sorcs2_after_session_fix` | 0/1 | **0/1** | 0 |
+| `gpt56sol_8tasks_method_blind` | 1/8 | **6/8** | 5 |
+| `gpt56sol_smoke_2tasks_hinted` | 0/2 | **2/2** | 2 |
+
+Across these 32 stored submissions, 11 verdicts change from incorrect to correct.
+The method-blind GPT-5.6-sol run includes a reference-matching Gibson result that
+is candidate 3 of 14 under v2, directly demonstrating why product 1 cannot be
+treated as authoritative. The unchanged PCR-based SORCS2 answer now produces an
+amplicon but remains incorrect because its best final sequence similarity is
+0.839761, below the 0.95 threshold.
 
 > ⚠️ `cloning_6tasks_rerun_6M.eval` was run at `--token-limit 6000000`, above the 2M
 > ceiling the rest of this work uses. **Five of its six samples exceeded 2M**, including
 > both passes, so its results are not valid at the 2M configuration. Kept for reference,
 > excluded from headline numbers.
+
+## Cloning constraint verifier v3-B rescoring
+
+The `*_constraint_v3_reviewed.eval` logs are a separate shadow rescore of the
+recorded GPT-5.6-sol answers. They use scorer-owned construct constraints as the
+correctness definition rather than requiring one reference sequence or one
+pLannotate feature list. Each task specifies required functional modules, copy
+ranges, and only biologically meaningful order/fusion relationships. Unspecified
+tag positions and extra benign annotations do not affect the result. Direct
+input-derived DNA/protein evidence takes priority; pLannotate is a deterministic
+fallback and does not require reviewer adjudication.
+
+| Source run | Original scorer | Constraint v3-B | Changed verdicts |
+| --- | ---: | ---: | ---: |
+| `gpt56sol_8tasks_method_blind` | 1/8 | **8/8** | 7 |
+| `gpt56sol_cloning_pilot_3tasks` | 1/3 | **3/3** | 2 |
+| `gpt56sol_smoke_2tasks_hinted` | 0/2 | **2/2** | 2 |
+
+This is 13/13 stored samples across 11 unique tasks; the two smoke tasks duplicate
+tasks in the method-blind run and must not be pooled as independent observations.
+All 13 explanations enumerate observed versus expected module copies and explicit
+relationship checks. Whole-reference similarity and the sequence-difference
+visualization remain diagnostic rather than overriding the constraint verdict.
 
 ## What these traces show
 
@@ -106,12 +159,15 @@ fragment boundaries — not strategy selection. Caveat: the tasks are only *meth
 not method-blind. `BsaI-MCS` and `BsmBI` remain in the golden-gate prompts and are
 unmistakable Type IIS tells.
 
-The single pass, `a4bf037c`, is the odd one: it used `restriction_assemble` on a task
-whose reference is a Gibson assembly, and still matched at >=95%. The scorer compares the
-assembled product, not the route, so more than one strategy can reach the same plasmid.
+The original scorer's single pass, `a4bf037c`, is the odd one: it used
+`restriction_assemble` on a task whose reference is a Gibson assembly, and still
+matched at >=95%. Constraint v3-B accepts all 8 completed products because they
+satisfy their task-specific functional constraints; the assembly route itself is
+not scored when it produces an acceptable plasmid.
 
 ### Duplicate guard
 
 `tools/check_run_guards.py` flagged `0a4f4de7` and `3a6704ab` as appearing in both the
 smoke and the 8-task run. They have two results each (hinted and method-blind) and must
-not be pooled. Both failed in both conditions, so no conclusion changes.
+not be pooled. Both failed under the original scorer and pass under constraint v3-B in
+both conditions, so the duplicate-handling conclusion does not change.

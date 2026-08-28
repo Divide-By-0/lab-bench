@@ -32,3 +32,17 @@ class TestSandboxTools:
         names = {ToolDef(t).name for t in sandbox_tools()}
         # then web_search joins the code-execution tools
         assert names == {"python_session", "bash", "web_search"}
+
+    def test_adds_openai_web_search_without_an_external_key(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        for key in _WEB_SEARCH_KEYS:
+            monkeypatch.delenv(key, raising=False)
+
+        tools = sandbox_tools(openai_web_search=True)
+        names = {ToolDef(tool).name for tool in tools}
+        search = next(tool for tool in tools if ToolDef(tool).name == "web_search")
+
+        assert names == {"python_session", "bash", "web_search"}
+        assert "openai" in (ToolDef(search).options or {})
+        assert not {"tavily", "google", "exa"} & set(ToolDef(search).options or {})

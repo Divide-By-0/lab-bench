@@ -29,7 +29,7 @@ from lab_bench_2.solvers.sandbox_tools import sandbox_tools, web_search_availabl
 DEFAULT_AGENTIC_MAX_TURNS = 80
 
 
-def build_sandbox_prompt(web_search: bool) -> str:
+def build_sandbox_prompt(web_search: bool, *, open_web_research: bool = False) -> str:
     """System prompt for the agentic sandbox.
 
     The available-tools sentence reflects whether a ``web_search`` tool is
@@ -44,13 +44,25 @@ def build_sandbox_prompt(web_search: bool) -> str:
     # returned nothing, and hit the token limit without answering -- while the same
     # task succeeded in 31 calls when it just computed. Scope the tool to single
     # factual lookups so it cannot become a research strategy.
-    search_clause = (
-        "\n\n    Use Web Search only to answer a single specific factual question "
-        "(for example, the catalogue sequence of a named plasmid). Do not use it to "
-        "research the task, look for worked solutions, or browse. Everything you need "
-        "to compute the answer is in your working directory and /opt/docs."
-        if web_search else ""
-    )
+    if open_web_research:
+        search_clause = (
+            "\n\n    This is an open-source-discovery task. Use Web Search to locate "
+            "public sequence records, quantitative component data, and primary or "
+            "repository sources needed for the design. Record stable accessions or "
+            "URLs and distinguish directly supported facts from assumptions. The "
+            "sandbox has outbound access in this mode, so use Bash or Python to "
+            "download and inspect exact public sequence files after finding them. "
+            "Do not search for a worked answer to this benchmark question."
+        )
+    elif web_search:
+        search_clause = (
+            "\n\n    Use Web Search only to answer a single specific factual question "
+            "(for example, the catalogue sequence of a named plasmid). Do not use it to "
+            "research the task, look for worked solutions, or browse. Everything you need "
+            "to compute the answer is in your working directory and /opt/docs."
+        )
+    else:
+        search_clause = ""
     return dedent(f"""\
     You are a helpful assistant completing a scientific research task. You have \
 access to {tools_clause} in a sandboxed environment. The \
@@ -145,8 +157,33 @@ def agentic() -> Solver:
 
 
 @solver
+def agentic_web(final_warning_cost_limit: float | None = None) -> Solver:
+    """OrbStack agent with Python/Bash plus OpenAI's server-side web search.
+
+    This solver uses a separate network-enabled compose file so the model can
+    download exact sequence records after discovering them with the explicitly
+    registered OpenAI search tool. It is for open-source-discovery pilots and
+    must not be used on public-answer-key tasks.
+    """
+    message_limit = DEFAULT_AGENTIC_MAX_TURNS * 2 + 2
+    return chain(
+        copy_files_to_sandbox(),
+        agent_with_final_warning(
+            warning_limit=message_limit,
+            final_warning_cost_limit=final_warning_cost_limit,
+            init=system_message(
+                build_sandbox_prompt(web_search=True, open_web_research=True)
+            ),
+            tools=sandbox_tools(openai_web_search=True),
+            continue_message=CONTINUE_MESSAGE,
+        ),
+    )
+
+
+@solver
 def agent_with_final_warning(
     warning_limit: int = 45,
+    final_warning_cost_limit: float | None = None,
     **agent_kwargs: Any,
 ) -> Solver:
     """Wrap basic_agent with a final-warning mechanism.
@@ -169,6 +206,13 @@ def agent_with_final_warning(
         # for dangling-tool resolution (2), the final-warning user message (1),
         # the model response (1), and its tool execution results (2).
         state.message_limit = len(state.messages) + 6
+        # A caller can reserve part of its total cost budget for the final
+        # answer by running the research loop with a lower CLI cost limit and
+        # relaxing it here. Without this, Inspect records the final model event
+        # but raises the already-active limit before returning ModelOutput, so
+        # the submit answer cannot become the sample completion.
+        if state.cost_limit is not None and final_warning_cost_limit is not None:
+            state.cost_limit = max(state.cost_limit, final_warning_cost_limit)
 
         # Resolve any dangling tool calls from the interrupted agent.
         if state.output and state.output.message.tool_calls:
@@ -207,8 +251,10 @@ def agent_with_final_warning(
 
         if output.message.tool_calls:
             # Extract submit answer directly from tool call arguments so
-            # the completion is captured even if execute_tools is blocked
-            # by the message limit.
+            # the completion is captured even when this warning was triggered
+            # by a sample cost/token limit. Do not execute a recovered submit:
+            # Inspect can re-raise the active sample limit during tool
+            # execution and discard the state mutation we just recovered.
             for tc in output.message.tool_calls:
                 if tc.function == "submit":
                     answer = (
@@ -217,9 +263,10 @@ def agent_with_final_warning(
                         else ""
                     )
                     state.output.completion = answer
-                    break
+                    return state
 
-            # Still execute the tools for proper message-state bookkeeping
+            # A warning response that ignored the instruction and called a
+            # non-submit tool is still executed for proper bookkeeping.
             tool_results, _ = await execute_tools([output.message], state.tools)
             state.messages.extend(tool_results)
 
