@@ -241,10 +241,14 @@ check will not catch:
   [gkad187](https://doi.org/10.1093/nar/gkad187)).
 - Local `(1)` duplicate of plasmid 105539 in the LAB-Bench cloning cache.
 
-Build it (GBKs stay in `~/.cache`, not git):
+Full-sequence GBKs for the catalog are tracked in
+`src/lab_bench_2/addgene_inventory_subset_gbk/` (55 files for 51 plasmids;
+plasmids with `sequence_source="all"` keep every public full map). Rebuild or
+refresh with:
 
 ```bash
 uv run python tools/build_addgene_inventory_subset.py \
+  --output-dir src/lab_bench_2/addgene_inventory_subset_gbk \
   --inventory-out ~/.cache/lab-bench-addgene/inventory-subset/inventory.json \
   --no-enzymes
 ```

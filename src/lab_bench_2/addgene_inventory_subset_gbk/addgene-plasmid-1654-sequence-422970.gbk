@@ -1,0 +1,142 @@
+LOCUS       sequence-422970-        2790 bp    DNA     circular SYN 15-DEC-2025
+DEFINITION  synthetic circular DNA
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2790)
+  AUTHORS   Fire A et al
+  TITLE     Fire Lab C. Elegans Vector Kit 1999
+REFERENCE   2  (bases 1 to 2790)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Dec 15, 2025 from SnapGene Server 8.0.1
+            https://www.snapgene.com
+COMMENT     SGRef: number: 1; type: "Journal Article"
+COMMENT     Sequence Label: L4440
+FEATURES             Location/Qualifiers
+     source          1..2790
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     primer_bind     14..31
+                     /label=M13 Forward
+                     /note="In lacZ gene. Also called M13-F20 or M13 (-21) 
+                     Forward"
+     primer_bind     15..31
+                     /label=M13 fwd
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     promoter        41..59
+                     /label=T7 promoter
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+     primer_bind     84..100
+                     /label=pBluescriptKS
+                     /note="For pBluescript vector"
+     primer_bind     85..101
+                     /label=KS primer
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     primer_bind     complement(171..187)
+                     /label=SK primer
+                     /note="common sequencing primer, one of multiple similar 
+                     variants"
+     primer_bind     complement(171..187)
+                     /label=pBluescriptSK
+                     /note="For pBluescript vector"
+     promoter        complement(245..263)
+                     /label=T7 promoter
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+     primer_bind     complement(287..304)
+                     /label=L4440
+                     /note="L4440 vector, forward primer"
+     rep_origin      complement(458..1046)
+                     /direction=LEFT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     primer_bind     complement(538..557)
+                     /label=pBR322ori-F
+                     /note="pBR322 origin, forward primer"
+     CDS             complement(join(1217..2008,2009..2077))
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label=AmpR
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     primer_bind     1840..1859
+                     /label=Amp-R
+                     /note="Ampicillin resistance gene, reverse primer"
+     promoter        complement(2078..2182)
+                     /gene="bla"
+                     /label=AmpR promoter
+     rep_origin      complement(2208..2663)
+                     /direction=LEFT
+                     /label=f1 ori
+                     /note="f1 bacteriophage origin of replication; arrow 
+                     indicates direction of (+) strand synthesis"
+     primer_bind     complement(2345..2366)
+                     /label=F1ori-F
+                     /note="F1 origin, forward primer"
+     primer_bind     2557..2576
+                     /label=F1ori-R
+                     /note="F1 origin, reverse primer"
+     primer_bind     join(2790,1..22)
+                     /label=M13/pUC Forward
+                     /note="In lacZ gene"
+ORIGIN
+        1 ccagtcacga cgttgtaaaa cgacggccag tgagcgcgcg taatacgact cactataggg
+       61 cgaattgggt accgggcccc ccctcgaggt cgacggtatc gataagcttg atatcgaatt
+      121 cctgcagccc gggggatcca cgcgtcacgt ggctagccat ggaaccggtg gatccactag
+      181 ttctagagcg gccgccaccg cggtggagct cgaattcatc gatgatatca gatctgccgg
+      241 tctccctata gtgagtcgta ttaatttcga taagccaggt tgcttcctcg ctcactgact
+      301 cgctgcgctc ggtcgttcgg ctgcggcgag cggtatcagc tcactcaaag gcggtaatac
+      361 ggttatccac agaatcaggg gataacgcag gaaagaacat gtgagcaaaa ggccagcaaa
+      421 aggccaggaa ccgtaaaaag gccgcgttgc tggcgttttt ccataggctc cgcccccctg
+      481 acgagcatca caaaaatcga cgctcaagtc agaggtggcg aaacccgaca ggactataaa
+      541 gataccaggc gtttccccct ggaagctccc tcgtgcgctc tcctgttccg accctgccgc
+      601 ttaccggata cctgtccgcc tttctccctt cgggaagcgt ggcgctttct catagctcac
+      661 gctgtaggta tctcagttcg gtgtaggtcg ttcgctccaa gctgggctgt gtgcacgaac
+      721 cccccgttca gcccgaccgc tgcgccttat ccggtaacta tcgtcttgag tccaacccgg
+      781 taagacacga cttatcgcca ctggcagcag ccactggtaa caggattagc agagcgaggt
+      841 atgtaggcgg tgctacagag ttcttgaagt ggtggcctaa ctacggctac actagaagaa
+      901 cagtatttgg tatctgcgct ctgctgaagc cagttacctt cggaaaaaga gttggtagct
+      961 cttgatccgg caaacaaacc accgctggta gcggtggttt ttttgtttgc aagcagcaga
+     1021 ttacgcgcag aaaaaaagga tctcaagaag atcctttgat cttttctacg gggtctgacg
+     1081 ctcagtggaa cgaaaactca cgttaaggga ttttggtcat gagattatca aaaaggatct
+     1141 tcacctagat ccttttaaat taaaaatgaa gttttaaatc aatctaaagt atatatgagt
+     1201 aaacttggtc tgacagttac caatgcttaa tcagtgaggc acctatctca gcgatctgtc
+     1261 tatttcgttc atccatagtt gcctgactcc ccgtcgtgta gataactacg atacgggagg
+     1321 gcttaccatc tggccccagt gctgcaatga taccgcgaga cccacgctca ccggctccag
+     1381 atttatcagc aataaaccag ccagccggaa gggccgagcg cagaagtggt cctgcaactt
+     1441 tatccgcctc catccagtct attaattgtt gccgggaagc tagagtaagt agttcgccag
+     1501 ttaatagttt gcgcaacgtt gttgccattg ctacaggcat cgtggtgtca cgctcgtcgt
+     1561 ttggtatggc ttcattcagc tccggttccc aacgatcaag gcgagttaca tgatccccca
+     1621 tgttgtgcaa aaaagcggtt agctccttcg gtcctccgat cgttgtcaga agtaagttgg
+     1681 ccgcagtgtt atcactcatg gttatggcag cactgcataa ttctcttact gtcatgccat
+     1741 ccgtaagatg cttttctgtg actggtgagt actcaaccaa gtcattctga gaatagtgta
+     1801 tgcggcgacc gagttgctct tgcccggcgt caatacggga taataccgcg ccacatagca
+     1861 gaactttaaa agtgctcatc attggaaaac gttcttcggg gcgaaaactc tcaaggatct
+     1921 taccgctgtt gagatccagt tcgatgtaac ccactcgtgc acccaactga tcttcagcat
+     1981 cttttacttt caccagcgtt tctgggtgag caaaaacagg aaggcaaaat gccgcaaaaa
+     2041 agggaataag ggcgacacgg aaatgttgaa tactcatact cttccttttt caatattatt
+     2101 gaagcattta tcagggttat tgtctcatga gcggatacat atttgaatgt atttagaaaa
+     2161 ataaacaaat aggggttccg cgcacatttc cccgaaaagt gccacctaaa ttgtaagcgt
+     2221 taatattttg ttaaaattcg cgttaaattt ttgttaaatc agctcatttt ttaaccaata
+     2281 ggccgaaatc ggcaaaatcc cttataaatc aaaagaatag accgagatag ggttgagtgt
+     2341 tgttccagtt tggaacaaga gtccactatt aaagaacgtg gactccaacg tcaaagggcg
+     2401 aaaaaccgtc tatcagggcg atggcccact acgtgaacca tcaccctaat caagtttttt
+     2461 ggggtcgagg tgccgtaaag cactaaatcg gaaccctaaa gggagccccc gatttagagc
+     2521 ttgacgggga aagccggcga acgtggcgag aaaggaaggg aagaaagcga aaggagcggg
+     2581 cgctagggcg ctggcaagtg tagcggtcac gctgcgcgta accaccacac ccgccgcgct
+     2641 taatgcgccg ctacagggcg cgtcccattc gccattcagg ctgcgcaact gttgggaagg
+     2701 gcgatcggtg cgggcctctt cgctattacg ccagctggcg aaagggggat gtgctgcaag
+     2761 gcgattaagt tgggtaacgc cagggttttc
+//

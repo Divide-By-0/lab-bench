@@ -5,13 +5,15 @@ literature-backed gotchas that are easy to miss on a map: conflicting full
 maps, FLEX leak, BbsI/BsmBI mixups, nickase vs nuclease, leftover Type IIS
 sites, splice-prone tags. Partial Sanger reads are excluded. Each entry also
 records a typical Gibson or Golden Gate process that would be run on top of
-that backbone, from 2-part inserts up to 24-fragment assembly. GBK bytes are
-not stored in git; download them with the chrome-session downloader.
+that backbone, from 2-part inserts up to 24-fragment assembly. Full-sequence
+GBKs for this subset live in ``addgene_inventory_subset_gbk/``. Re-download
+with the chrome-session builder if those files are missing.
 """
 
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 ALLOWED_SEQUENCE_SOURCES = frozenset({"preferred", "addgene", "depositor", "all"})
@@ -1041,6 +1043,11 @@ SUBSET: tuple[SubsetPlasmid, ...] = (
         ),
     ),
 )
+
+
+def subset_gbk_dir() -> Path:
+    """Directory of tracked full-sequence GBKs for this subset."""
+    return Path(__file__).resolve().parent / "addgene_inventory_subset_gbk"
 
 
 def subset_plasmids() -> tuple[SubsetPlasmid, ...]:

@@ -25,7 +25,8 @@ uv run python tools/download_addgene_gbk.py \
 
 For the curated diverse/gotcha subset (full sequences only), use
 `uv run python tools/build_addgene_inventory_subset.py`. Catalog:
-`src/lab_bench_2/addgene_inventory_subset.py`.
+`src/lab_bench_2/addgene_inventory_subset.py`. Tracked GBKs:
+`src/lab_bench_2/addgene_inventory_subset_gbk/`.
 
 ## Keep the cookie fresh
 

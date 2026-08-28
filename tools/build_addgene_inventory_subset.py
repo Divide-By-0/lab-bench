@@ -12,14 +12,13 @@ from pathlib import Path
 from lab_bench_2.addgene_downloader import AddgeneDownloadError
 from lab_bench_2.addgene_inventory_subset import (
     annotate_inventory_with_subset,
+    subset_gbk_dir,
     subset_plasmids,
 )
 from lab_bench_2.addgene_web_downloader import AddgeneWebDownloader
 from lab_bench_2.cloning_inventory import build_cloning_inventory
 
-DEFAULT_GBK_DIR = (
-    Path.home() / ".cache" / "lab-bench-addgene" / "inventory-subset" / "gbk"
-)
+DEFAULT_GBK_DIR = subset_gbk_dir()
 
 
 def _arguments() -> argparse.Namespace:

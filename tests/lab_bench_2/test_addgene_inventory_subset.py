@@ -4,6 +4,7 @@ from lab_bench_2.addgene_inventory_subset import (
     SubsetPlasmid,
     annotate_inventory_with_subset,
     plasmid_ids,
+    subset_gbk_dir,
     subset_plasmids,
     validate_subset,
 )
@@ -60,6 +61,19 @@ def test_catalog_covers_hosts_and_cited_gotchas() -> None:
         "golden_gate",
         "hierarchical_gg",
     }
+
+
+def test_tracked_gbks_cover_catalog() -> None:
+    gbk_dir = subset_gbk_dir()
+    assert gbk_dir.is_dir()
+    missing: list[str] = []
+    for entry in subset_plasmids():
+        matches = list(gbk_dir.glob(f"addgene-plasmid-{entry.plasmid_id}-*.gbk"))
+        if not matches:
+            missing.append(f"{entry.plasmid_id} has no GBK")
+        elif entry.sequence_source == "all" and len(matches) < 2:
+            missing.append(f"{entry.plasmid_id} expected multiple full maps")
+    assert missing == []
 
 
 def test_validate_subset_rejects_duplicate_ids() -> None:
