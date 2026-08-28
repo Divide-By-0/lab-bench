@@ -37,7 +37,7 @@ Default interval is 840 seconds. Cache (mode 0600, never git): `~/.cache/lab-ben
 
 1. Confirm Chrome is signed in to Addgene.
 2. Re-run the same command. The downloader reloads Chrome cookies and hits `www.addgene.org` to mint a new media-edge cookie, then retries the GBK.
-3. Do not open a Chrome window per plasmid (`--via chrome`) for long lists.
+3. Do not drive one Chrome window per plasmid. That path was deleted; notes to regenerate it live in `src/lab_bench_2/CLONING_SEQUENCE_DATA.md`.
 
 ## Do not
 

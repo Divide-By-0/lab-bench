@@ -27,7 +27,8 @@ official inputs, and should not be used to infer the benchmark contract.
 The default, API-key-free route is HTTP and is meant for long plasmid lists.
 Sequence ids and GenBank URLs are public. The GBK bytes are gated by Addgene's
 media-edge cookie, which this tool reads from the already-signed-in Chrome
-profile into memory and never writes to disk or the manifest:
+profile. Cookie values are cached at `~/.cache/lab-bench-addgene/cookies.json`
+(mode 0600) and omitted from git and manifests.
 
 ```bash
 uv run python tools/download_addgene_gbk.py \
@@ -38,10 +39,18 @@ uv run python tools/download_addgene_gbk.py \
 That is `--via chrome-session`. It does not open a Chrome window per plasmid,
 does not go through `Downloads`, and reuses the same polite retry/cache path
 as the API downloader. Sign in once at <https://www.addgene.org/> in Chrome.
+`--via api` is the durable unattended route once a Catalog token exists.
 
-`--via chrome` still exists for tiny lists: it drives one Chrome window per
-plasmid through AppleScript. That path does not scale. `--via api` is the
-durable unattended route once a Catalog token exists.
+An earlier AppleScript path opened one Chrome window per plasmid, scraped the
+signed-in sequences page for the `.gbk` link, navigated Chrome so the file
+landed in `~/Downloads`, then validated and moved it. That avoided reading the
+cookie store. It does not scale (window flash, Downloads folder, no HTTP).
+Deleted 2026-08-27. To regenerate: `osascript` `execute javascript` on
+`https://www.addgene.org/<id>/sequences/` to collect `a[href$=.gbk]`, open that
+URL in the same Chrome profile, wait for `~/Downloads/addgene-plasmid-<id>-*.gbk`.
+Apple Events JS must be enabled (View → Developer). HttpOnly cookies never
+appear in `document.cookie`; Cloudflare 404s `.gbk`/`.dna` without
+`__Secure_media_edge_auth`.
 
 Addgene directs bulk/programmatic use to the Developers Portal:
 <https://help.addgene.org/hc/en-us/articles/44210206209549/>.

@@ -62,25 +62,18 @@ def _arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--via",
-        choices=("chrome-session", "api", "chrome"),
+        choices=("chrome-session", "api"),
         default="chrome-session",
         help=(
             "chrome-session: public discovery + HTTP GBK download using the "
             "signed-in Chrome cookie store (default, scales). "
-            "api: Developers API with ADDGENE_TOKEN. "
-            "chrome: one Chrome window per plasmid (small lists only)."
+            "api: Developers API with ADDGENE_TOKEN."
         ),
     )
     parser.add_argument(
         "--chrome-profile",
         type=Path,
         help="Chrome profile directory (default: ~/Library/Application Support/Google/Chrome/Default)",
-    )
-    parser.add_argument(
-        "--chrome-download-dir",
-        type=Path,
-        default=Path.home() / "Downloads",
-        help="Chrome download directory for --via chrome (default: ~/Downloads)",
     )
     parser.add_argument(
         "--manifest",
@@ -149,20 +142,6 @@ def main() -> int:
                 plasmid_ids,
                 args.output_dir,
                 sequence_source=args.sequence_source,
-                refresh=args.refresh,
-            )
-        elif args.via == "chrome":
-            from lab_bench_2.addgene_chrome_downloader import ChromeAddgeneDownloader
-
-            chrome = ChromeAddgeneDownloader(
-                download_dir=args.chrome_download_dir,
-                min_delay=args.min_delay,
-                max_delay=args.max_delay,
-            )
-            manifest = chrome.download_many(
-                plasmid_ids,
-                args.output_dir,
-                download_all=args.sequence_source == "all",
                 refresh=args.refresh,
             )
         else:
