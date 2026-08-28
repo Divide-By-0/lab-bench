@@ -2,6 +2,10 @@
 
 LABBench2 evaluates language models and research agents on life-science tasks spanning literature reasoning, database access, figures, tables, protocols, source quality, sequence analysis, cloning, patents, and clinical trials.
 
+For cloning attachment acquisition, feature/primer/enzyme inventories, the
+current data audit, and the proposed question-difficulty graph, see
+[Cloning sequence data](CLONING_SEQUENCE_DATA.md).
+
 <!-- Contributors: Automatically Generated -->
 Contributed by [@iphan](https://github.com/iphan), [@ItsTania](https://github.com/ItsTania), [@lewtun](https://github.com/lewtun), [@Sunishchal](https://github.com/Sunishchal)
 <!-- /Contributors: Automatically Generated -->
