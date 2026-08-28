@@ -1,0 +1,386 @@
+{
+  "0a4f4de7-0821-40d0-9bbb-2ea22670186e": {
+    "name": "Cas9-T2A-BlastR marker swap",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cas9",
+        "description": "Cas9",
+        "source_features": {"file": "addgene-plasmid-62988-sequence-456946", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "two_a",
+        "description": "T2A peptide (either supplied variant)",
+        "source_features": [
+          {"file": "addgene-plasmid-62988-sequence-456946", "label": "T2A", "feature_type": "CDS"},
+          {"file": "addgene-plasmid-136477-sequence-267565", "label": "T2A", "feature_type": "CDS"}
+        ],
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "blastr",
+        "description": "Blasticidin resistance protein",
+        "source_features": {"file": "addgene-plasmid-136477-sequence-267565", "label": "BSD", "feature_type": "CDS"},
+        "annotation_aliases": ["BSD", "BlastR", "Bsr"],
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "addgene-plasmid-62988-sequence-456946", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-plasmid-62988-sequence-456946", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["cas9", "two_a", "blastr"]]
+  },
+  "dff28bd4-89ea-401e-a3c1-ce8733512b79": {
+    "name": "GAP-StayGold-dArc-IRES-Cre yeast expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "gap_promoter",
+        "description": "GAP promoter",
+        "source_features": {"file": "pye012_staygold-ura3", "label": "GAP promoter", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "staygold",
+        "description": "StayGold fusion partner",
+        "source_features": {"file": "pye012_staygold-ura3", "label": "staygold", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "darc",
+        "description": "dArc1 LN domain",
+        "source_features": {"file": "pMBP-bdSUMO-dArc1", "label": "ARC1_DROME (fragment)", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ires",
+        "description": "IRES",
+        "source_features": {"file": "cag-gfp-ires-cre", "label": "IRES2", "feature_type": "misc_feature"},
+        "annotation_aliases": ["IRES", "IRES2"],
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cre",
+        "description": "Cre recombinase",
+        "source_features": {"file": "cag-gfp-ires-cre", "label": "Cre", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ura3",
+        "description": "URA3 yeast selection marker",
+        "source_features": {"file": "pye012_staygold-ura3", "label": "URA3", "feature_type": "gene"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "yeast_origin",
+        "description": "2-micron yeast origin",
+        "source_features": {"file": "pye012_staygold-ura3", "label": "2 micron origin", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["gap_promoter", "staygold", "darc", "ires", "cre"]],
+    "fusions": [{"left": "staygold", "right": "darc", "max_linker_bp": 30}]
+  },
+  "fb8fc27d-592a-40e8-a65f-9e1a60b7a708": {
+    "name": "CMV-Sorcs2-IRES-Puro lentiviral expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cmv",
+        "description": "CMV promoter",
+        "source_features": {"file": "plvx-egfp-ires-puro", "label": "CMV promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "sorcs2",
+        "description": "complete Sorcs2 coding sequence",
+        "source_features": {"file": "sorcs2-201-ensmust00000037370", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ires",
+        "description": "IRES",
+        "source_features": {"file": "plvx-egfp-ires-puro", "label": "IRES2", "feature_type": "misc_feature"},
+        "annotation_aliases": ["IRES", "IRES2"],
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "puro",
+        "description": "puromycin resistance protein",
+        "source_features": {"file": "plvx-egfp-ires-puro", "label": "PuroR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "wpre",
+        "description": "WPRE",
+        "source_features": {"file": "plvx-egfp-ires-puro", "label": "WPRE", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "plvx-egfp-ires-puro", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["cmv", "sorcs2", "ires", "puro", "wpre"]]
+  },
+  "21e4def0-1c9f-4628-8724-81db65cdb7f8": {
+    "name": "mCherry minicircle cloning construct",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "mcherry",
+        "description": "mCherry protein",
+        "source_features": {"file": "pcmv-ha-mcherry", "label": "mCherry", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "bsai-mcs-cloning-vector-for-golden-gate", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "bsai-mcs-cloning-vector-for-golden-gate", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ]
+  },
+  "3a6704ab-70b0-4b2d-a039-5fab5a1a33cc": {
+    "name": "CAG-5x-mCherry expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cag",
+        "description": "CAG/chicken beta-actin promoter",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "chicken beta-actin promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "mcherry",
+        "description": "complete mCherry protein",
+        "source_features": {"file": "pcmv-ha-mcherry", "label": "mCherry", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 5
+      },
+      {
+        "id": "polya",
+        "description": "bGH polyadenylation signal",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "bGH poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["cag", "mcherry", "polya"]]
+  },
+  "a4bf037c-2477-4cca-9ca3-12c5ee63c44f": {
+    "name": "hSyn-NPAS4-HA AAV expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "hsyn",
+        "description": "human synapsin promoter",
+        "source_features": {"file": "addgene-plasmid-105539-sequence-457689 (1)", "label": "hSyn promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "npas4",
+        "description": "complete NPAS4 protein",
+        "source_features": {"file": "npas4-201-enst00000311034", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ha",
+        "description": "HA epitope tag",
+        "protein_sequences": ["YPYDVPDYA"],
+        "annotation_aliases": ["HA", "HA tag"],
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "polya",
+        "description": "bGH polyadenylation signal",
+        "source_features": {"file": "addgene-plasmid-105539-sequence-457689 (1)", "label": "bGH poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "addgene-plasmid-105539-sequence-457689 (1)", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      }
+    ],
+    "ordered": [["hsyn", "npas4", "ha", "polya"]],
+    "fusions": [{"left": "npas4", "right": "ha", "max_linker_bp": 9}]
+  },
+  "bc918101-32f3-4cba-a435-110093600f24": {
+    "name": "CAG-MCS-IRES-Puro barcode lentivector",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cag",
+        "description": "CAG/chicken beta-actin promoter",
+        "source_features": {"file": "addgene-plasmid-78311-sequence-146188", "label": "chicken beta-actin promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ires",
+        "description": "IRES",
+        "source_features": [
+          {"file": "addgene-plasmid-78311-sequence-146188", "label": "IRES2", "feature_type": "misc_feature"},
+          {"file": "addgene-plasmid-85132-sequence-354458", "label": "IRES", "feature_type": "misc_feature"}
+        ],
+        "annotation_aliases": ["IRES", "IRES2"],
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "puro",
+        "description": "puromycin resistance protein",
+        "source_features": [
+          {"file": "addgene-plasmid-78311-sequence-146188", "label": "PuroR", "feature_type": "CDS"},
+          {"file": "addgene-plasmid-85132-sequence-354458", "label": "PuroR", "feature_type": "CDS"}
+        ],
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "bsmbi_sites",
+        "description": "flanking BsmBI recognition sites",
+        "dna_sequences": ["CGTCTC"],
+        "match": "dna",
+        "copies": 2
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "addgene-plasmid-78311-sequence-146188", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-plasmid-78311-sequence-146188", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["cag", "ires", "puro", "bsmbi_sites"]]
+  },
+  "31d22b22-0d48-41a4-88ed-b46ff451be52": {
+    "name": "CAG-dCas9-IRES-BlastR expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cag",
+        "description": "CAG/chicken beta-actin promoter",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "chicken beta-actin promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "dcas9",
+        "description": "complete dCas9 protein",
+        "source_features": {"file": "px330a_dcas9-1x4", "label": "dCas9", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ires",
+        "description": "IRES",
+        "source_features": {"file": "plv-ef1a-ires-blast", "label": "IRES", "feature_type": "misc_feature"},
+        "annotation_aliases": ["IRES", "IRES2"],
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "blastr",
+        "description": "Blasticidin resistance protein",
+        "protein_sequences": [
+          "MAKPLSQEESTLIERATATINSIPISEDYSVASAALSSDGRIFTGVNVYHFTGGPCAELVVLGTAAAAAAGNLTCIVAIGNENRGILSPCGRCRQVLLDLHPGIKAIVKDSDGQPTAVGIRELLPSGYVWEG",
+          "MVMKTFNISQQDLELVEVATEKITMLYEDNKHHVGAAIRTKTGEIISAVHIEAYIGRVTVCAEAIAIGSAVSNGQKDFDTIVAVRHPYSDEVDRSIRVVSPCGMCRELISDYAPDCFVLIEMNGKLVKTTIEELIPLKYTRN"
+        ],
+        "annotation_aliases": ["BSD", "BlastR", "Bsr"],
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "polya",
+        "description": "bGH polyadenylation signal",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "bGH poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial selection marker",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "pcag-golden-gate-destination", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["cag", "dcas9", "ires", "blastr", "polya"]]
+  }
+}

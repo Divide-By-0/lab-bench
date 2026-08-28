@@ -52,6 +52,9 @@ Go toolchain (1.21+) must be available on the host the first time you score
 reused. To install Go: `brew install go` (macOS), `sudo apt install golang-go` (Linux),
 or <https://go.dev/dl/>.
 
+For the reference-derived structural cloning shadow verifier and offline
+rescoring workflow, see [`CLONING_VERIFIER_V3.md`](CLONING_VERIFIER_V3.md).
+
 <!-- Options: Automatically Generated -->
 ## Options
 

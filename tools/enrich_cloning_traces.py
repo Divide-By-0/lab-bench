@@ -61,7 +61,8 @@ def _question_ids(log: EvalLog) -> set[str]:
         if sample.metadata.get("tag") == "cloning"
         and sample.metadata.get("id")
         and not (
-            sample.metadata.get("files_path") and sample.metadata.get("reference_path")
+            _existing_directory(sample.metadata.get("files_path"))
+            and _existing_file(sample.metadata.get("reference_path"))
         )
     }
 
@@ -163,6 +164,20 @@ def _answer(sample: EvalSample) -> str:
     return sample.output.completion
 
 
+def _existing_directory(value: object) -> Path | None:
+    if not value:
+        return None
+    path = Path(str(value))
+    return path if path.is_dir() else None
+
+
+def _existing_file(value: object) -> Path | None:
+    if not value:
+        return None
+    path = Path(str(value))
+    return path if path.is_file() else None
+
+
 async def enrich_sample(
     sample: EvalSample,
     cache_dir: Path,
@@ -187,18 +202,15 @@ async def enrich_sample(
 
     question_id = str(sample.metadata["id"])
     cache_root = cache_dir / GCS_BUCKET
-    local_files_path = sample.metadata.get("files_path")
-    base_dir = (
-        Path(str(local_files_path))
-        if local_files_path
-        else cache_root / "cloning" / question_id
+    base_dir = _existing_directory(sample.metadata.get("files_path")) or (
+        cache_root / "cloning" / question_id
     )
-    local_reference_path = sample.metadata.get("reference_path")
+    local_reference_path = _existing_file(sample.metadata.get("reference_path"))
     reference_path = (
         reference_dir / f"{question_id}_assembled.fa"
         if reference_dir is not None
-        else Path(str(local_reference_path))
-        if local_reference_path
+        else local_reference_path
+        if local_reference_path is not None
         else cache_root / "validation" / f"{question_id}_assembled.fa"
     )
     if not base_dir.is_dir() or not reference_path.is_file():
