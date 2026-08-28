@@ -1,5 +1,9 @@
 """Versioned cloning simulators used by the LAB-Bench 2 evaluator."""
 
+from lab_bench_2.cloning_simulators.constraints_v3 import (
+    ConstructSpec,
+    evaluate_construct_constraints,
+)
 from lab_bench_2.cloning_simulators.execution import (
     execute_cloning_protocol_v2,
     execute_operation_v2,
@@ -17,6 +21,8 @@ from lab_bench_2.cloning_simulators.rewards_v3 import (
 __all__ = [
     "execute_cloning_protocol_v2",
     "execute_operation_v2",
+    "ConstructSpec",
+    "evaluate_construct_constraints",
     "gibson_v2",
     "goldengate_v2",
     "cloning_reward_v3",

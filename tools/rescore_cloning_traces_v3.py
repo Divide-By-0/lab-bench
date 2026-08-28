@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import csv
+import json
 import math
 from pathlib import Path
 from typing import Any
@@ -18,7 +19,7 @@ from rescore_cloning_traces import GCS_BUCKET, corrected_reference
 from lab_bench_2.cloning_simulators.features_v3 import PlannotateAnnotator
 from lab_bench_2.cloning_simulators.rewards_v3 import verify_cloning_v3
 
-VERIFIER_TASK_VERSION = "3-A"
+VERIFIER_TASK_VERSION = "3-B"
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,6 +36,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--suffix", default="_hybrid_v3")
     parser.add_argument("--all-cloning-references-circular", action="store_true")
     parser.add_argument("--report-csv", type=Path)
+    parser.add_argument(
+        "--constraint-specs",
+        type=Path,
+        help=(
+            "Optional JSON mapping from question id to deterministic construct "
+            "specification; per-sample validator_params.construct_spec is used otherwise"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -76,6 +85,31 @@ def _best_candidate_metadata(report: Any) -> tuple[float | None, bool | None]:
     return best.similarity, best.exact_sequence_match
 
 
+def _constraint_details(report: Any) -> str:
+    """Render the actual scorer-owned checks instead of an opaque pass count."""
+    assessed = [
+        candidate
+        for candidate in report.candidates
+        if candidate.constraint_assessment is not None
+    ]
+    if not assessed:
+        return ""
+    candidate = next((value for value in assessed if value.passes), assessed[0])
+    constraints = candidate.constraint_assessment
+    assert constraints is not None
+    lines = [f"Constraint checks for candidate {candidate.simulator_index + 1}:"]
+    lines.extend(f"- {module.summary}" for module in constraints.modules)
+    lines.extend(
+        f"- {relationship.detail} ({'pass' if relationship.passes else 'FAIL'})"
+        for relationship in constraints.relationships
+    )
+    lines.append(
+        "- pLannotate calls are fallback annotation evidence only; direct "
+        "DNA/protein evidence takes priority."
+    )
+    return "\n".join(lines)
+
+
 async def rescore_sample(
     sample: EvalSample,
     cache_dir: Path,
@@ -83,6 +117,7 @@ async def rescore_sample(
     assume_plasmid_circular: bool,
     annotator: PlannotateAnnotator | None,
     require_plannotate: bool,
+    constraint_specs: dict[str, Any],
 ) -> tuple[bool, dict[str, Any] | None]:
     if sample.metadata.get("tag") != "cloning":
         return False, None
@@ -112,6 +147,7 @@ async def rescore_sample(
     )
     original_value = score.value
     original_explanation = score.explanation
+    construct_spec = constraint_specs.get(question_id)
     report = await verify_cloning_v3(
         answer=_answer(sample),
         base_dir=base_dir,
@@ -120,24 +156,48 @@ async def rescore_sample(
         require_circular=True,
         plannotate=annotator,
         require_plannotate=require_plannotate,
+        construct_spec=construct_spec,
     )
     score.value = CORRECT if report.score >= 1.0 else INCORRECT
-    score.explanation = (
-        f"Hybrid verifier v3 rescoring: {report.reason}\n\n"
-        f"Reference handling: {repair_reason}\n\n"
-        f"Original recorded explanation: {original_explanation or 'n/a'}"
+    constraint_mode = report.construct_spec is not None
+    verifier_name = (
+        "Constraint verifier v3-B" if constraint_mode else "Hybrid verifier v3"
     )
+    explanation_parts = [
+        f"{verifier_name} result: {report.status.value.upper()} (score {score.value})",
+        report.reason,
+    ]
+    constraint_details = _constraint_details(report)
+    if constraint_details:
+        explanation_parts.append(constraint_details)
+    reference_label = (
+        "Reference handling (whole-sequence similarity is advisory)"
+        if constraint_mode
+        else "Reference handling"
+    )
+    explanation_parts.append(f"{reference_label}: {repair_reason}")
+    explanation_parts.append(
+        "The original recorded score and explanation are retained in metadata."
+    )
+    score.explanation = "\n\n".join(explanation_parts)
+    verifier_report = report.metadata()
     score.metadata = {
         **(score.metadata or {}),
         "cloning_score": report.score,
-        "verifier_version": "v3",
+        "verifier_version": "v3-B" if constraint_mode else "v3",
         "verifier_status": report.status.value,
-        "hybrid_verifier_report": report.metadata(),
+        "verifier_v3_report": verifier_report,
+        **(
+            {"constraint_verifier_report": verifier_report}
+            if constraint_mode
+            else {"hybrid_verifier_report": verifier_report}
+        ),
         "rescored": True,
         "reused_recorded_model_answer": True,
         "reference_topology_repaired": repaired,
         "original_score_value": original_value,
         "original_score_explanation": original_explanation,
+        "constraint_mode": constraint_mode,
     }
     _sync_score_event(sample)
     changed = original_value != score.value
@@ -146,11 +206,12 @@ async def rescore_sample(
         "sample_id": sample.id,
         "question_id": question_id,
         "original_score": original_value,
-        "hybrid_v3_score": score.value,
+        "verifier_v3_score": score.value,
         "changed": changed,
         "status": report.status.value,
         "best_similarity": best_similarity,
         "exact_sequence_match": exact_match,
+        "constraint_mode": constraint_mode,
         "reason": report.reason,
     }
     print(
@@ -215,15 +276,16 @@ def _write_report(path: Path, rows: list[dict[str, Any]]) -> None:
         "sample_id",
         "question_id",
         "original_score",
-        "hybrid_v3_score",
+        "verifier_v3_score",
         "changed",
         "status",
         "best_similarity",
         "exact_sequence_match",
+        "constraint_mode",
         "reason",
     ]
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
@@ -234,6 +296,13 @@ async def rescore_logs(args: argparse.Namespace) -> None:
     if args.download_missing:
         download_sample_files(args.cache_dir, _question_ids(logs))
         apply_pr_repairs(args.cache_dir)
+
+    constraint_specs: dict[str, Any] = {}
+    if args.constraint_specs is not None:
+        loaded = json.loads(args.constraint_specs.read_text(encoding="utf-8"))
+        if not isinstance(loaded, dict):
+            raise ValueError("--constraint-specs must contain a JSON object")
+        constraint_specs = loaded
 
     annotator = (
         PlannotateAnnotator(
@@ -262,23 +331,36 @@ async def rescore_logs(args: argparse.Namespace) -> None:
                 args.all_cloning_references_circular,
                 annotator,
                 args.require_plannotate,
+                constraint_specs,
             )
             changes += int(changed)
             if row is not None:
                 rows.append({"source_log": source_path.name, **row})
         passed, count = _refresh_cloning_summary(log)
         log.eval.task_version = VERIFIER_TASK_VERSION
+        rescore_metadata = {
+            "verifier_version": "v3-B" if constraint_specs else "v3",
+            "original_task_version": original_version,
+            "original_metrics": original_metrics,
+            "reused_recorded_model_answers": True,
+            "requires_same_candidate_for_all_gates": True,
+            "pLannotate_required": args.require_plannotate,
+            "pLannotate_manifest": annotator.manifest() if annotator else None,
+            "constraint_mode": bool(constraint_specs),
+            "constraint_specs_path": (
+                str(args.constraint_specs.resolve())
+                if args.constraint_specs is not None
+                else None
+            ),
+        }
+        metadata_key = (
+            "constraint_verifier_rescore"
+            if constraint_specs
+            else "hybrid_verifier_rescore"
+        )
         log.eval.metadata = {
             **(log.eval.metadata or {}),
-            "hybrid_verifier_rescore": {
-                "verifier_version": "v3",
-                "original_task_version": original_version,
-                "original_metrics": original_metrics,
-                "reused_recorded_model_answers": True,
-                "requires_same_candidate_for_all_gates": True,
-                "pLannotate_required": args.require_plannotate,
-                "pLannotate_manifest": annotator.manifest() if annotator else None,
-            },
+            metadata_key: rescore_metadata,
         }
         destination = (
             args.output_dir / f"{source_path.stem}{args.suffix}{source_path.suffix}"

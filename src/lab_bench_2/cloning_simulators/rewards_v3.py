@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from lab_bench_2.cloning_simulators.constraints_v3 import (
+    ConstraintSpecError,
+    ConstructConstraintAssessment,
+    ConstructSpec,
+    evaluate_construct_constraints,
+)
 from lab_bench_2.cloning_simulators.execution import execute_cloning_protocol_v2
 from lab_bench_2.cloning_simulators.features_v3 import (
     FeatureAnnotationError,
@@ -46,14 +53,17 @@ class HybridCandidateAssessment:
     repeat_integrity: RepeatAssessment | None
     source_features: FeatureArchitectureAssessment | None
     plannotate_features: FeatureArchitectureAssessment | None
+    constraint_assessment: ConstructConstraintAssessment | None = None
 
     @property
     def passes(self) -> bool:
         """Require every configured gate to pass on this same candidate."""
+        physical_pass = self.topology_pass and self.digest_pass is not False
+        if self.constraint_assessment is not None:
+            return physical_pass and self.constraint_assessment.passes
         return bool(
-            self.similarity_pass
-            and self.topology_pass
-            and self.digest_pass is not False
+            physical_pass
+            and self.similarity_pass
             and (self.repeat_integrity is None or self.repeat_integrity.passes)
             and (self.source_features is None or self.source_features.passes)
             and (self.plannotate_features is None or self.plannotate_features.passes)
@@ -70,6 +80,7 @@ class HybridVerificationReport:
     normalized_files: tuple[str, ...] = ()
     topology_repaired: bool = False
     plannotate_manifest: dict[str, Any] | None = None
+    construct_spec: ConstructSpec | None = None
 
     @property
     def score(self) -> float:
@@ -82,16 +93,25 @@ class HybridVerificationReport:
             "status": self.status.value,
             "reason": self.reason,
             "candidates": [
-                {
-                    **asdict(candidate),
-                    "passes": candidate.passes,
-                }
-                for candidate in self.candidates
+                _candidate_metadata(candidate) for candidate in self.candidates
             ],
             "normalized_files": list(self.normalized_files),
             "topology_repaired": self.topology_repaired,
             "plannotate_manifest": self.plannotate_manifest,
+            "constraint_mode": self.construct_spec is not None,
+            "construct_spec": (
+                self.construct_spec.metadata()
+                if self.construct_spec is not None
+                else None
+            ),
         }
+
+
+def _candidate_metadata(candidate: HybridCandidateAssessment) -> dict[str, Any]:
+    result = {**asdict(candidate), "passes": candidate.passes}
+    if candidate.constraint_assessment is not None:
+        result["constraint_assessment"] = candidate.constraint_assessment.metadata()
+    return result
 
 
 def _candidate_report(
@@ -101,6 +121,7 @@ def _candidate_report(
     source_features: FeatureArchitectureAssessment | None = None,
     plannotate_features: FeatureArchitectureAssessment | None = None,
     repeat_integrity: RepeatAssessment | None = None,
+    constraint_assessment: ConstructConstraintAssessment | None = None,
 ) -> HybridCandidateAssessment:
     report = HybridCandidateAssessment(
         simulator_index=assessment.candidate.index,
@@ -116,6 +137,7 @@ def _candidate_report(
         repeat_integrity=repeat_integrity,
         source_features=source_features,
         plannotate_features=plannotate_features,
+        constraint_assessment=constraint_assessment,
     )
     return report
 
@@ -171,6 +193,27 @@ def _failure_reason(
     return "Cloning validation failed: no single candidate passed every gate"
 
 
+def _constraint_failure_reason(
+    candidates: tuple[HybridCandidateAssessment, ...],
+) -> str:
+    physical = [
+        candidate
+        for candidate in candidates
+        if candidate.topology_pass and candidate.digest_pass is not False
+    ]
+    if not physical:
+        if not any(candidate.topology_pass for candidate in candidates):
+            return "Topology gate failed: no candidate has the required topology."
+        return "Digest gate failed: no topology-matching candidate passed the digest."
+    failures = [
+        f"candidate {candidate.simulator_index + 1}: "
+        f"{candidate.constraint_assessment.summary}"
+        for candidate in physical
+        if candidate.constraint_assessment is not None
+    ]
+    return "Deterministic construct constraint failure: " + " | ".join(failures)
+
+
 async def verify_cloning_v3(
     answer: str,
     base_dir: Path | str,
@@ -181,6 +224,7 @@ async def verify_cloning_v3(
     require_circular: bool = True,
     plannotate: PlannotateAnnotator | None = None,
     require_plannotate: bool = False,
+    construct_spec: Mapping[str, Any] | ConstructSpec | None = None,
 ) -> HybridVerificationReport:
     """Run physical, reference, topology, and feature-architecture gates."""
     from labbench2.cloning.cloning_protocol import (
@@ -250,6 +294,21 @@ async def verify_cloning_v3(
         )
 
     params = validator_params or {}
+    raw_spec = construct_spec or params.get("construct_spec")
+    try:
+        parsed_spec = (
+            raw_spec
+            if isinstance(raw_spec, ConstructSpec)
+            else ConstructSpec.from_mapping(raw_spec)
+            if isinstance(raw_spec, Mapping)
+            else None
+        )
+    except ConstraintSpecError as exc:
+        return HybridVerificationReport(
+            VerificationStatus.ERROR,
+            f"Verifier error: invalid construct specification: {exc}",
+            normalized_files=normalized_files,
+        )
     reference, topology_repaired = repair_reference_topology(reference, params)
     ranked = assess_candidates(products, reference, params, threshold)
     preliminary = tuple(
@@ -258,9 +317,9 @@ async def verify_cloning_v3(
     eligible_indices = [
         index
         for index, value in enumerate(preliminary)
-        if value.similarity_pass
-        and value.topology_pass
+        if value.topology_pass
         and value.digest_pass is not False
+        and (parsed_spec is not None or value.similarity_pass)
     ]
 
     source_results: dict[int, FeatureArchitectureAssessment] = {}
@@ -274,6 +333,7 @@ async def verify_cloning_v3(
         )
 
     plannotate_results: dict[int, FeatureArchitectureAssessment] = {}
+    annotation_calls: dict[int, tuple[Any, ...]] = {}
     manifest: dict[str, Any] | None = None
     if require_plannotate and plannotate is None:
         return HybridVerificationReport(
@@ -295,6 +355,22 @@ async def verify_cloning_v3(
                 plannotate,
             )
             plannotate_results.update(zip(eligible_indices, assessments, strict=True))
+            constraint_names = {
+                f"constraint_candidate_{index}": (
+                    str(ranked[index].candidate.sequence.sequence),
+                    bool(ranked[index].candidate.sequence.is_circular),
+                )
+                for index in eligible_indices
+            }
+            annotated = await asyncio.to_thread(
+                plannotate.annotate_many, constraint_names
+            )
+            annotation_calls.update(
+                {
+                    index: annotated[f"constraint_candidate_{index}"]
+                    for index in eligible_indices
+                }
+            )
             manifest = await asyncio.to_thread(plannotate.manifest)
         except FeatureAnnotationError as exc:
             if require_plannotate:
@@ -306,6 +382,19 @@ async def verify_cloning_v3(
                     topology_repaired=topology_repaired,
                 )
 
+    constraint_results: dict[int, ConstructConstraintAssessment] = {}
+    if parsed_spec is not None:
+        for index in eligible_indices:
+            candidate_sequence = ranked[index].candidate.sequence
+            constraint_results[index] = await asyncio.to_thread(
+                evaluate_construct_constraints,
+                str(candidate_sequence.sequence),
+                circular=bool(candidate_sequence.is_circular),
+                spec=parsed_spec,
+                base_dir=base_path,
+                annotation_calls=annotation_calls.get(index, ()),
+            )
+
     candidates = tuple(
         _candidate_report(
             assessment,
@@ -313,12 +402,35 @@ async def verify_cloning_v3(
             repeat_integrity=repeat_results.get(index),
             source_features=source_results.get(index),
             plannotate_features=plannotate_results.get(index),
+            constraint_assessment=constraint_results.get(index),
         )
         for index, assessment in enumerate(ranked)
     )
     passing = [value for value in candidates if value.passes]
     if passing:
         selected = passing[0]
+        if selected.constraint_assessment is not None:
+            digest_note = (
+                "digest gate passed"
+                if selected.digest_pass is True
+                else "digest gate not configured"
+            )
+            reason = (
+                f"Constraint verifier passed candidate "
+                f"{selected.simulator_index + 1}/{len(candidates)}: "
+                f"{selected.constraint_assessment.summary}; circular topology gate "
+                f"passed; {digest_note}. Whole-reference similarity "
+                f"{selected.similarity:.6f} is advisory in constraint mode."
+            )
+            return HybridVerificationReport(
+                VerificationStatus.PASS,
+                reason,
+                candidates=candidates,
+                normalized_files=normalized_files,
+                topology_repaired=topology_repaired,
+                plannotate_manifest=manifest,
+                construct_spec=parsed_spec,
+            )
         evidence = [
             selected.repeat_integrity.summary
             if selected.repeat_integrity is not None
@@ -357,11 +469,16 @@ async def verify_cloning_v3(
         )
     return HybridVerificationReport(
         VerificationStatus.FAIL,
-        _failure_reason(candidates, threshold),
+        (
+            _constraint_failure_reason(candidates)
+            if parsed_spec is not None
+            else _failure_reason(candidates, threshold)
+        ),
         candidates=candidates,
         normalized_files=normalized_files,
         topology_repaired=topology_repaired,
         plannotate_manifest=manifest,
+        construct_spec=parsed_spec,
     )
 
 
@@ -375,6 +492,7 @@ async def cloning_reward_v3(
     require_circular: bool = True,
     plannotate: PlannotateAnnotator | None = None,
     require_plannotate: bool = False,
+    construct_spec: Mapping[str, Any] | ConstructSpec | None = None,
 ) -> tuple[float, str]:
     """Compatibility wrapper returning the traditional ``(score, reason)`` pair."""
     report = await verify_cloning_v3(
@@ -386,5 +504,6 @@ async def cloning_reward_v3(
         require_circular=require_circular,
         plannotate=plannotate,
         require_plannotate=require_plannotate,
+        construct_spec=construct_spec,
     )
     return report.score, report.reason

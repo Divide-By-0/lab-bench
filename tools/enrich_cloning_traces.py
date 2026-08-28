@@ -54,17 +54,32 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _question_ids(log: EvalLog) -> set[str]:
-    return {
-        str(sample.metadata["id"])
-        for sample in log.samples or []
-        if sample.metadata.get("tag") == "cloning"
-        and sample.metadata.get("id")
-        and not (
-            _existing_directory(sample.metadata.get("files_path"))
-            and _existing_file(sample.metadata.get("reference_path"))
+def _question_ids(
+    log: EvalLog,
+    cache_dir: Path,
+    reference_dir: Path | None,
+) -> set[str]:
+    """Return only samples whose effective local inputs are unavailable."""
+    cache_root = cache_dir / GCS_BUCKET
+    missing: set[str] = set()
+    for sample in log.samples or []:
+        if sample.metadata.get("tag") != "cloning" or not sample.metadata.get("id"):
+            continue
+        question_id = str(sample.metadata["id"])
+        files_path = _existing_directory(sample.metadata.get("files_path")) or (
+            cache_root / "cloning" / question_id
         )
-    }
+        local_reference_path = _existing_file(sample.metadata.get("reference_path"))
+        reference_path = (
+            reference_dir / f"{question_id}_assembled.fa"
+            if reference_dir is not None
+            else local_reference_path
+            if local_reference_path is not None
+            else cache_root / "validation" / f"{question_id}_assembled.fa"
+        )
+        if not files_path.is_dir() or not reference_path.is_file():
+            missing.add(question_id)
+    return missing
 
 
 def _list_objects(client: httpx.Client, prefix: str) -> list[str]:
@@ -288,7 +303,7 @@ async def enrich_logs(
     for source_path in sorted(source_dir.glob("*.eval")):
         log = read_eval_log(source_path)
         logs.append((source_path, log))
-        question_ids.update(_question_ids(log))
+        question_ids.update(_question_ids(log, cache_dir, reference_dir))
 
     download_sample_files(cache_dir, question_ids)
     apply_pr_repairs(cache_dir)

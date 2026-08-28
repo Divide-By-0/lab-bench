@@ -382,5 +382,148 @@
       }
     ],
     "ordered": [["cag", "dcas9", "ires", "blastr", "polya"]]
+  },
+  "02e631d2-19f5-50f9-a43a-af5e7440fb7d": {
+    "name": "CMV-NeoR compact mammalian expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cmv",
+        "description": "CMV promoter",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "CMV promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "payload",
+        "description": "complete NeoR/KanR protein",
+        "source_features": {"file": "pcalnl-gfp", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "polya",
+        "description": "beta-globin polyadenylation signal",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "beta-globin poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "preserved bacterial selection marker",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "preserved bacterial replication origin",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cas9",
+        "description": "removed Cas9 payload",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "min_copies": 0,
+        "max_copies": 0
+      }
+    ],
+    "ordered": [["cmv", "payload", "polya"]]
+  },
+  "a641ec71-1142-5e19-a1c5-354142bcc6c4": {
+    "name": "CMV-AmpR compact mammalian expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cmv",
+        "description": "CMV promoter",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "CMV promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "payload",
+        "description": "expressed plus bacterial AmpR/bla copies",
+        "source_features": {"file": "pcalnl-gfp", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 2
+      },
+      {
+        "id": "polya",
+        "description": "beta-globin polyadenylation signal",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "beta-globin poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "preserved bacterial replication origin",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cas9",
+        "description": "removed Cas9 payload",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "min_copies": 0,
+        "max_copies": 0
+      }
+    ],
+    "ordered": [["cmv", "payload", "polya"]]
+  },
+  "777f42d4-f239-5979-8a6e-e13daceba2a3": {
+    "name": "CMV-EGFP compact mammalian expression plasmid",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cmv",
+        "description": "CMV promoter",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "CMV promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "payload",
+        "description": "complete EGFP protein",
+        "source_features": {"file": "pcalnl-gfp", "label": "EGFP", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "polya",
+        "description": "beta-globin polyadenylation signal",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "beta-globin poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "preserved bacterial selection marker",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "preserved bacterial replication origin",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cas9",
+        "description": "removed Cas9 payload",
+        "source_features": {"file": "pcmv-mmlvgag-3xnes-cas9", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "min_copies": 0,
+        "max_copies": 0
+      }
+    ],
+    "ordered": [["cmv", "payload", "polya"]]
   }
 }
