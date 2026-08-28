@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 from pathlib import Path
@@ -13,7 +14,10 @@ from lab_bench_2.addgene_downloader import AddgeneDownloadError, HttpResponse
 from lab_bench_2.addgene_web_downloader import (
     AddgeneWebDownloader,
     decrypt_chrome_cookie_value,
+    load_cookie_cache,
+    media_cookie_expires_at,
     parse_sequence_sections,
+    save_cookie_cache,
     select_sequence_ids,
 )
 
@@ -201,3 +205,75 @@ def test_decrypt_chrome_cookie_value_strips_digest_prefix() -> None:
     encrypted = b"v10" + cipher.encryptor().update(padded) + cipher.encryptor().finalize()
 
     assert decrypt_chrome_cookie_value(encrypted, key) == "en"
+
+
+def test_media_cookie_expires_at_reads_jwt_payload() -> None:
+    payload = base64.urlsafe_b64encode(
+        b'{"aud":"media-edge-auth","exp":1787888707}'
+    ).rstrip(b"=").decode()
+    token = f"{payload}.sig"
+    assert media_cookie_expires_at({"__Secure_media_edge_auth": token}) == 1787888707
+
+
+def test_cookie_cache_roundtrip_does_not_lose_header(tmp_path: Path) -> None:
+    path = tmp_path / "cookies.json"
+    cookies = {"__Secure_media_edge_auth": "abc", "addgene.org": "sess"}
+    save_cookie_cache(cookies, path)
+    assert path.stat().st_mode & 0o777 == 0o600
+    loaded = load_cookie_cache(path)
+    assert loaded == cookies
+
+
+def test_retries_expired_media_cookie_then_downloads(tmp_path: Path) -> None:
+    media_url = (
+        "https://media.addgene.org/snapgene-media/v1/sequences/353936/uuid/"
+        "addgene-plasmid-181752-sequence-353936.gbk"
+    )
+    sequences_url = "https://www.addgene.org/181752/sequences/"
+    collection_url = (
+        "https://www.addgene.org/api/get-sequence-file-collection/353936/"
+    )
+    home = "https://www.addgene.org/"
+    request = FakeRequest(
+        {
+            sequences_url: [
+                HttpResponse(200, sequences_url, {}, SEQUENCES_HTML.encode())
+            ],
+            collection_url: [
+                HttpResponse(
+                    200,
+                    collection_url,
+                    {},
+                    json.dumps(
+                        {"inProgress": False, "genbankUrl": media_url}
+                    ).encode(),
+                )
+            ],
+            media_url: [
+                HttpResponse(404, media_url, {}, b"Not Found"),
+                HttpResponse(200, media_url, {}, _genbank_bytes()),
+            ],
+            home: [
+                HttpResponse(
+                    200,
+                    home,
+                    {
+                        "Set-Cookie": "__Secure_media_edge_auth=refreshed-after-404; Path=/"
+                    },
+                    b"<html>ok</html>",
+                )
+            ],
+        }
+    )
+    downloader = AddgeneWebDownloader(
+        cookies={"__Secure_media_edge_auth": "expired"},
+        request=request,
+        min_delay=0,
+        max_delay=0,
+        persist_cookies=False,
+    )
+
+    records = downloader.download_plasmid(181752, tmp_path)
+
+    assert records[0].status == "downloaded-via-chrome-session"
+    assert downloader.cookies["__Secure_media_edge_auth"] == "refreshed-after-404"

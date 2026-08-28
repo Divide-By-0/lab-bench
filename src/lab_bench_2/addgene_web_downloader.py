@@ -1,13 +1,15 @@
 """Scale-oriented Addgene GBK downloads through a signed-in Chrome session.
 
 Discovery uses public Addgene HTML and the public sequence-file-collection
-API. The GenBank bytes themselves are gated by Addgene's media-edge cookie.
-This module reads that cookie from the local Chrome profile into memory,
-downloads over HTTP, and never writes cookie values to disk or manifests.
+API. The GenBank bytes themselves are gated by Addgene's 15-minute
+media-edge cookie. Cookies are read from Chrome, refreshed from
+www.addgene.org Set-Cookie, cached at ~/.cache/lab-bench-addgene/cookies.json
+(mode 0600), and never written to git or download manifests.
 """
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import random
@@ -84,6 +86,11 @@ SEQUENCE_BUCKET_ORDER = {
 }
 CookieDecryptFunction = Callable[[bytes, bytes], str]
 KeychainPasswordFunction = Callable[[], bytes]
+MEDIA_COOKIE_NAME = "__Secure_media_edge_auth"
+COOKIE_CACHE_DIR = Path.home() / ".cache" / "lab-bench-addgene"
+COOKIE_CACHE_FILE = COOKIE_CACHE_DIR / "cookies.json"
+MEDIA_COOKIE_REFRESH_SKEW = 60.0
+KEEP_FRESH_INTERVAL = 14 * 60.0
 
 
 @dataclass(frozen=True)
@@ -225,6 +232,65 @@ def select_sequence_ids(
     return selected
 
 
+def media_cookie_expires_at(cookies: Mapping[str, str]) -> int | None:
+    """Return Unix expiry of ``__Secure_media_edge_auth``, if it is a JWT."""
+    token = cookies.get(MEDIA_COOKIE_NAME) or ""
+    parts = token.split(".")
+    if "." not in token:
+        return None
+    # Addgene's media-edge token puts JSON in the first segment.
+    for candidate in (parts[0], parts[1] if len(parts) > 1 else ""):
+        padded = candidate + "=" * ((4 - len(candidate) % 4) % 4)
+        try:
+            data = json.loads(base64.urlsafe_b64decode(padded))
+        except (ValueError, json.JSONDecodeError):
+            continue
+        exp = data.get("exp") if isinstance(data, dict) else None
+        if isinstance(exp, int):
+            return exp
+    return None
+
+
+def media_seconds_remaining(
+    cookies: Mapping[str, str], *, now: float | None = None
+) -> float:
+    """Seconds until the media-edge cookie expires. Negative means expired."""
+    expiry = media_cookie_expires_at(cookies)
+    if expiry is None:
+        return -1.0
+    return float(expiry) - (time.time() if now is None else now)
+
+
+def save_cookie_cache(
+    cookies: Mapping[str, str], path: Path | None = None
+) -> Path:
+    """Write cookies to the user cache file (mode 0600). Not for git."""
+    destination = path or COOKIE_CACHE_FILE
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "cookies": dict(cookies),
+        "cookie_header": _cookie_header(cookies),
+        "media_edge_exp": media_cookie_expires_at(cookies),
+        "updated_at": int(time.time()),
+    }
+    destination.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+    destination.chmod(0o600)
+    return destination
+
+
+def load_cookie_cache(path: Path | None = None) -> dict[str, str] | None:
+    """Load a previously saved cookie cache, or None if missing/invalid."""
+    source = path or COOKIE_CACHE_FILE
+    try:
+        payload = json.loads(source.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    cookies = payload.get("cookies") if isinstance(payload, dict) else None
+    if not isinstance(cookies, dict):
+        return None
+    return {str(key): str(value) for key, value in cookies.items()}
+
+
 class AddgeneWebDownloader:
     """Download full GBK files through Addgene's website plus a Chrome session."""
 
@@ -242,6 +308,8 @@ class AddgeneWebDownloader:
         sleep: SleepFunction = time.sleep,
         random_uniform: Callable[[float, float], float] = random.uniform,
         cookie_loader: Callable[[], Mapping[str, str]] | None = None,
+        cookie_cache: Path | None = COOKIE_CACHE_FILE,
+        persist_cookies: bool | None = None,
     ) -> None:
         if min_delay < 0 or max_delay < min_delay:
             raise ValueError("Require 0 <= min_delay <= max_delay")
@@ -251,16 +319,26 @@ class AddgeneWebDownloader:
         self.max_delay = max_delay
         self.max_retries = max_retries
         self.user_agent = user_agent
+        self.chrome_profile = chrome_profile
         self._sleep = sleep
         self._random_uniform = random_uniform
         self._request_count = 0
         self._request = request or self._build_request(proxy_url)
+        self._cookie_loader = cookie_loader
+        self._cookie_cache = cookie_cache
+        self._persist_cookies = persist_cookies if persist_cookies is not None else cookies is None
+        self._reload_from_chrome = cookies is None
         if cookies is not None:
             self.cookies = dict(cookies)
         elif cookie_loader is not None:
             self.cookies = dict(cookie_loader())
         else:
-            self.cookies = load_chrome_addgene_cookies(profile=chrome_profile)
+            cached = load_cookie_cache(cookie_cache)
+            if cached and media_seconds_remaining(cached) > MEDIA_COOKIE_REFRESH_SKEW:
+                self.cookies = cached
+            else:
+                self.cookies = load_chrome_addgene_cookies(profile=chrome_profile)
+                self.refresh_session()
 
     @staticmethod
     def _build_request(proxy_url: str | None) -> RequestFunction:
@@ -306,6 +384,55 @@ class AddgeneWebDownloader:
             name = name.strip()
             if name:
                 self.cookies[name] = value
+        if self._persist_cookies:
+            save_cookie_cache(self.cookies, self._cookie_cache)
+
+    def refresh_session(self) -> Mapping[str, str]:
+        """Reload Chrome cookies if needed and mint a fresh media-edge cookie."""
+        if self._reload_from_chrome:
+            loader = self._cookie_loader or (
+                lambda: load_chrome_addgene_cookies(profile=self.chrome_profile)
+            )
+            try:
+                self.cookies.update(dict(loader()))
+            except AddgeneDownloadError:
+                if MEDIA_COOKIE_NAME not in self.cookies:
+                    raise
+        url = f"{SITE_ORIGIN}/"
+        response = self._request(url, self._headers(url, "text/html"))
+        self._absorb_set_cookies(response.headers)
+        if MEDIA_COOKIE_NAME not in self.cookies:
+            raise AddgeneDownloadError(
+                "Addgene media-edge cookie did not refresh. Sign in at "
+                "https://www.addgene.org/ in Chrome and retry."
+            )
+        expiry = media_cookie_expires_at(self.cookies)
+        if expiry is not None and float(expiry) - time.time() <= 0:
+            raise AddgeneDownloadError(
+                "Addgene media-edge cookie did not refresh. Sign in at "
+                "https://www.addgene.org/ in Chrome and retry."
+            )
+        return self.cookies
+
+    def ensure_fresh_media_cookie(self) -> None:
+        """Refresh when the 15-minute media-edge JWT is missing or near expiry."""
+        expiry = media_cookie_expires_at(self.cookies)
+        if expiry is None:
+            return
+        if float(expiry) - time.time() > MEDIA_COOKIE_REFRESH_SKEW:
+            return
+        self.refresh_session()
+
+    def keep_fresh(self, *, interval: float = KEEP_FRESH_INTERVAL) -> None:
+        """Refresh the media-edge cookie on a loop. interval is seconds."""
+        if interval <= 0:
+            raise ValueError("keep-fresh interval must be positive")
+        while True:
+            self.refresh_session()
+            remaining = media_seconds_remaining(self.cookies)
+            print(f"Addgene media-edge cookie fresh for {int(remaining)}s", flush=True)
+            wait = min(interval, max(30.0, remaining - MEDIA_COOKIE_REFRESH_SKEW))
+            self._sleep(wait)
 
     def _headers(self, url: str, accept: str) -> dict[str, str]:
         headers = {
@@ -323,7 +450,12 @@ class AddgeneWebDownloader:
             self._sleep(self._random_uniform(self.min_delay, self.max_delay))
 
     def _get(self, url: str, accept: str) -> HttpResponse:
+        host = (urlsplit(url).hostname or "").casefold()
+        is_media = host == "media.addgene.org" or host.endswith(".media.addgene.org")
+        refreshed = False
         for attempt in range(self.max_retries + 1):
+            if is_media:
+                self.ensure_fresh_media_cookie()
             self._polite_delay()
             self._request_count += 1
             response = self._request(url, self._headers(url, accept))
@@ -336,8 +468,11 @@ class AddgeneWebDownloader:
                     "https://www.addgene.org/ in Chrome and retry."
                 )
             if response.status == HTTP_NOT_FOUND:
-                host = (urlsplit(url).hostname or "").casefold()
-                if host == "media.addgene.org" or host.endswith(".media.addgene.org"):
+                if is_media and not refreshed:
+                    self.refresh_session()
+                    refreshed = True
+                    continue
+                if is_media:
                     raise AddgeneDownloadError(
                         "Addgene media returned 404. The Chrome media-edge cookie "
                         "is missing or expired; sign in at https://www.addgene.org/."

@@ -34,7 +34,11 @@ def _arguments() -> argparse.Namespace:
         type=Path,
         help="UTF-8 text file with one Addgene id or URL per line",
     )
-    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Directory for GBK files (required unless --keep-fresh)",
+    )
     parser.add_argument(
         "--sequence-source",
         choices=("preferred", "addgene", "depositor", "all"),
@@ -83,6 +87,20 @@ def _arguments() -> argparse.Namespace:
         type=Path,
         help="Manifest path (default: <output-dir>/addgene-download-manifest.json)",
     )
+    parser.add_argument(
+        "--keep-fresh",
+        action="store_true",
+        help=(
+            "Refresh the Addgene media-edge cookie from Chrome and www.addgene.org "
+            "on a loop (default every 14 minutes). Does not print cookie values."
+        ),
+    )
+    parser.add_argument(
+        "--keep-fresh-interval",
+        type=float,
+        default=840.0,
+        help="Seconds between cookie refreshes when --keep-fresh is set (default: 840)",
+    )
     return parser.parse_args()
 
 
@@ -102,6 +120,23 @@ def _inputs(args: argparse.Namespace) -> list[int]:
 def main() -> int:
     args = _arguments()
     try:
+        if args.keep_fresh and not args.plasmids and not args.ids_file:
+            downloader = AddgeneWebDownloader(
+                chrome_profile=args.chrome_profile,
+                proxy_url=args.proxy_url,
+                min_delay=args.min_delay,
+                max_delay=args.max_delay,
+                max_retries=args.max_retries,
+            )
+            print(
+                "Refreshing Addgene media-edge cookie. Stay signed in to Chrome. "
+                "Cookie values are cached at ~/.cache/lab-bench-addgene/cookies.json.",
+                flush=True,
+            )
+            downloader.keep_fresh(interval=args.keep_fresh_interval)
+            return 0
+        if args.output_dir is None:
+            raise ValueError("--output-dir is required when downloading plasmids")
         plasmid_ids = _inputs(args)
         if args.via == "api":
             downloader = AddgeneDownloader(
