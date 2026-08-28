@@ -60,6 +60,7 @@ def test_hard_manifest_and_questions_are_consistent() -> None:
 
     for task in TASKS:
         assert len(task["inventory_addgene_ids"]) == 12
+        assert task["inventory_igem_part_count"] == 8
         assert task["canonical_exact_circular_match"]
         assert task["canonical_product_count"] == 1
         assert len(task["components"]) == task["canonical_component_count"]
@@ -67,7 +68,9 @@ def test_hard_manifest_and_questions_are_consistent() -> None:
         LabBenchQuestion.model_validate(question)
         assert question["difficulty"]["name"] == "hard_inventory_multifragment"
         assert question["difficulty"]["method"] == "model_chooses"
-        assert question["question"].count("`addgene-") == 12
+        assert question["difficulty"]["igem_part_count"] == 8
+        assert "All available Addgene and iGEM plasmids" in question["question"]
+        assert "Do not synthesize genes de novo" in question["question"]
 
 
 def test_prompts_do_not_disclose_plasmid_names_sources_or_method() -> None:
@@ -82,8 +85,12 @@ def test_prompts_do_not_disclose_plasmid_names_sources_or_method() -> None:
     )
     for question in QUESTIONS:
         text = question["question"]
-        assert "filenames deliberately provide only accession numbers" in text
-        assert "Choose any supported assembly method" in text
+        assert "Available inventory:" not in text
+        assert "Functional and construction constraints:" not in text
+        assert "Choose any supported assembly method" not in text
+        assert "The final circular construct" not in text
+        assert "PCR-derived assembly components" not in text
+        assert len(text) < 700
         assert all(term not in text for term in hidden_terms)
 
 
@@ -103,7 +110,7 @@ def test_reagent_inventory_subset_is_matched_and_opaque() -> None:
         assert question["difficulty"]["name"] == "hard_reagent_inventory"
         assert question["difficulty"]["novel_primers_allowed"] is False
         assert question["difficulty"]["igem_part_count"] == 8
-        assert "Eight additional QC-valid iGEM kit plasmids" in question["question"]
+        assert "fixed primer and enzyme stock" in question["question"]
         assert task["primer_count"] == 2 * task["canonical_primer_count"]
         assert task["decoy_primer_count"] == task["canonical_primer_count"]
         assert len(task["enzymes"]) == 8
@@ -149,8 +156,11 @@ def test_selected_igem_inventory_is_qc_valid_and_hash_matched() -> None:
         "terminator",
     }
     assert all(part["is_valid"] and part["qc_status"] == "Correct" for part in parts)
-    for task in REAGENT_TASKS:
-        task_dir = PILOT / "reagent_inventory" / task["id"]
+    task_dirs = [PILOT / "cloning" / task["id"] for task in TASKS]
+    task_dirs.extend(
+        PILOT / "reagent_inventory" / task["id"] for task in REAGENT_TASKS
+    )
+    for task_dir in task_dirs:
         for part in parts:
             path = task_dir / part["filename"]
             assert hashlib.sha256(path.read_bytes()).hexdigest() == part["sha256"]
@@ -288,6 +298,32 @@ def test_hard_questions_load_as_a_local_file_dataset() -> None:
 
     assert len(dataset) == 6
     assert all(sample.metadata is not None for sample in dataset)
+    for sample in dataset:
+        assert sample.metadata is not None
+        inventory = Path(sample.metadata["files_path"])
+        assert len(list(inventory.glob("igem-*.gbk"))) == 8
+        assert (inventory / "igem_inventory.tsv").is_file()
+
+
+def test_igem_files_are_exposed_in_file_and_inject_modes() -> None:
+    file_sample = load_local_cloning_dataset(
+        PILOT / "questions.jsonl", mode="file"
+    )[0]
+    assert isinstance(file_sample.input, list)
+    assert isinstance(file_sample.input[0].content, list)
+    attached_names = {
+        getattr(item, "filename", None) for item in file_sample.input[0].content
+    }
+    assert sum(
+        isinstance(name, str) and name.startswith("igem-")
+        for name in attached_names
+    ) == 8
+
+    inject_sample = load_local_cloning_dataset(
+        PILOT / "questions.jsonl", mode="inject"
+    )[0]
+    assert isinstance(inject_sample.input, str)
+    assert inject_sample.input.count("## igem-") == 8
 
 
 def test_reagent_questions_and_readme_are_reviewable() -> None:
@@ -298,6 +334,7 @@ def test_reagent_questions_and_readme_are_reviewable() -> None:
 
     assert len(dataset) == 3
     assert "## Reagent-inventory questions for review (3 of 6)" in readme
+    assert "## Which requirements are realistic?" in readme
     reagent_slugs = {task["slug"] for task in REAGENT_TASKS}
     for task in TASKS:
         if task["slug"] not in reagent_slugs:

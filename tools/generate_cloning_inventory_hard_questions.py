@@ -22,7 +22,8 @@ from Bio.SeqRecord import SeqRecord
 from lab_bench_2.cloning_simulators import execute_cloning_protocol_v2
 from lab_bench_2.prompt_composer import CLONING_PROTOCOL_SUFFIX
 
-VERSION = "inventory-hard-1.0"
+VERSION = "inventory-hard-1.1"
+TASK_ID_SEED_VERSION = "inventory-hard-1.0"
 OUTPUT_DEFAULT = Path("experiments/cloning_inventory_hard_v1")
 OVERLAP_LENGTH = 24
 ANNEAL_LENGTH = 24
@@ -97,8 +98,7 @@ class ManualFeature:
 class HardTask:
     slug: str
     title: str
-    goal: str
-    requirements: tuple[str, ...]
+    request: str
     components: tuple[Component, ...]
     inventory_ids: tuple[int, ...]
     manual_features: tuple[ManualFeature, ...] = ()
@@ -108,16 +108,10 @@ TASKS = (
     HardTask(
         slug="wnt-egfp-p2a-puro",
         title="TCF/LEF EGFP-P2A-PuroR reporter",
-        goal=(
-            "Build a beta-catenin/TCF-responsive mammalian reporter that produces "
-            "EGFP and puromycin resistance as separate proteins from one transcript"
-        ),
-        requirements=(
-            "retain an eight-site TCF/LEF response array, its minimal promoter, and its native translation-initiation context",
-            "replace firefly luciferase with one continuous EGFP-P2A-PuroR open reading frame",
-            "omit the EGFP stop codon, preserve the P2A reading frame, and place the only coding-region stop after PuroR",
-            "retain the response vector's SV40 polyadenylation signal and bacterial propagation elements",
-            "use sequence present in the inventory and no more than three PCR-derived assembly components",
+        request=(
+            "Could you turn one of our TCF/LEF-responsive mammalian reporters into "
+            "an EGFP reporter with puromycin selection? I want EGFP and PuroR made "
+            "as separate proteins from the same reporter transcript, using P2A"
         ),
         components=(
             Component(
@@ -162,16 +156,11 @@ TASKS = (
     HardTask(
         slug="lenti-mcherry-neor-two-locus",
         title="Lentiviral mCherry with G418 selection",
-        goal=(
-            "Build a third-generation lentiviral transfer vector that expresses "
-            "mCherry and uses independent G418/neomycin selection"
-        ),
-        requirements=(
-            "start from an inventory transfer vector that already contains the required LTR, Psi, RRE, and cPPT/CTS elements",
-            "replace its green reporter with mCherry while preserving the existing downstream fusion/stop context",
-            "independently replace its hPGK-driven puromycin-resistance coding region with a complete NeoR/KanR coding region",
-            "remove all EGFP and PuroR coding sequence while retaining the original promoters, lentiviral cis elements, and bacterial propagation elements",
-            "make exactly the two local coding-region edits and use no more than four PCR-derived assembly components",
+        request=(
+            "Could you modify one of our third-generation lentiviral transfer "
+            "vectors so it expresses mCherry instead of its current fluorescent "
+            "reporter and uses G418 rather than puromycin for mammalian selection? "
+            "Keep reporter expression and drug selection independent"
         ),
         components=(
             Component(
@@ -213,16 +202,10 @@ TASKS = (
     HardTask(
         slug="cre-tdtomato-p2a-puro",
         title="Cre-dependent tdTomato-P2A-PuroR reporter",
-        goal=(
-            "Build a Cre-activated reporter that produces tdTomato and puromycin "
-            "resistance as separate proteins from the activated transcript"
-        ),
-        requirements=(
-            "retain both loxP sites and the complete intervening transcriptional-stop/selection architecture of an inventory conditional-expression backbone",
-            "replace the original green reporter with a continuous tdTomato-P2A-PuroR open reading frame",
-            "omit the tdTomato stop, preserve the P2A frame, and retain a single terminal stop after PuroR",
-            "retain the CAG expression context, mammalian polyadenylation signal, and bacterial propagation elements, with no EGFP coding sequence remaining",
-            "use sequence present in the inventory and no more than three PCR-derived assembly components",
+        request=(
+            "Could you modify one of our Cre-dependent mammalian reporters so that, "
+            "after Cre activation, it produces tdTomato and puromycin resistance as "
+            "separate proteins from one transcript? Please use P2A between them"
         ),
         components=(
             Component(
@@ -259,16 +242,11 @@ TASKS = (
     HardTask(
         slug="cas9-p2a-mcherry-kanr",
         title="Cas9-P2A-mCherry with kanamycin propagation",
-        goal=(
-            "Build a nonviral mammalian CRISPR plasmid that coexpresses Cas9 and "
-            "mCherry as separate proteins and propagates under kanamycin selection"
-        ),
-        requirements=(
-            "start from a CAG-Cas9 inventory backbone that initially has no linked fluorescent reporter or mammalian selectable marker",
-            "retain its U6 guide-RNA cassette, 3xFLAG/SV40-NLS-Cas9-nucleoplasmin-NLS reading frame, and bGH polyadenylation signal",
-            "append P2A followed by complete mCherry immediately after the terminal Cas9 NLS, with no stop before P2A and one stop after mCherry",
-            "replace the bacterial AmpR coding region with a complete, correctly oriented KanR coding region while retaining the original bacterial promoter and origin",
-            "use sequence present in the inventory and no more than five PCR-derived assembly components",
+        request=(
+            "Could you modify one of our CAG-Cas9/sgRNA plasmids so it also makes "
+            "mCherry as a separate protein using P2A? I also need the finished "
+            "plasmid to use kanamycin, rather than ampicillin, for bacterial "
+            "selection"
         ),
         components=(
             Component("P2A", Segment(52961, 8677, 8734), "linker"),
@@ -311,16 +289,11 @@ TASKS = (
     HardTask(
         slug="t7-histev-tdtomato-kanr",
         title="T7 6xHis-TEV-tdTomato with kanamycin propagation",
-        goal=(
-            "Build a T7 bacterial expression plasmid for N-terminally tagged, "
-            "TEV-cleavable tdTomato that propagates under kanamycin selection"
-        ),
-        requirements=(
-            "retain the T7 promoter, ribosome-binding context, T7 terminator, and origin of an inventory MBP expression backbone",
-            "replace MBP and its original C-terminal affinity tag with an in-frame N-terminal 6xHis-tag/T7-tag/TEV-site/tdTomato segment and a terminal stop",
-            "retain the original start codon immediately upstream of the replacement segment and remove all MBP coding sequence",
-            "replace the bacterial AmpR coding region with a complete, correctly oriented KanR coding region while retaining the original resistance-gene promoter",
-            "use sequence present in the inventory and no more than four PCR-derived assembly components",
+        request=(
+            "Could you repurpose one of our T7 MBP expression plasmids to express "
+            "tdTomato instead of MBP? The protein should carry the available "
+            "N-terminal 6xHis/T7-tag/TEV leader, and the finished plasmid should use "
+            "kanamycin rather than ampicillin for bacterial selection"
         ),
         components=(
             Component(
@@ -362,16 +335,11 @@ TASKS = (
     HardTask(
         slug="lenti-guide-mcherry-p2a-neor",
         title="Guide-vector mCherry-P2A-NeoR replacement",
-        goal=(
-            "Build a compact third-generation lentiviral guide vector with "
-            "mCherry expression and G418/neomycin selection"
-        ),
-        requirements=(
-            "start from an inventory lentiviral CRISPR vector and retain its U6 guide-RNA cassette, EF-1-alpha expression context, LTRs, Psi, RRE, cPPT/CTS, and WPRE",
-            "replace the complete Cas9-NLS-FLAG-P2A-PuroR coding region with one mCherry-P2A-NeoR open reading frame",
-            "omit the mCherry stop codon, retain an in-frame P2A, and place the only coding-region stop after NeoR",
-            "remove all Cas9 and PuroR coding sequence while retaining the downstream WPRE, polyadenylation signal, and bacterial propagation elements",
-            "use sequence present in the inventory and no more than four PCR-derived assembly components",
+        request=(
+            "Could you convert one of our lentiviral Cas9/guide vectors into a "
+            "guide-only vector that expresses mCherry and NeoR as separate proteins "
+            "using P2A? The finished vector should use G418 for mammalian selection "
+            "and should no longer contain Cas9"
         ),
         components=(
             Component(
@@ -828,27 +796,19 @@ def _reference_record(
 
 
 def _question_text(task: HardTask) -> str:
-    inventory = "\n".join(
-        f"- `addgene-{addgene_id}.gbk`" for addgene_id in task.inventory_ids
-    )
-    requirements = "\n".join(
-        f"- {requirement.rstrip('.')}." for requirement in task.requirements
-    )
     return (
-        f"{task.goal}. Select all starting molecules by inspecting the attached "
-        "GenBank sequences and annotations; the inventory filenames deliberately "
-        "provide only accession numbers.\n\n"
-        f"Available inventory:\n{inventory}\n\n"
-        f"Functional and construction constraints:\n{requirements}\n\n"
-        "Do not synthesize a complete coding region in primer tails. Choose any "
-        "supported assembly method, but preserve the selected backbone outside "
-        "the required local edits. The final circular construct, including its "
-        "junction sequences, reading frames, and retained architecture, will be "
-        "assessed."
+        f"{task.request.rstrip('.')}.\n\n"
+        "All available Addgene and iGEM plasmids are in the attached task inventory. "
+        "Do not synthesize genes de novo; obtain the gene sequences you need from "
+        "that inventory."
     )
 
 
-def _question_record(task: HardTask, task_id: str) -> dict[str, Any]:
+def _question_record(
+    task: HardTask,
+    task_id: str,
+    igem_parts: list[dict[str, Any]],
+) -> dict[str, Any]:
     return {
         "id": task_id,
         "tag": "cloning",
@@ -858,8 +818,11 @@ def _question_record(task: HardTask, task_id: str) -> dict[str, Any]:
         "ideal": "",
         "files": f"cloning/{task_id}",
         "sources": [
-            f"https://www.addgene.org/{addgene_id}/"
-            for addgene_id in task.inventory_ids
+            *(
+                f"https://www.addgene.org/{addgene_id}/"
+                for addgene_id in task.inventory_ids
+            ),
+            *(part["part_url"] for part in igem_parts),
         ],
         "prompt_suffix": CLONING_PROTOCOL_SUFFIX,
         "validator_params": "{}",
@@ -868,9 +831,10 @@ def _question_record(task: HardTask, task_id: str) -> dict[str, Any]:
         "difficulty": {
             "name": "hard_inventory_multifragment",
             "method": "model_chooses",
-            "materials": "accession_only_inventory",
+            "materials": "addgene_and_igem_inventory",
             "architecture": "functional_multifragment",
             "component_count": len(task.components),
+            "igem_part_count": len(igem_parts),
         },
     }
 
@@ -881,26 +845,14 @@ def _reagent_question_record(
     primer_count: int,
     igem_parts: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    record = _question_record(task, task_id)
+    record = _question_record(task, task_id, igem_parts)
     record["files"] = f"reagent_inventory/{task_id}"
     record["question"] = (
         _question_text(task)
-        + "\n\nA fixed reagent stockroom is also attached. Each `primer-*.txt` "
-        "file contains one stocked primer sequence in 5'-to-3' orientation; "
-        "select primer files by inspecting their sequences and use their filenames "
-        "directly as pcr() arguments. Some primers are decoys. Do not introduce "
-        "novel primer sequences. Each `enzyme-*.txt` file contains one available "
-        "enzyme name; if you choose an enzyme-based operation, use only an enzyme "
-        "from that stock. `reagent_inventory.tsv` is an index of all stocked "
-        "reagents. Enzymes do not need to be used when the selected assembly method "
-        "does not require them."
-        " Eight additional QC-valid iGEM kit plasmids are included as "
-        "`igem-*.gbk` files. Their part roles, assembly standards, flanking "
-        "overhangs, resistance markers, and QC status are listed in "
-        "`igem_inventory.tsv`; inspect the GenBank sequence before choosing any "
-        "of them."
+        + "\n\nThis version also has a fixed primer and enzyme stock in the same "
+        "task inventory. Use only the stocked primers and enzymes; some of them "
+        "will not be relevant to this build."
     )
-    record["sources"].extend(part["part_url"] for part in igem_parts)
     record["difficulty"] = {
         "name": "hard_reagent_inventory",
         "method": "model_chooses",
@@ -916,7 +868,9 @@ def _reagent_question_record(
 
 
 def _primer_sort_key(task: HardTask, sequence: str) -> str:
-    return hashlib.sha256(f"{VERSION}:{task.slug}:{sequence}".encode()).hexdigest()
+    return hashlib.sha256(
+        f"{TASK_ID_SEED_VERSION}:{task.slug}:{sequence}".encode()
+    ).hexdigest()
 
 
 def _primer_template_id(primer: dict[str, str]) -> int:
@@ -1030,56 +984,17 @@ def _write_fasta(record: SeqRecord, path: Path) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
-def _write_readme(output: Path) -> None:
-    rows = "\n".join(
-        f"| {task.title} | {len(task.components)} | "
-        f"{len(task.inventory_ids)} |"
-        for task in TASKS
-    )
-    (output / "README.md").write_text(
-        "# Hard Addgene cloning inventory pilot\n\n"
-        "This package preserves the easier `cloning_inventory_pilot_v1` set and "
-        "adds six genuinely harder underlying constructs. These are not merely "
-        "prompt-redacted versions of two-fragment swaps.\n\n"
-        "| Construct | Canonical components | Inventory files |\n"
-        "| --- | ---: | ---: |\n"
-        f"{rows}\n\n"
-        "## What makes these harder\n\n"
-        "- No assembly method, backbone, insert source, plasmid name, or exact "
-        "coordinates are disclosed.\n"
-        "- Each task supplies 12 accession-only GenBank files, including close "
-        "architectural decoys.\n"
-        "- The exact products require three to five PCR-derived components.\n"
-        "- All six tasks require frame-sensitive coding or tag junctions; three require "
-        "two coding changes, and two require reverse-orienting a bacterial marker.\n"
-        "- The prompts impose retained-architecture and component-count constraints "
-        "so whole-vector redesign is not an equivalent answer.\n\n"
-        "The existing sequence verifier remains usable because every prompt still "
-        "defines one smallest-change final construct. `validation/` contains exact "
-        "circular FASTA references and annotated GenBank review references. Every "
-        "base is covered by an assembly-component provenance annotation.\n\n"
-        "## Regeneration\n\n"
-        "```bash\n"
-        "uv run --extra lab_bench_2 python "
-        "tools/generate_cloning_inventory_hard_questions.py \\\n  --input-dir /path/to/addgene-genbank-files \\\n  --output experiments/cloning_inventory_hard_v1\n"
-        "```\n\n"
-        "## Running\n\n"
-        "```bash\n"
-        "inspect eval src/lab_bench_2/lab_bench_2.py@lab_bench_2 \\\n  -T tags=cloning -T mode=file -T solver=agentic \\\n  -T dataset_path=\"$PWD/experiments/cloning_inventory_hard_v1/questions.jsonl\" \\\n  --model openai/gpt-5.6-sol --reasoning-effort max\n"
-        "```\n"
-    )
-
-
 def _write_clean_readme(output: Path) -> None:
     rows = "\n".join(
-        f"| {task.title} | {len(task.components)} | {len(task.inventory_ids)} |"
+        f"| {task.title} | {len(task.components)} | {len(task.inventory_ids)} | 8 |"
         for task in TASKS
     )
     review_lines = [
         "## Reagent-inventory questions for review (3 of 6)",
         "",
-        "These are the exact task-specific question texts from `questions.jsonl`; "
-        "the shared protocol-syntax suffix is not repeated here.",
+        "These show the shortened question wording. The reagent variant adds one "
+        "sentence requiring use of the stocked primers and enzymes. The shared "
+        "protocol-syntax suffix is not repeated here.",
     ]
     review_tasks = [task for task in TASKS if task.slug in REAGENT_TASK_SLUGS]
     for task in review_tasks:
@@ -1092,32 +1007,53 @@ def _write_clean_readme(output: Path) -> None:
             ]
         )
     lines = [
-        "# Hard Addgene cloning inventory pilot",
+        "# Hard mixed-inventory cloning pilot",
         "",
         "This package preserves the easier `cloning_inventory_pilot_v1` set and "
         "adds six genuinely harder underlying constructs. These are not merely "
         "prompt-redacted versions of two-fragment swaps.",
         "",
-        "| Construct | Canonical components | Inventory files |",
-        "| --- | ---: | ---: |",
+        "Each JSONL record points to its complete inventory through the `files` "
+        "field. Base-task inventories are under `cloning/<task-id>/`; fixed-reagent "
+        "inventories are under `reagent_inventory/<task-id>/`. The runner attaches "
+        "or copies every file from that directory into the model's working directory.",
+        "",
+        "| Construct | Canonical components | Addgene plasmids | iGEM plasmids |",
+        "| --- | ---: | ---: | ---: |",
         rows,
         "",
         "## What makes these harder",
         "",
         "- No assembly method, backbone, insert source, plasmid name, or exact "
         "coordinates are disclosed.",
-        "- Each task supplies 12 accession-only GenBank files, including close "
-        "architectural decoys.",
+        "- Each task supplies 12 accession-only Addgene GenBank files and eight "
+        "QC-valid iGEM GenBank files, including irrelevant alternatives.",
         "- The exact products require three to five PCR-derived components.",
         "- All six tasks require frame-sensitive coding or tag junctions; three require "
         "two coding changes, and two require reverse-orienting a bacterial marker.",
-        "- The prompts impose retained-architecture and component-count constraints "
-        "so whole-vector redesign is not an equivalent answer.",
+        "- The prompt describes the biological outcome without naming the source "
+        "plasmids, assembly method, coordinates, junctions, or component count.",
         "",
-        "The existing sequence verifier remains usable because every prompt still "
-        "defines one smallest-change final construct. `validation/` contains exact "
-        "circular FASTA references and annotated GenBank review references. Every "
-        "base is covered by an assembly-component provenance annotation.",
+        "The verifier still compares the assembled circular product with one exact "
+        "reference. Because the prompts are now less prescriptive, that score should "
+        "be interpreted alongside the sequence visualization: another biologically "
+        "reasonable architecture may not be sequence-identical to the reference. "
+        "`validation/` contains exact FASTA references and annotated GenBank review "
+        "references with complete component provenance.",
+        "",
+        "## Which requirements are realistic?",
+        "",
+        "The expressed protein, regulatory context, linked-versus-independent "
+        "expression, selectable marker, and removal of an unwanted gene are ordinary "
+        "real-world design requirements. Requiring genes to come from the available "
+        "inventory is also realistic when a lab wants to reuse material on hand.",
+        "",
+        "The fixed primer-only variant is benchmark scaffolding that represents a "
+        "stockroom exercise, not a universal laboratory requirement. The previous "
+        "component-count limits, explicit stop-codon and reading-frame instructions, "
+        "long lists of elements to retain, and directions about exact local edits were "
+        "removed. Those details made the intended reference easier to infer and were "
+        "more useful for constraining the verifier than for stating a normal request.",
         "",
         "## Primer and enzyme inventory subset",
         "",
@@ -1131,7 +1067,7 @@ def _write_clean_readme(output: Path) -> None:
         "are drawn deterministically from primer designs against the attached "
         "Addgene sequence inventory rather than random DNA strings.",
         "",
-        "Each reagent task also includes eight QC-valid plasmids sampled from the "
+        "Every base task and reagent task includes eight QC-valid plasmids sampled from the "
         "2026 iGEM distribution kit: a promoter, RBS, terminator, three unrelated "
         "CDS parts, a fluorescent-protein decoy, and a Type IIS destination "
         "backbone. Only the circular GenBank files and a filtered "
@@ -1143,14 +1079,11 @@ def _write_clean_readme(output: Path) -> None:
         "provide nucleotide coordinates for the named parts, so the model still "
         "has to inspect the whole-plasmid sequence.",
         "",
-        "The reagent-inventory prompt adds the following rule to the corresponding "
-        "question shown below:",
+        "The reagent-inventory prompt adds only this rule:",
         "",
-        "> Use only stocked `primer-*.txt` files as PCR primers. Some are decoys. "
-        "If an enzyme-based operation is selected, use only a stocked "
-        "`enzyme-*.txt`; enzyme use is optional for methods that do not require it. "
-        "Eight QC-valid `igem-*.gbk` plasmids listed in `igem_inventory.tsv` are "
-        "also available.",
+        "> This version also has a fixed primer and enzyme stock in the same task "
+        "inventory. Use only the stocked primers and enzymes; some of them will not "
+        "be relevant to this build.",
         "",
         *review_lines,
         "",
@@ -1206,11 +1139,17 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
         task.slug: _canonical_protocol(task, records)[1] for task in TASKS
     }
     for task in TASKS:
-        task_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"labbench2:{VERSION}:{task.slug}"))
+        task_id = str(
+            uuid.uuid5(
+                uuid.NAMESPACE_URL,
+                f"labbench2:{TASK_ID_SEED_VERSION}:{task.slug}",
+            )
+        )
         task_dir = output / "cloning" / task_id
         task_dir.mkdir(parents=True, exist_ok=True)
         for addgene_id in task.inventory_ids:
             shutil.copy2(input_paths[addgene_id], task_dir / f"addgene-{addgene_id}.gbk")
+        _copy_igem_inventory(igem_parts, task_dir)
 
         reference, components = _reference_record(task, task_id, records)
         protocol, primers = _canonical_protocol(task, records)
@@ -1292,13 +1231,14 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
                 }
             )
 
-        questions.append(_question_record(task, task_id))
+        questions.append(_question_record(task, task_id, igem_parts))
         task_manifest.append(
             {
                 "id": task_id,
                 "slug": task.slug,
                 "title": task.title,
                 "inventory_addgene_ids": list(task.inventory_ids),
+                "inventory_igem_part_count": len(igem_parts),
                 "reference_length_bp": len(str(reference.seq)),
                 "reference_is_circular": True,
                 "canonical_method": "Gibson",

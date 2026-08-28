@@ -1,5 +1,5 @@
 {
-  "version": "inventory-hard-1.0",
+  "version": "inventory-hard-1.1",
   "generator": "tools/generate_cloning_inventory_hard_questions.py",
   "question_set": {
     "path": "questions.jsonl",
@@ -334,6 +334,7 @@
         69929,
         1864
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 4702,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -439,6 +440,7 @@
         48138,
         52961
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 8269,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -560,6 +562,7 @@
         54856,
         69929
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 8206,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -658,6 +661,7 @@
         54856,
         69929
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 9227,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -802,6 +806,7 @@
         69929,
         181752
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 6249,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -923,6 +928,7 @@
         27705,
         52961
       ],
+      "inventory_igem_part_count": 8,
       "reference_length_bp": 11594,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
