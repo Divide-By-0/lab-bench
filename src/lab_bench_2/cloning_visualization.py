@@ -747,9 +747,12 @@ def _digest_diagnostic(
     if not enzymes:
         return None
 
-    from labbench2.cloning.enzyme_cut import enzyme_cut
-    from labbench2.cloning.sequence_alignment import sequence_similarity
     from labbench2.cloning.sequence_models import BioSequence
+
+    from lab_bench_2.cloning_simulators.molecular import digest_records, from_pydna
+    from lab_bench_2.cloning_simulators.sequence_similarity_v2 import (
+        sequence_similarity_v2,
+    )
 
     predicted = BioSequence(
         sequence=comparison.predicted,
@@ -762,37 +765,61 @@ def _digest_diagnostic(
     reference_circular = reference_as_loaded.model_copy(update={"is_circular": True})
 
     def digest(sequence: BioSequence) -> list[BioSequence]:
-        fragments = [sequence]
-        for enzyme in enzymes:
-            fragments = [
-                output
-                for fragment in fragments
-                for output in enzyme_cut(fragment, enzyme)
-            ]
-        return sorted(fragments, key=lambda value: len(value.sequence))
+        return [
+            from_pydna(
+                fragment,
+                prefix="digest-v2",
+                description=f"Diagnostic digest with {', '.join(enzymes)}",
+            )
+            for fragment in digest_records(sequence, enzymes)
+        ]
 
     predicted_fragments = digest(predicted)
     loaded_fragments = digest(reference_as_loaded)
     circular_fragments = digest(reference_circular)
 
     def pairs(reference_fragments: list[BioSequence]) -> tuple[DigestFragmentPair, ...]:
+        import networkx as nx  # type: ignore[import-untyped]
+
         if len(predicted_fragments) != len(reference_fragments):
             return ()
+        graph = nx.Graph()
+        for predicted_index, predicted_fragment in enumerate(predicted_fragments):
+            for reference_index, reference_fragment in enumerate(reference_fragments):
+                graph.add_edge(
+                    ("predicted", predicted_index),
+                    ("reference", reference_index),
+                    weight=sequence_similarity_v2(
+                        predicted_fragment, reference_fragment
+                    ),
+                )
+        matching = nx.max_weight_matching(graph, maxcardinality=True, weight="weight")
+        reference_by_predicted = {
+            (left[1] if left[0] == "predicted" else right[1]): (
+                right[1] if right[0] == "reference" else left[1]
+            )
+            for left, right in matching
+        }
         return tuple(
             DigestFragmentPair(
                 predicted_length=len(predicted_fragment.sequence),
                 reference_length=len(reference_fragment.sequence),
-                similarity=sequence_similarity(predicted_fragment, reference_fragment),
+                similarity=sequence_similarity_v2(
+                    predicted_fragment, reference_fragment
+                ),
             )
-            for predicted_fragment, reference_fragment in zip(
-                predicted_fragments, reference_fragments, strict=True
+            for predicted_index, predicted_fragment in enumerate(predicted_fragments)
+            for reference_fragment in (
+                reference_fragments[reference_by_predicted[predicted_index]],
             )
         )
 
     expected_lengths = tuple(
         sorted(int(value) for value in validator_params.get("fragments", []))
     )
-    circular_lengths = tuple(len(value.sequence) for value in circular_fragments)
+    circular_lengths = tuple(
+        sorted(len(value.sequence) for value in circular_fragments)
+    )
     topology_mismatch = bool(
         comparison.predicted_circular
         and not comparison.reference_circular
@@ -809,9 +836,11 @@ def _digest_diagnostic(
         reference_sites=_restriction_sites(
             comparison.reference, comparison.reference_circular, tuple(enzymes)
         ),
-        predicted_lengths=tuple(len(value.sequence) for value in predicted_fragments),
+        predicted_lengths=tuple(
+            sorted(len(value.sequence) for value in predicted_fragments)
+        ),
         reference_lengths_as_loaded=tuple(
-            len(value.sequence) for value in loaded_fragments
+            sorted(len(value.sequence) for value in loaded_fragments)
         ),
         fragment_pairs_as_loaded=pairs(loaded_fragments),
         circular_reference_lengths=circular_lengths,

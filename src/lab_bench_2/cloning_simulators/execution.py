@@ -8,6 +8,7 @@ from typing import Any, cast
 
 from lab_bench_2.cloning_simulators.gibson_v2 import gibson_v2
 from lab_bench_2.cloning_simulators.golden_gate_v2 import goldengate_v2
+from lab_bench_2.cloning_simulators.molecular import cut_sequence_v2
 from lab_bench_2.cloning_simulators.pcr_v2 import simulate_pcr_v2
 from lab_bench_2.cloning_simulators.restriction_v2 import restriction_assemble_v2
 
@@ -86,13 +87,11 @@ async def execute_operation_v2(operation: Any, base_dir: Path) -> list[Any]:
         )
         return restriction_assemble_v2(first, second)
     if name == "EnzymeCutOperation":
-        from labbench2.cloning.enzyme_cut import enzyme_cut
-
         sequence = _one(
             await execute_operation_v2(operation.sequence, base_dir),
             "restriction digest input",
         )
-        fragments = enzyme_cut(sequence, operation.enzyme)
+        fragments = cut_sequence_v2(sequence, operation.enzyme)
         return [max(fragments, key=lambda value: len(value.sequence))]
     return cast(list[Any], await operation.execute(base_dir))
 

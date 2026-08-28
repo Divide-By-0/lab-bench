@@ -1,12 +1,15 @@
-"""Candidate-aware sticky-end restriction assembly."""
+"""Sticky-end restriction assembly backed by pydna ligation."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from lab_bench_2.cloning_simulators.golden_gate_v2 import (
+from lab_bench_2.cloning_simulators.molecular import (
     MAX_CANDIDATES,
-    assemble_restriction_fragments_v2,
+    assembly_parts,
+    collect_library_products,
+    from_pydna,
+    label_inputs,
 )
 
 
@@ -15,32 +18,41 @@ def restriction_assemble_v2(
     second: Any,
     max_candidates: int = MAX_CANDIDATES,
 ) -> list[Any]:
-    """Enumerate self-ligation and two-fragment circular products.
+    """Enumerate circular products from two genuinely compatible DNA ends.
 
-    The archived implementation returns immediately when the first fragment can
-    self-ligate, which suppresses an otherwise valid first-plus-second product.
+    Nested v2 digests carry a pydna double-stranded record, including overhang
+    sequence, strand, and polarity.  Unlike the prior implementation, failure
+    to ligate returns no product rather than returning unassembled inputs.
     """
-    from labbench2.cloning.sequence_models import BioSequence, make_pretty_id
+    from pydna.assembly2 import ligation_assembly  # type: ignore[import-untyped]
 
-    assemblies = assemble_restriction_fragments_v2(
-        [first, second], max_candidates=max_candidates
+    records = label_inputs((first, second))
+    candidates = collect_library_products(
+        records,
+        lambda subset: ligation_assembly(
+            subset,
+            allow_blunt=False,
+            allow_partial_overlap=False,
+            circular_only=True,
+        ),
+        max_candidates=max_candidates,
     )
-    assemblies.sort(
-        key=lambda assembly: (-assembly.fragment_count, -len(assembly.sequence))
-    )
-    if not assemblies:
-        return [first, second]
-    products: list[Any] = []
-    for assembly in assemblies:
-        product = BioSequence(
-            sequence=assembly.sequence,
-            is_circular=True,
-            name=make_pretty_id("restriction-assemble-v2"),
-            description=(
-                "Restriction assembly v2 candidate assembled from "
-                f"{assembly.fragment_count} fragments"
-            ),
+    candidates.sort(
+        key=lambda candidate: (
+            -len(candidate.source_indices),
+            -len(candidate.record),
+            str(candidate.record.seguid()),
         )
-        object.__setattr__(product, "_assembly_parts", assembly.parts)
-        products.append(product)
-    return products
+    )
+    return [
+        from_pydna(
+            candidate.record,
+            prefix="restriction-assemble-v2",
+            description=(
+                "Restriction-ligation candidate simulated by pydna from "
+                f"{len(candidate.source_indices)} input fragments"
+            ),
+            assembly_parts=assembly_parts(candidate.record, candidate.source_indices),
+        )
+        for candidate in candidates
+    ]

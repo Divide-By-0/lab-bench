@@ -258,24 +258,20 @@ The `cloning` tag is not graded by an LLM judge: it is scored deterministically
 by the candidate-aware v2 cloning pipeline, which parses the submitted protocol,
 executes it, and compares every plausible top-level product to the reference
 assembly via sequence-similarity and restriction-digest checks.
-PCR simulation requires that Go be available on the host. Without Go,
-protocol execution fails gracefully: PCR-based samples score 0.0 with an explanatory
-reason rather than crashing the run.
+The `lab_bench_2` extra installs pydna for molecular simulation and Edlib for
+exact circular edit-distance scoring; PCR does not require a Go toolchain.
 
 Simulator v2 fixes several reproducibility defects in the pinned upstream behavior:
 
-- PCR retains the upstream engine but recovers unique, exact primer pairs that
-  amplify across a circular sequence origin.
-- Golden Gate builds compatible multi-fragment intermediates and enumerates all
-  plausible circular products. Empty-vector/dropout reassembly remains a possible
-  product, but the scorer no longer assumes that the first returned product is the
-  intended one.
-- Gibson tracks fragments by input position, considers circularization even when
-  another overlapping extension is possible, and deduplicates reverse-complement
-  representations of the same plasmid.
-- Sticky-end restriction assembly enumerates insert-containing products even when
-  the backbone can also self-ligate, instead of returning early with only the
-  empty-vector path.
+- PCR uses pydna's primer-annealing model for linear, inverse, and
+  circular-origin amplification, including 5' tails and non-specific products.
+- Golden Gate and ordinary restriction/ligation use the enzymes' actual
+  double-stranded cut geometry instead of unsigned overhang lengths.
+- Gibson uses pydna's homologous-assembly graph and double-stranded SEGUID
+  deduplication. Assembly input subsets retain compatible competing products.
+- Edlib scores exact circular edit distance without anchor guesses and treats
+  reverse complements as the same dsDNA molecule. Digest fragments are paired
+  with a one-to-one matching instead of length-sort order.
 
 Multiple products are allowed only at the protocol's top level, where the hidden
 reference can select a matching outcome. A multi-product operation used as an input
@@ -312,9 +308,9 @@ and paths outside the sample directory remain literal strings and are not
 rewritten.
 
 The backfill utility downloads the public cloning inputs and hidden reference
-assemblies, leaves the source logs unchanged, and requires the same Go toolchain
-as ordinary cloning scoring when a submitted protocol includes PCR. It adds the
-panel to both the transcript and the cloning scorer explanation; the latter keeps
+assemblies and leaves the source logs unchanged. It requires the `lab_bench_2`
+extra used by ordinary cloning scoring. It adds the panel to both the transcript
+and the cloning scorer explanation; the latter keeps
 the visualization accessible from the **Scoring** tab when Inspect suppresses
 transcript events for an exceptionally large sample.
 

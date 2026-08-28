@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from lab_bench_2.cloning_simulators.execution import execute_cloning_protocol_v2
+from lab_bench_2.cloning_simulators.molecular import digest_records, from_pydna
 
 
 @dataclass(frozen=True)
@@ -39,14 +40,14 @@ def _enzymes(validator_params: dict[str, Any]) -> tuple[str, ...]:
 
 
 def _digest(sequence: Any, enzymes: tuple[str, ...]) -> list[Any]:
-    from labbench2.cloning.enzyme_cut import enzyme_cut
-
-    fragments = [sequence]
-    for enzyme in enzymes:
-        fragments = [
-            output for fragment in fragments for output in enzyme_cut(fragment, enzyme)
-        ]
-    return fragments
+    return [
+        from_pydna(
+            fragment,
+            prefix="digest-v2",
+            description=f"Diagnostic digest with {', '.join(enzymes)}",
+        )
+        for fragment in digest_records(sequence, enzymes)
+    ]
 
 
 def _digest_lengths(sequence: Any, enzymes: tuple[str, ...]) -> tuple[int, ...]:
@@ -98,18 +99,36 @@ def _digest_matches(
     enzymes: tuple[str, ...],
     threshold: float,
 ) -> bool:
-    from labbench2.cloning.sequence_alignment import sequence_similarity
+    from lab_bench_2.cloning_simulators.sequence_similarity_v2 import (
+        sequence_similarity_v2,
+    )
 
-    output_fragments = sorted(
-        _digest(candidate, enzymes), key=lambda value: len(value.sequence)
-    )
-    reference_fragments = sorted(
-        _digest(reference, enzymes), key=lambda value: len(value.sequence)
-    )
-    return len(output_fragments) == len(reference_fragments) and all(
-        sequence_similarity(output, expected) >= threshold
-        for output, expected in zip(output_fragments, reference_fragments, strict=True)
-    )
+    output_fragments = _digest(candidate, enzymes)
+    reference_fragments = _digest(reference, enzymes)
+    if len(output_fragments) != len(reference_fragments):
+        return False
+
+    compatible = [
+        [
+            sequence_similarity_v2(output, expected) >= threshold
+            for expected in reference_fragments
+        ]
+        for output in output_fragments
+    ]
+    reference_match: dict[int, int] = {}
+
+    def augment(output_index: int, visited: set[int]) -> bool:
+        for reference_index, is_compatible in enumerate(compatible[output_index]):
+            if not is_compatible or reference_index in visited:
+                continue
+            visited.add(reference_index)
+            previous = reference_match.get(reference_index)
+            if previous is None or augment(previous, visited):
+                reference_match[reference_index] = output_index
+                return True
+        return False
+
+    return all(augment(index, set()) for index in range(len(output_fragments)))
 
 
 def assess_candidates(
