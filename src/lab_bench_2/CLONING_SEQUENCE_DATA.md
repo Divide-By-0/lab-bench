@@ -206,6 +206,54 @@ GBK, so uploading this private copy to Benchling was unnecessary. Benchling is
 still a reasonable optional visual QA step for selected files, not the source
 of inventory truth.
 
+## Addgene inventory subset
+
+LAB-Bench cloning attachments are not a survey of Addgene. For inventories of a
+broader, still-small slice of the repository, use the curated catalog in
+`src/lab_bench_2/addgene_inventory_subset.py`. Full-sequence plasmids only (no
+Sanger partials), spanning hosts and a Gibson/Golden Gate complexity ladder
+from 2-fragment inserts through 8-part YTK cassettes to the 24-fragment
+pGGAselect destination.
+
+Gotchas in that catalog come from public reports, including traps that a length
+check will not catch:
+
+- Conflicting Addgene-verified vs depositor full maps, including the 11-bp 5'
+  ITR C-C' deletion on popular AAV plasmids (Xie et al., *NAR* 2025
+  [gkaf697](https://doi.org/10.1093/nar/gkaf697); Table S4 lists 26973,
+  60229, 83900, 104588; 112159/112173 also reported backbone flips; 112168 is
+  the match control from that deposit, still 3 bp apart).
+- Two Addgene-verified full sequences on one plasmid page (62988 PX459 V2.0).
+- FLEX/DIO inverted ORFs and packaging leak: [28306](https://www.addgene.org/28306/)
+  recombines more than other FLEX vectors (Addgene comments);
+  lox2272 x lox2272 is about 10x weaker than loxP
+  ([BMC Biotechnol 2018](https://bmcbiotechnol.biomedcentral.com/articles/10.1186/s12896-018-0462-x)).
+- BbsI vs BsmBI vs BsaI cloning enzyme mixups across Zhang PX plasmids,
+  lentiCRISPR v2, and pX601 (SaCas9).
+- pX330 nuclease vs pX335 D10A nickase vs pdCas9; maps still say Cas9.
+- pLKO.1 1.9 kb stuffer that is not an empty MCS.
+- Leftover Type IIS sites in YTK/MoClo/GreenGate (entry BsmBI, cassette BsaI).
+- Paper figure vs Addgene sequence typo on [21870 pKJ1712](https://www.addgene.org/21870/notes/).
+- Splice-prone HA codon in empty backbone [128034](https://www.addgene.org/128034/)
+  (LaFleur et al., *EMBO J* 2026).
+- SnapGene ORF stacked on CDS ([BioStars](https://www.biostars.org/p/230001))
+  and uncatalogued part variants across Addgene (Mante et al., *NAR* 2023
+  [gkad187](https://doi.org/10.1093/nar/gkad187)).
+- Local `(1)` duplicate of plasmid 105539 in the LAB-Bench cloning cache.
+
+Build it (GBKs stay in `~/.cache`, not git):
+
+```bash
+uv run python tools/build_addgene_inventory_subset.py \
+  --inventory-out ~/.cache/lab-bench-addgene/inventory-subset/inventory.json \
+  --no-enzymes
+```
+
+Plasmids tagged `sequence_source="all"` download every public full map so the
+inventory can see same-id, different-sha256 conflicts. Preferred download of
+those plasmids would hide the ITR mismatch. Cookie handling is the same
+chrome-session path as `tools/download_addgene_gbk.py`.
+
 ## Enrichment plan
 
 Use a provenance-preserving, three-layer pipeline:

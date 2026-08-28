@@ -23,6 +23,10 @@ uv run python tools/download_addgene_gbk.py \
 
 `plasmids.txt` is one Addgene id or `https://www.addgene.org/<id>/` per line. IDs can also be CLI args. Default `--via chrome-session` reads Chrome cookies, refreshes media-edge on `www.addgene.org` Set-Cookie, and re-mints the cookie if a media request 404s.
 
+For the curated diverse/gotcha subset (full sequences only), use
+`uv run python tools/build_addgene_inventory_subset.py`. Catalog:
+`src/lab_bench_2/addgene_inventory_subset.py`.
+
 ## Keep the cookie fresh
 
 The media-edge JWT lasts 900 seconds. Refresh from Chrome + `www.addgene.org` before it dies:
