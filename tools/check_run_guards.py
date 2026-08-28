@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 from collections import Counter
@@ -31,8 +32,15 @@ SANDBOX_TOOLS = {"python_session", "python", "bash"}
 
 
 def load(path: Path) -> dict:
+    sibling_inspect = Path(sys.executable).with_name("inspect")
+    if sibling_inspect.is_file():
+        command = [str(sibling_inspect), "log", "dump", str(path)]
+    elif inspect_executable := shutil.which("inspect"):
+        command = [inspect_executable, "log", "dump", str(path)]
+    else:
+        command = ["uv", "run", "inspect", "log", "dump", str(path)]
     out = subprocess.run(
-        ["uv", "run", "inspect", "log", "dump", str(path)],
+        command,
         capture_output=True,
         text=True,
         check=True,

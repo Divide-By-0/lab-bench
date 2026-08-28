@@ -201,8 +201,13 @@ def cloning_scorer() -> Scorer:
             )
 
         ground_truth_filename = f"{question_id}_assembled.fa"
-        ground_truth_path = resolve_file_path(ground_truth_filename, None)
-        if ground_truth_path is None:
+        local_reference = metadata.get("reference_path")
+        ground_truth_path = (
+            Path(str(local_reference))
+            if local_reference
+            else resolve_file_path(ground_truth_filename, None)
+        )
+        if ground_truth_path is None or not ground_truth_path.is_file():
             return Score(
                 value=INCORRECT,
                 explanation=f"Ground truth file not found: {ground_truth_filename}",

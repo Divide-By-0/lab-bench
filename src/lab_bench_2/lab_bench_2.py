@@ -8,13 +8,18 @@ benchmark's "bare" single-turn `generate()`).
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 from inspect_ai import Task, task
 from inspect_ai.dataset import Dataset
 from inspect_ai.model import ContentText
 from inspect_ai.scorer import Scorer
 
-from lab_bench_2.dataset import load_lab_bench_2_dataset, load_multi_tags_dataset
+from lab_bench_2.dataset import (
+    load_lab_bench_2_dataset,
+    load_local_cloning_dataset,
+    load_multi_tags_dataset,
+)
 from lab_bench_2.model_cost import register_from_env
 from lab_bench_2.prompt_composer import Mode
 from lab_bench_2.scorers import multi_tags_scorer, scorer_for_tag
@@ -52,6 +57,7 @@ def lab_bench_2(
     mode: Mode = "file",
     solver: SolverType = "bare",
     strip_method_hint: bool = False,
+    dataset_path: str | None = None,
 ) -> Task:
     """LAB-Bench 2 evaluation task.
 
@@ -88,10 +94,18 @@ def lab_bench_2(
             key, ``web_search``) tools in a Docker sandbox.
         strip_method_hint: Remove explicit assembly-method wording from cloning
             prompts while retaining the underlying sequence files and task data.
+        dataset_path: Optional path to a local CloningQA JSONL package. Its
+            ``files`` paths are resolved relative to the JSONL, and references
+            are read from the sibling ``validation`` directory. When supplied,
+            ``tags`` must be omitted or select only ``cloning``.
     """
     dataset: Dataset
     scorer: Scorer
-    if isinstance(tags, str):
+    if dataset_path is not None:
+        _ensure_local_cloning_selection(tags)
+        dataset = load_local_cloning_dataset(Path(dataset_path), mode=mode)
+        scorer = scorer_for_tag("cloning")
+    elif isinstance(tags, str):
         _ensure_supported([tags])
         dataset = load_lab_bench_2_dataset(tag=tags, mode=mode)
         scorer = scorer_for_tag(tags)
@@ -189,3 +203,10 @@ def _ensure_supported(tags: list[str]) -> None:
         raise NotImplementedError(
             f"Unsupported tag(s): {unknown}; supported tags: {list(SUPPORTED_TAGS)}."
         )
+
+
+def _ensure_local_cloning_selection(tags: str | list[str] | None) -> None:
+    """Reject tag selections that conflict with a local cloning package."""
+    if tags is None or tags in ("cloning", ["cloning"]):
+        return
+    raise ValueError("dataset_path supports only the cloning tag")

@@ -414,6 +414,41 @@ class TestCloningScorer:
             metadata={"cloning_score": 1.0},
         )
 
+    async def test_uses_explicit_local_reference(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        reference = tmp_path / "local-reference.fa"
+        reference.write_text(">ref: circular (circular)\nACGT\n")
+
+        async def fake_cloning_reward(**kwargs: Any) -> tuple[float, str]:
+            assert kwargs["reference_path"] == reference
+            return 1.0, "Cloning validation passed"
+
+        monkeypatch.setattr(
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
+        )
+        monkeypatch.setattr(
+            "evals.utils.resolve_file_path",
+            lambda *_: pytest.fail("local reference should bypass global resolution"),
+        )
+
+        result = await _score(
+            cloning_scorer(),
+            _task_state(
+                "<protocol>assemble</protocol>",
+                {
+                    "tag": "cloning",
+                    "id": "clone_1",
+                    "files_path": str(tmp_path),
+                    "reference_path": str(reference),
+                },
+            ),
+            Target(""),
+        )
+
+        assert result.value == CORRECT
+
     async def test_scores_incorrect_when_reward_fails(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:

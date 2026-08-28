@@ -16,6 +16,7 @@ from lab_bench_2.cloning_visualization import (
     _nice_tick_interval,
     _ProvenanceInput,
     _split_circular_range,
+    _unquote_exact_file_references,
     build_sequence_comparison,
     load_source_features,
     render_comparison_png,
@@ -72,6 +73,18 @@ def test_renders_png_with_reference_only() -> None:
 
     assert png.startswith(b"\x89PNG\r\n\x1a\n")
     assert len(png) > 1_000
+
+
+def test_unquotes_only_exact_local_file_references(tmp_path: Path) -> None:
+    sample_dir = tmp_path / "sample"
+    sample_dir.mkdir()
+    (sample_dir / "vector.gbk").touch()
+    (tmp_path / "outside.gbk").touch()
+    expression = 'pcr("vector.gbk", "ACGT", "not-a-file.gbk"), "../outside.gbk"'
+
+    normalized = _unquote_exact_file_references(expression, sample_dir)
+
+    assert normalized == ('pcr(vector.gbk, "ACGT", "not-a-file.gbk"), "../outside.gbk"')
 
 
 def test_loads_annotations_from_input_genbank(tmp_path: Path) -> None:

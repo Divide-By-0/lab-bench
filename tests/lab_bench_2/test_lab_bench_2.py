@@ -100,3 +100,27 @@ class TestLabBench2Task:
     def test_empty_list_raises(self) -> None:
         with pytest.raises(ValueError, match="at least one tag"):
             lab_bench_2(tags=[])
+
+    def test_local_dataset_uses_cloning_loader(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        captured: dict[str, Any] = {}
+
+        def fake_local(path: Any, mode: str = "file") -> Dataset:
+            captured.update(path=path, mode=mode)
+            return _fake_dataset()
+
+        monkeypatch.setattr(task_module, "load_local_cloning_dataset", fake_local)
+
+        sut = lab_bench_2(
+            tags="cloning", mode="file", dataset_path="pilot/questions.jsonl"
+        )
+
+        assert str(captured["path"]) == "pilot/questions.jsonl"
+        assert captured["mode"] == "file"
+        assert sut.scorer is not None
+        assert "inspect_ai/grouped" not in _metric_names(sut.scorer[0])
+
+    def test_local_dataset_rejects_non_cloning_tag(self) -> None:
+        with pytest.raises(ValueError, match="only the cloning tag"):
+            lab_bench_2(tags="seqqa2", dataset_path="pilot/questions.jsonl")

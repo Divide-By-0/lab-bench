@@ -75,6 +75,7 @@ See `uv run inspect eval --help` for all available options.
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'file'`)
 - `solver` (SolverType): The solver to run. Options: ``bare``: a plain single-turn `generate()`., ``tools``: the server-side agentic configuration. The model is given provider-native, **server-side** tools — WebSearch and CodeExecution — and runs Inspect's tool-use loop., ``agentic``: the client-side agentic configuration. The model is given ``python``/``bash`` (and, with an external provider key, ``web_search``) tools in a Docker sandbox. (default: `'bare'`)
 - `strip_method_hint` (bool): Remove explicit assembly-method wording from cloning prompts while retaining the underlying sequence files and task data. (default: `False`)
+- `dataset_path` (str | None): Optional path to a local CloningQA JSONL package. Its ``files`` paths are resolved relative to the JSONL, and references are read from the sibling ``validation`` directory. When supplied, ``tags`` must be omitted or select only ``cloning``. (default: `None`)
 <!-- /Parameters: Automatically Generated -->
 
 ### Reference run configs
@@ -300,6 +301,15 @@ rerun the sample to include it, or create enriched copies with:
 uv run python tools/enrich_cloning_traces.py path/to/logs path/to/enriched-logs \
   --cache-dir path/to/writable-cache
 ```
+
+For local cloning datasets, the backfill utility uses the `files_path` and
+`reference_path` stored in each sample instead of downloading public benchmark
+assets. Pass `--replace-existing` to refresh panels after visualization code
+changes. If the official parser fails only because exact local sequence filenames
+were quoted, the panel also shows a clearly labeled visualization-only retry with
+those filenames unquoted. This diagnostic never changes the submitted answer or
+official score; quoted primer strings and names that do not resolve to local files
+are not modified.
 
 The backfill utility downloads the public cloning inputs and hidden reference
 assemblies, leaves the source logs unchanged, and requires the same Go toolchain

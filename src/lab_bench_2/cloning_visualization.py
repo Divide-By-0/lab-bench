@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import io
 import math
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -56,6 +57,10 @@ _MAX_PROVENANCE_ASSIGNMENTS = 4_096
 _DNA_COMPLEMENT = str.maketrans("ACGTRYMKBDHVN", "TGCAYRKMVHDBN")
 _PROVENANCE_COLORS = ("#0ea5e9", "#a855f7", "#f97316", "#22c55e")
 _DIGEST_COLORS = ("#7c3aed", "#0f766e", "#be123c", "#b45309")
+_QUOTED_FILE_REFERENCE = re.compile(
+    r"(?P<quote>['\"])(?P<path>[^'\"]+\.(?:genbank|gbank|fasta|gbk|txt|gb|fa|gg))(?P=quote)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -236,6 +241,7 @@ async def cloning_comparison_markdown(
     protocol: Any | None = None
     candidate_products: tuple[CandidateProduct, ...] = ()
     prediction_label = "Predicted assembly"
+    visualization_only_repair: str | None = None
 
     if PROTOCOL_TAG_OPEN not in answer or PROTOCOL_TAG_CLOSE not in answer:
         prediction_error = "No executable protocol was submitted."
@@ -251,8 +257,25 @@ async def cloning_comparison_markdown(
                 assess_candidates,
             )
 
-            protocol = CloningProtocol(expression)
-            results = await execute_cloning_protocol_v2(expression, base_dir)
+            try:
+                protocol = CloningProtocol(expression)
+                results = await execute_cloning_protocol_v2(expression, base_dir)
+            except Exception as raw_exc:
+                normalized_expression = _unquote_exact_file_references(
+                    expression, base_dir
+                )
+                if normalized_expression == expression:
+                    raise
+                protocol = CloningProtocol(normalized_expression)
+                results = await execute_cloning_protocol_v2(
+                    normalized_expression, base_dir
+                )
+                visualization_only_repair = (
+                    "The official verifier rejected the submitted protocol: "
+                    f"{raw_exc}. For this reviewer-only image, exact local sequence "
+                    "filenames were unquoted and the protocol was rerun; the official "
+                    "score is unchanged."
+                )
             if results:
                 assessments = assess_candidates(
                     results,
@@ -267,7 +290,8 @@ async def cloning_comparison_markdown(
                 selected = selected_assessment.candidate
                 predicted = selected.sequence
                 prediction_label = (
-                    f"Predicted assembly (simulator candidate "
+                    f"{'Diagnostic assembly' if visualization_only_repair else 'Predicted assembly'} "
+                    f"(simulator candidate "
                     f"{selected.index + 1}/{len(assessments)}"
                     ")"
                 )
@@ -289,6 +313,9 @@ async def cloning_comparison_markdown(
                 prediction_error = "The protocol produced no assembled sequence."
         except Exception as exc:  # visualization must not affect evaluation
             prediction_error = f"Could not visualize predicted assembly: {exc}"
+
+    if visualization_only_repair is not None:
+        prediction_error = visualization_only_repair
 
     comparison = build_sequence_comparison(
         predicted=predicted,
@@ -322,6 +349,22 @@ async def cloning_comparison_markdown(
         provenance=provenance,
         digest=digest,
     )
+
+
+def _unquote_exact_file_references(expression: str, base_dir: Path) -> str:
+    """Repair quoted local filenames for a visualization-only diagnostic retry."""
+    resolved_base_dir = base_dir.resolve()
+
+    def replace(match: re.Match[str]) -> str:
+        relative_path = match.group("path")
+        candidate = (base_dir / relative_path).resolve()
+        return (
+            relative_path
+            if candidate.is_relative_to(resolved_base_dir) and candidate.is_file()
+            else match.group(0)
+        )
+
+    return _QUOTED_FILE_REFERENCE.sub(replace, expression)
 
 
 def load_source_features(base_dir: Path) -> tuple[SourceFeature, ...]:

@@ -26,10 +26,12 @@ The inserted CDS includes its native start and stop codons.
 - `manifest.json` records source hashes, coordinates, primers, lengths, and
   canonical validation results.
 
-The question records use relative object-store prefixes. They are not added to
-the gated Hugging Face dataset or automatically registered as an Inspect task.
-To deploy them, upload each `cloning/<task-id>/` directory and the corresponding
-validation FASTA under the same conventions as the existing CloningQA data.
+The question records use relative object-store prefixes and are not added to the
+gated Hugging Face dataset. They can be run directly with the task's
+`dataset_path` option; the local loader resolves each input directory and hidden
+reference relative to `questions.jsonl`. To deploy them, upload each
+`cloning/<task-id>/` directory and the corresponding validation FASTA under the
+same conventions as the existing CloningQA data.
 
 ## Generation and validation
 
@@ -50,6 +52,44 @@ The source files used for this checked-in generation had these SHA-256 hashes:
 
 - Addgene #181752: `f7d8fd6b2aa1a7b8694a77cac6652d66d5669d2b81f9c433edcfbd65d430a01a`
 - Addgene #13770: `cada641a2462f018be374032cd73ec3a40b3287e45678ff81fb0b6f06d5f38e0`
+
+## GPT-5.6-sol pilot run
+
+The three questions were run together on 2026-08-27 with the agentic solver,
+file mode, `openai/gpt-5.6-sol`, maximum reasoning effort, and an OrbStack Docker
+context. The $0.10 cost guard used $1 per million uncached input/output tokens
+and $0 for cache reads, imposing a 100,000-novel-token ceiling per sample.
+
+| Task | Inspect sample | Official result | Novel tokens | Tool calls | Diagnostic sequence result |
+| --- | --- | --- | ---: | ---: | --- |
+| CMV-EGFP | `labbench2_c7ea2dd4` | pass | 30,144 | 10 | exact, 1.000000 |
+| CMV-AmpR | `labbench2_524243f7` | fail | 29,031 | 13 | exact after filename-only syntax repair |
+| CMV-NeoR/KanR | `labbench2_4ea2fad5` | fail | 17,199 | 9 | exact after filename-only syntax repair |
+
+The two failures quoted the `.gbk` arguments to `pcr`. In this DSL, an unquoted
+token ending in `.gbk` is a file reference, while a quoted token is literal DNA.
+The strict verifier therefore rejected both protocols before assembly. For
+review only, the enriched trace unquotes strings that exactly match files in the
+sample directory and reruns the protocol for the visualization. Both repaired
+assemblies are circular, have the expected length, and match their references
+exactly. This does not alter their official incorrect verdicts.
+
+The raw and reviewed traces are
+`experiments/traces/gpt56sol_cloning_pilot_3tasks.eval` and
+`experiments/traces/gpt56sol_cloning_pilot_3tasks_reviewed.eval`. The reviewed
+copy retains the original messages and scores and adds the diagnostic maps to
+the transcript and scoring explanation.
+
+The essential run arguments were:
+
+```bash
+inspect eval src/lab_bench_2/lab_bench_2.py@lab_bench_2 \
+  -T tags=cloning -T mode=file -T solver=agentic \
+  -T dataset_path="$PWD/experiments/cloning_pilot_181752_13770/questions.jsonl" \
+  --model openai/gpt-5.6-sol --reasoning-effort max \
+  --cost-limit 0.1 --max-tokens 64000 --message-limit 60 \
+  --token-limit 3000000 --max-connections 3 --epochs 1
+```
 
 ## Pilot caveats
 

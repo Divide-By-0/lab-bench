@@ -46,6 +46,11 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         help="Optional directory of corrected <question-id>_assembled.fa references",
     )
+    parser.add_argument(
+        "--replace-existing",
+        action="store_true",
+        help="Regenerate sequence-comparison events already present in a log",
+    )
     return parser.parse_args()
 
 
@@ -53,7 +58,11 @@ def _question_ids(log: EvalLog) -> set[str]:
     return {
         str(sample.metadata["id"])
         for sample in log.samples or []
-        if sample.metadata.get("tag") == "cloning" and sample.metadata.get("id")
+        if sample.metadata.get("tag") == "cloning"
+        and sample.metadata.get("id")
+        and not (
+            sample.metadata.get("files_path") and sample.metadata.get("reference_path")
+        )
     }
 
 
@@ -158,23 +167,44 @@ async def enrich_sample(
     sample: EvalSample,
     cache_dir: Path,
     reference_dir: Path | None = None,
+    replace_existing: bool = False,
 ) -> bool:
     if sample.metadata.get("tag") != "cloning":
         return False
-    if any(
-        event.event == "info" and event.source == COMPARISON_SOURCE
+    existing_comparisons = [
+        event
         for event in sample.events
-    ):
+        if event.event == "info" and event.source == COMPARISON_SOURCE
+    ]
+    if existing_comparisons and not replace_existing:
         return False
+    if existing_comparisons:
+        sample.events = [
+            event
+            for event in sample.events
+            if not (event.event == "info" and event.source == COMPARISON_SOURCE)
+        ]
 
     question_id = str(sample.metadata["id"])
     cache_root = cache_dir / GCS_BUCKET
-    base_dir = cache_root / "cloning" / question_id
+    local_files_path = sample.metadata.get("files_path")
+    base_dir = (
+        Path(str(local_files_path))
+        if local_files_path
+        else cache_root / "cloning" / question_id
+    )
+    local_reference_path = sample.metadata.get("reference_path")
     reference_path = (
         reference_dir / f"{question_id}_assembled.fa"
         if reference_dir is not None
+        else Path(str(local_reference_path))
+        if local_reference_path
         else cache_root / "validation" / f"{question_id}_assembled.fa"
     )
+    if not base_dir.is_dir() or not reference_path.is_file():
+        raise FileNotFoundError(
+            f"Cannot enrich {question_id}: files={base_dir}, reference={reference_path}"
+        )
     try:
         markdown = await cloning_comparison_markdown(
             answer=_answer(sample),
@@ -189,11 +219,17 @@ async def enrich_sample(
         )
     score = (sample.scores or {}).get("cloning_scorer")
     if score is not None:
-        original_explanation = score.explanation or ""
+        score_metadata = score.metadata or {}
+        original_explanation = str(
+            score_metadata.get(
+                "sequence_comparison_original_explanation", score.explanation or ""
+            )
+        )
         score.explanation = f"{original_explanation}\n\n---\n\n{markdown}"
         score.metadata = {
-            **(score.metadata or {}),
+            **score_metadata,
             "sequence_comparison_backfilled": True,
+            "sequence_comparison_original_explanation": original_explanation,
         }
 
     score_event_index = next(
@@ -232,6 +268,7 @@ async def enrich_logs(
     cache_dir: Path,
     suffix: str,
     reference_dir: Path | None = None,
+    replace_existing: bool = False,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     logs: list[tuple[Path, EvalLog]] = []
@@ -247,7 +284,15 @@ async def enrich_logs(
     for source_path, log in logs:
         changed = False
         for sample in log.samples or []:
-            changed = await enrich_sample(sample, cache_dir, reference_dir) or changed
+            changed = (
+                await enrich_sample(
+                    sample,
+                    cache_dir,
+                    reference_dir,
+                    replace_existing=replace_existing,
+                )
+                or changed
+            )
         destination = output_dir / f"{source_path.stem}{suffix}{source_path.suffix}"
         if changed:
             write_eval_log(log, destination)
@@ -265,6 +310,7 @@ def main() -> None:
             args.cache_dir,
             args.suffix,
             args.reference_dir,
+            args.replace_existing,
         )
     )
 

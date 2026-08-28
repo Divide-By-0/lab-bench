@@ -8,6 +8,8 @@ from evals.models import LabBenchQuestion
 from labbench2.cloning.cloning_protocol import CloningProtocol
 from labbench2.cloning.sequence_models import BioSequence
 
+from lab_bench_2.dataset import load_local_cloning_dataset
+
 PILOT = Path(__file__).parents[2] / "experiments" / "cloning_pilot_181752_13770"
 EXPECTED = {
     "777f42d4-f239-5979-8a6e-e13daceba2a3": ("EGFP", 5476),
@@ -69,3 +71,13 @@ def test_pilot_question_records_and_manifest_are_consistent() -> None:
     assert all(question.type == "gibson" for question in questions)
     assert all(question.validator_params == "{}" for question in questions)
     assert all(task["canonical_exact_circular_match"] for task in manifest["tasks"])
+
+
+def test_pilot_loads_as_local_file_mode_dataset() -> None:
+    dataset = load_local_cloning_dataset(PILOT / "questions.jsonl", mode="file")
+
+    assert len(dataset) == 3
+    for sample in dataset:
+        assert sample.metadata is not None
+        assert Path(sample.metadata["files_path"]).is_dir()
+        assert Path(sample.metadata["reference_path"]).is_file()
