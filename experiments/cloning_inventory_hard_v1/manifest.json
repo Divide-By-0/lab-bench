@@ -1,0 +1,874 @@
+{
+  "version": "inventory-hard-1.0",
+  "generator": "tools/generate_cloning_inventory_hard_questions.py",
+  "question_set": {
+    "path": "questions.jsonl",
+    "difficulty": "hard_inventory_multifragment"
+  },
+  "inventory": [
+    {
+      "addgene_id": 1864,
+      "name": "pLKO.1 scrambled shRNA",
+      "input_filename": "addgene-plasmid-1864-sequence-106096.gbk",
+      "sha256": "9ed4de0d64d257d3cd5157f13f5168b1fcfa2347a19f2eb1a4f76b8a2b9d12bf",
+      "length_bp": 7085,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 10878,
+      "name": "pLKO.1",
+      "input_filename": "addgene-plasmid-10878-sequence-438456.gbk",
+      "sha256": "63805fc1fb8d882652eb2c55d9e82c63a0e9da1bbe2a2369b5a915ec4d40933b",
+      "length_bp": 8901,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 12253,
+      "name": "pRSV-Rev",
+      "input_filename": "addgene-plasmid-12253-sequence-443803.gbk",
+      "sha256": "7bfec3996d4b77b4dc5463249778da6660393416b24d7c3632231c69163ded6e",
+      "length_bp": 4180,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 12259,
+      "name": "pMD2.G",
+      "input_filename": "addgene-plasmid-12259-sequence-443804.gbk",
+      "sha256": "68ba24cd1507445d1284c2a79f3b2cbc2539a47b5850eb7e1b7c75275ef3d8bd",
+      "length_bp": 5822,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 12260,
+      "name": "psPAX2",
+      "input_filename": "addgene-plasmid-12260-sequence-467229.gbk",
+      "sha256": "4009aec0c7fda35ef8b2abee3b4429e533c1aa44300f9985e84eeeed1fdcb8c1",
+      "length_bp": 10712,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 12456,
+      "name": "M50 Super 8x TOPFlash",
+      "input_filename": "addgene-plasmid-12456-sequence-354510.gbk",
+      "sha256": "1b1cbf20b8f1e993a5bdf4497a804c281d513f0da21c092d89a5fffbd859f713",
+      "length_bp": 4984,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 13031,
+      "name": "pcDNA3-EGFP",
+      "input_filename": "addgene-plasmid-13031-sequence-513020.gbk",
+      "sha256": "acf5cff071c69f1981bcbdf0092566cbc606ff635dacde63cc4f6e1af687cbf6",
+      "length_bp": 6159,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 13770,
+      "name": "pCALNL-GFP",
+      "input_filename": "addgene-plasmid-13770-sequence-7759.gbk",
+      "sha256": "cada641a2462f018be374032cd73ec3a40b3287e45678ff81fb0b6f06d5f38e0",
+      "length_bp": 6844,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 19319,
+      "name": "pLJM1-EGFP",
+      "input_filename": "addgene-plasmid-19319-sequence-444690.gbk",
+      "sha256": "886fd7ce5c15ab4fb3c36ddf28941a2432a84f05bff96637f4b21ca638b392a3",
+      "length_bp": 8083,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 21915,
+      "name": "Tet-pLKO-puro",
+      "input_filename": "addgene-plasmid-21915-sequence-326721.gbk",
+      "sha256": "bc8a3a53cac994e23bc239887f4ff903b3f8bb702e71746662a26b112b7c92c5",
+      "length_bp": 10633,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 27705,
+      "name": "pmCherry-N1",
+      "input_filename": "addgene-plasmid-27705-sequence-516845.gbk",
+      "sha256": "e15ff7b8c321cb069f04a319a9738ee0339f93701c54ce1f59e23e3eba041799",
+      "length_bp": 5274,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 37237,
+      "name": "pET MBP-6xHis",
+      "input_filename": "addgene-plasmid-37237-sequence-47247.gbk",
+      "sha256": "343839073bf58632a73f5c57e1d7e7d2cdc8d410a6323114962b634cd49d8b2d",
+      "length_bp": 5895,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 40315,
+      "name": "pET OmpA-6xHis",
+      "input_filename": "addgene-plasmid-40315-sequence-222548.gbk",
+      "sha256": "e6599676f9582107f568486a71897274faab881404ee197331aa36ffdad20dcd",
+      "length_bp": 5806,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 42230,
+      "name": "pX330",
+      "input_filename": "addgene-plasmid-42230-sequence-419908.gbk",
+      "sha256": "27b1db2a4fb54de84dc065f5ab49553a8082e9c28b27ac1372b573462c522724",
+      "length_bp": 8504,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 48138,
+      "name": "pSpCas9(BB)-2A-GFP (PX458)",
+      "input_filename": "addgene-plasmid-48138-sequence-418767.gbk",
+      "sha256": "ed6361488a13044bb47cadaf5915f12cb7d6ad73807549518739eac0237c458c",
+      "length_bp": 9288,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 52961,
+      "name": "lentiCRISPR v2",
+      "input_filename": "addgene-plasmid-52961-sequence-244694.gbk",
+      "sha256": "d85a0ba68fe52d0d10ea4e9bc7666e52145ccfca96e54fea86167c41a366a4a3",
+      "length_bp": 14873,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 54856,
+      "name": "pBAD 6xHis-TEV-tdTomato",
+      "input_filename": "addgene-plasmid-54856-sequence-142928.gbk",
+      "sha256": "72ff59bb3591f3d3c52e8da5e2a6d8faf4e68880769eb7870c42fa83a2b03437",
+      "length_bp": 6140,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 69929,
+      "name": "pET His-MBP-TEV",
+      "input_filename": "addgene-plasmid-69929-sequence-322059.gbk",
+      "sha256": "a6468db6934d39ac367282ce26546b4aabcf05e0936185461c7f30819733e7c5",
+      "length_bp": 7034,
+      "topology": "circular"
+    },
+    {
+      "addgene_id": 181752,
+      "name": "pCMV-MMLVgag-3xNES-Cas9",
+      "input_filename": "addgene-plasmid-181752-sequence-353936.gbk",
+      "sha256": "f7d8fd6b2aa1a7b8694a77cac6652d66d5669d2b81f9c433edcfbd65d430a01a",
+      "length_bp": 10783,
+      "topology": "circular"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "4568bc10-71e1-5ce5-92f1-1f2c772d96cb",
+      "slug": "wnt-egfp-p2a-puro",
+      "title": "TCF/LEF EGFP-P2A-PuroR reporter",
+      "inventory_addgene_ids": [
+        12456,
+        13031,
+        13770,
+        19319,
+        21915,
+        27705,
+        42230,
+        48138,
+        52961,
+        54856,
+        69929,
+        1864
+      ],
+      "reference_length_bp": 4702,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 3,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "native TOPFlash initiation context plus EGFP without stop",
+          "role": "reporter",
+          "reference_interval_zero_based_half_open": [
+            0,
+            732
+          ],
+          "template": {
+            "addgene_id": 13031,
+            "interval_zero_based_half_open": [
+              742,
+              1459
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": {
+            "addgene_id": 12456,
+            "interval_zero_based_half_open": [
+              380,
+              395
+            ],
+            "strand": 1
+          }
+        },
+        {
+          "label": "P2A-PuroR with terminal stop",
+          "role": "linked selection cassette",
+          "reference_interval_zero_based_half_open": [
+            732,
+            1386
+          ],
+          "template": {
+            "addgene_id": 52961,
+            "interval_zero_based_half_open": [
+              8677,
+              9331
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained TOPFlash backbone",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            1386,
+            4702
+          ],
+          "template": {
+            "addgene_id": 12456,
+            "interval_zero_based_half_open": [
+              2048,
+              380
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "native TOPFlash initiation context plus EGFP without stop",
+          "template": "addgene-13031.gbk",
+          "forward_5_to_3": "TAAAAAGCTTGGCATTCCGGTACTGTTGGTAAAGCCACCATGGTGAGCAAGGGCGAGGAGCTG",
+          "reverse_5_to_3": "CTTGTACAGCTCGTCCATGCCGAG"
+        },
+        {
+          "component": "P2A-PuroR with terminal stop",
+          "template": "addgene-52961.gbk",
+          "forward_5_to_3": "CTCGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "reverse_5_to_3": "TCAGGCACCGGGCTTGCGGGTCAT"
+        },
+        {
+          "component": "retained TOPFlash backbone",
+          "template": "addgene-12456.gbk",
+          "forward_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGATTCTAGAGTCGGGGCGGCCGGCCG",
+          "reverse_5_to_3": "AGTACCGGAATGCCAAGCTTTTTA"
+        }
+      ]
+    },
+    {
+      "id": "b3ac8f3a-9b51-544d-a1ae-c9e6cc34d6c6",
+      "slug": "lenti-mcherry-neor-two-locus",
+      "title": "Lentiviral mCherry with G418 selection",
+      "inventory_addgene_ids": [
+        1864,
+        10878,
+        12259,
+        12260,
+        12456,
+        13031,
+        13770,
+        19319,
+        21915,
+        27705,
+        48138,
+        52961
+      ],
+      "reference_length_bp": 8269,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 4,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "mCherry without terminal stop",
+          "role": "reporter",
+          "reference_interval_zero_based_half_open": [
+            0,
+            708
+          ],
+          "template": {
+            "addgene_id": 27705,
+            "interval_zero_based_half_open": [
+              1228,
+              1936
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained reporter-to-marker interval",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            708,
+            1476
+          ],
+          "template": {
+            "addgene_id": 19319,
+            "interval_zero_based_half_open": [
+              1254,
+              2022
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "complete NeoR/KanR CDS",
+          "role": "mammalian selection marker",
+          "reference_interval_zero_based_half_open": [
+            1476,
+            2271
+          ],
+          "template": {
+            "addgene_id": 13031,
+            "interval_zero_based_half_open": [
+              2629,
+              3424
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained lentiviral backbone",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            2271,
+            8269
+          ],
+          "template": {
+            "addgene_id": 19319,
+            "interval_zero_based_half_open": [
+              2622,
+              537
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "mCherry without terminal stop",
+          "template": "addgene-27705.gbk",
+          "forward_5_to_3": "CCGCTAGCGCTACCGGTCGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+          "reverse_5_to_3": "CTTGTACAGCTCGTCCATGCCGCC"
+        },
+        {
+          "component": "retained reporter-to-marker interval",
+          "template": "addgene-19319.gbk",
+          "forward_5_to_3": "GGCGGCATGGACGAGCTGTACAAGTCCGGACTCAGATCTCGAGCTCAA",
+          "reverse_5_to_3": "GGTAAGCTCCGGTGGATCCCCCTG"
+        },
+        {
+          "component": "complete NeoR/KanR CDS",
+          "template": "addgene-13031.gbk",
+          "forward_5_to_3": "CAGGGGGATCCACCGGAGCTTACCATGATTGAACAAGATGGATTGCAC",
+          "reverse_5_to_3": "TCAGAAGAACTCGTCAAGAAGGCG"
+        },
+        {
+          "component": "retained lentiviral backbone",
+          "template": "addgene-19319.gbk",
+          "forward_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGACGCCCGCCCCACGACCCGCAGCGC",
+          "reverse_5_to_3": "GGTGGCGACCGGTAGCGCTAGCGG"
+        }
+      ]
+    },
+    {
+      "id": "9ca455db-61aa-5243-b0f5-676ecdbd2896",
+      "slug": "cre-tdtomato-p2a-puro",
+      "title": "Cre-dependent tdTomato-P2A-PuroR reporter",
+      "inventory_addgene_ids": [
+        12456,
+        13031,
+        13770,
+        19319,
+        21915,
+        27705,
+        37237,
+        42230,
+        48138,
+        52961,
+        54856,
+        69929
+      ],
+      "reference_length_bp": 8206,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 3,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "tdTomato without terminal stop",
+          "role": "reporter",
+          "reference_interval_zero_based_half_open": [
+            0,
+            1428
+          ],
+          "template": {
+            "addgene_id": 54856,
+            "interval_zero_based_half_open": [
+              1888,
+              3316
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "P2A-PuroR with terminal stop",
+          "role": "linked selection cassette",
+          "reference_interval_zero_based_half_open": [
+            1428,
+            2082
+          ],
+          "template": {
+            "addgene_id": 52961,
+            "interval_zero_based_half_open": [
+              8677,
+              9331
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained Cre-dependent backbone",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            2082,
+            8206
+          ],
+          "template": {
+            "addgene_id": 13770,
+            "interval_zero_based_half_open": [
+              3781,
+              3061
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "tdTomato without terminal stop",
+          "template": "addgene-54856.gbk",
+          "forward_5_to_3": "GCCCGGGATCCACCGGTCGCCACCATGGTGAGCAAGGGCGAGGAGGTC",
+          "reverse_5_to_3": "CTTGTACAGCTCGTCCATGCCGTA"
+        },
+        {
+          "component": "P2A-PuroR with terminal stop",
+          "template": "addgene-52961.gbk",
+          "forward_5_to_3": "TACGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "reverse_5_to_3": "TCAGGCACCGGGCTTGCGGGTCAT"
+        },
+        {
+          "component": "retained Cre-dependent backbone",
+          "template": "addgene-13770.gbk",
+          "forward_5_to_3": "ATGACCCGCAAGCCCGGTGCCTGAAGCGGCCGCACTCCTCAGGTGCAG",
+          "reverse_5_to_3": "GGTGGCGACCGGTGGATCCCGGGC"
+        }
+      ]
+    },
+    {
+      "id": "de0083c7-8e33-5886-b09a-b6f17963ec69",
+      "slug": "cas9-p2a-mcherry-kanr",
+      "title": "Cas9-P2A-mCherry with kanamycin propagation",
+      "inventory_addgene_ids": [
+        12456,
+        13031,
+        13770,
+        19319,
+        27705,
+        37237,
+        40315,
+        42230,
+        48138,
+        52961,
+        54856,
+        69929
+      ],
+      "reference_length_bp": 9227,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 5,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "P2A",
+          "role": "linker",
+          "reference_interval_zero_based_half_open": [
+            0,
+            57
+          ],
+          "template": {
+            "addgene_id": 52961,
+            "interval_zero_based_half_open": [
+              8677,
+              8734
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "complete mCherry CDS",
+          "role": "reporter",
+          "reference_interval_zero_based_half_open": [
+            57,
+            768
+          ],
+          "template": {
+            "addgene_id": 27705,
+            "interval_zero_based_half_open": [
+              1228,
+              1939
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained Cas9-polyA-to-AmpR-promoter interval",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            768,
+            2074
+          ],
+          "template": {
+            "addgene_id": 42230,
+            "interval_zero_based_half_open": [
+              5522,
+              6828
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "complete KanR CDS in expression orientation",
+          "role": "bacterial selection marker",
+          "reference_interval_zero_based_half_open": [
+            2074,
+            2890
+          ],
+          "template": {
+            "addgene_id": 69929,
+            "interval_zero_based_half_open": [
+              2821,
+              3637
+            ],
+            "strand": -1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained origin-U6-CAG-Cas9 backbone",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            2890,
+            9227
+          ],
+          "template": {
+            "addgene_id": 42230,
+            "interval_zero_based_half_open": [
+              7689,
+              5522
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "P2A",
+          "template": "addgene-52961.gbk",
+          "forward_5_to_3": "GCCGGCCAGGCAAAAAAGAAAAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "reverse_5_to_3": "CGGTCCAGGATTCTCTTCGACATC"
+        },
+        {
+          "component": "complete mCherry CDS",
+          "template": "addgene-27705.gbk",
+          "forward_5_to_3": "GATGTCGAAGAGAATCCTGGACCGATGGTGAGCAAGGGCGAGGAGGAT",
+          "reverse_5_to_3": "TTACTTGTACAGCTCGTCCATGCC"
+        },
+        {
+          "component": "retained Cas9-polyA-to-AmpR-promoter interval",
+          "template": "addgene-42230.gbk",
+          "forward_5_to_3": "GGCATGGACGAGCTGTACAAGTAATAAGAATTCCTAGAGCTCGCTGAT",
+          "reverse_5_to_3": "ACTCTTCCTTTTTCAATATTATTG"
+        },
+        {
+          "component": "complete KanR CDS in expression orientation",
+          "template": "addgene-69929.gbk",
+          "forward_5_to_3": "CAATAATATTGAAAAAGGAAGAGTATGAGCCATATTCAACGGGAAACG",
+          "reverse_5_to_3": "TTAGAAAAACTCATCGAGCATCAA"
+        },
+        {
+          "component": "retained origin-U6-CAG-Cas9 backbone",
+          "template": "addgene-42230.gbk",
+          "forward_5_to_3": "TTGATGCTCGATGAGTTTTTCTAACTGTCAGACCAAGTTTACTCATAT",
+          "reverse_5_to_3": "CTTTTTCTTTTTTGCCTGGCCGGC"
+        }
+      ]
+    },
+    {
+      "id": "c5a544f6-2728-5fcc-b8ab-23a84af0ef19",
+      "slug": "t7-histev-tdtomato-kanr",
+      "title": "T7 6xHis-TEV-tdTomato with kanamycin propagation",
+      "inventory_addgene_ids": [
+        12456,
+        13031,
+        19319,
+        27705,
+        37237,
+        40315,
+        42230,
+        48138,
+        52961,
+        54856,
+        69929,
+        181752
+      ],
+      "reference_length_bp": 6249,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 4,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "complete KanR CDS in expression orientation",
+          "role": "bacterial selection marker",
+          "reference_interval_zero_based_half_open": [
+            0,
+            816
+          ],
+          "template": {
+            "addgene_id": 69929,
+            "interval_zero_based_half_open": [
+              2821,
+              3637
+            ],
+            "strand": -1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained origin-to-expression-start interval",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            816,
+            3929
+          ],
+          "template": {
+            "addgene_id": 37237,
+            "interval_zero_based_half_open": [
+              1069,
+              4182
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "6xHis-T7-tag-TEV-tdTomato with stop",
+          "role": "protein coding region",
+          "reference_interval_zero_based_half_open": [
+            3929,
+            5453
+          ],
+          "template": {
+            "addgene_id": 54856,
+            "interval_zero_based_half_open": [
+              1795,
+              3319
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained terminator-to-AmpR-promoter interval",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            5453,
+            6249
+          ],
+          "template": {
+            "addgene_id": 37237,
+            "interval_zero_based_half_open": [
+              5307,
+              208
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "complete KanR CDS in expression orientation",
+          "template": "addgene-69929.gbk",
+          "forward_5_to_3": "CAATAACATTGAAAAAGGAAGAGTATGAGCCATATTCAACGGGAAACG",
+          "reverse_5_to_3": "TTAGAAAAACTCATCGAGCATCAA"
+        },
+        {
+          "component": "retained origin-to-expression-start interval",
+          "template": "addgene-37237.gbk",
+          "forward_5_to_3": "TTGATGCTCGATGAGTTTTTCTAACTGTCAGACCAAGTTTACTCATAT",
+          "reverse_5_to_3": "CATAGAGCCGCTAGAGCCGGATTG"
+        },
+        {
+          "component": "6xHis-T7-tag-TEV-tdTomato with stop",
+          "template": "addgene-54856.gbk",
+          "forward_5_to_3": "CAATCCGGCTCTAGCGGCTCTATGCATCATCATCATCATCATGGTATG",
+          "reverse_5_to_3": "TTACTTGTACAGCTCGTCCATGCC"
+        },
+        {
+          "component": "retained terminator-to-AmpR-promoter interval",
+          "template": "addgene-37237.gbk",
+          "forward_5_to_3": "GGCATGGACGAGCTGTACAAGTAATAATAACCAACTCCATAAGGATCC",
+          "reverse_5_to_3": "ACTCTTCCTTTTTCAATGTTATTG"
+        }
+      ]
+    },
+    {
+      "id": "4214dfb9-eb38-5b69-992c-37f5ad4e6f32",
+      "slug": "lenti-guide-mcherry-p2a-neor",
+      "title": "Guide-vector mCherry-P2A-NeoR replacement",
+      "inventory_addgene_ids": [
+        1864,
+        10878,
+        12253,
+        12259,
+        12260,
+        12456,
+        13031,
+        13770,
+        19319,
+        21915,
+        27705,
+        52961
+      ],
+      "reference_length_bp": 11594,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_component_count": 4,
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "components": [
+        {
+          "label": "mCherry without terminal stop",
+          "role": "reporter",
+          "reference_interval_zero_based_half_open": [
+            0,
+            708
+          ],
+          "template": {
+            "addgene_id": 27705,
+            "interval_zero_based_half_open": [
+              1228,
+              1936
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "P2A",
+          "role": "linker",
+          "reference_interval_zero_based_half_open": [
+            708,
+            765
+          ],
+          "template": {
+            "addgene_id": 52961,
+            "interval_zero_based_half_open": [
+              8677,
+              8734
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "complete NeoR/KanR CDS",
+          "role": "mammalian selection marker",
+          "reference_interval_zero_based_half_open": [
+            765,
+            1560
+          ],
+          "template": {
+            "addgene_id": 13031,
+            "interval_zero_based_half_open": [
+              2629,
+              3424
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        },
+        {
+          "label": "retained lentiviral guide-vector backbone",
+          "role": "backbone",
+          "reference_interval_zero_based_half_open": [
+            1560,
+            11594
+          ],
+          "template": {
+            "addgene_id": 52961,
+            "interval_zero_based_half_open": [
+              9331,
+              4492
+            ],
+            "strand": 1
+          },
+          "primer_added_prefix": null
+        }
+      ],
+      "primers_5_to_3": [
+        {
+          "component": "mCherry without terminal stop",
+          "template": "addgene-27705.gbk",
+          "forward_5_to_3": "GACCGGTTCTAGAGCGCTGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+          "reverse_5_to_3": "CTTGTACAGCTCGTCCATGCCGCC"
+        },
+        {
+          "component": "P2A",
+          "template": "addgene-52961.gbk",
+          "forward_5_to_3": "GGCGGCATGGACGAGCTGTACAAGGCAACAAACTTCTCTCTGCTGAAA",
+          "reverse_5_to_3": "CGGTCCAGGATTCTCTTCGACATC"
+        },
+        {
+          "component": "complete NeoR/KanR CDS",
+          "template": "addgene-13031.gbk",
+          "forward_5_to_3": "GATGTCGAAGAGAATCCTGGACCGATGATTGAACAAGATGGATTGCAC",
+          "reverse_5_to_3": "TCAGAAGAACTCGTCAAGAAGGCG"
+        },
+        {
+          "component": "retained lentiviral guide-vector backbone",
+          "template": "addgene-52961.gbk",
+          "forward_5_to_3": "CGCCTTCTTGACGAGTTCTTCTGAACGCGTTAAGTCGACAATCAACCT",
+          "reverse_5_to_3": "GGTGGCAGCGCTCTAGAACCGGTC"
+        }
+      ]
+    }
+  ]
+}

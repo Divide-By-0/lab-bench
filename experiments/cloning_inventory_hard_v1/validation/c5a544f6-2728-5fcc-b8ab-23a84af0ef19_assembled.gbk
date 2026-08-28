@@ -1,0 +1,231 @@
+LOCUS       t7-histev-tdtoma        6249 bp    DNA     circular UNK 01-JAN-1980
+DEFINITION  T7 6xHis-TEV-tdTomato with kanamycin propagation; circular
+            multi-fragment reference assembly.
+ACCESSION   c5a544f6-2728-5fcc-b8ab-23a84af0ef19
+VERSION     c5a544f6-2728-5fcc-b8ab-23a84af0ef19
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+     source          1..6249
+     misc_feature    1..816
+                     /label="complete KanR CDS in expression orientation"
+                     /note="Assembly component role: bacterial selection marker;
+                     sequence provenance Addgene #69929"
+     CDS             1..816
+                     /codon_start=1
+                     /product="aminoglycoside phosphotransferase"
+                     /label="KanR"
+                     /note="confers resistance to kanamycin in bacteria or G418
+                     (Geneticin(R)) in eukaryotes"
+                     /note="Sequence provenance: pET His-MBP-TEV (Addgene
+                     #69929; bacterial selection marker)"
+                     /translation="MSHIQRETSCSRPRLNSNMDADLYGYKWARDNVGQSGATIYRLYG
+                     KPDAPELFLKHGKGSVANDVTDEMVRLNWLTEFMPLPTIKHFIRTPDDAWLLTTAIPGK
+                     TAFQVLEEYPDSGENIVDALAVFLRRLHSIPVCNCPFNSDRVFRLAQAQSRMNNGLVDA
+                     SDFDDERNGWPVEQVWKEMHKLLPFSPDSVVTHGDFSLDNLIFDEGKLIGCIDVGRVGI
+                     ADRYQDLAILWNCLGEFSPSLQKRLFQKYGIDNPDMNKLQFHLMLDEFF"
+     misc_feature    817..3929
+                     /label="retained origin-to-expression-start interval"
+                     /note="Assembly component role: backbone; sequence
+                     provenance Addgene #37237"
+     rep_origin      987..1575
+                     /direction=RIGHT
+                     /label="ori"
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of
+                     replication"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     misc_feature    1761..1903
+                     /label="bom"
+                     /note="basis of mobility region from pBR322"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     CDS             complement(2005..2196)
+                     /codon_start=1
+                     /gene="rop"
+                     /product="Rop protein, which maintains plasmids at low copy
+                     number"
+                     /label="rop"
+                     /translation="MTKQEKTALNMARFIRSQTLTLLEKLNELDADEQADICESLHDHA
+                     DELYRSCLARFGDDGENL"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     promoter        3757..3775
+                     /label="T7 promoter"
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     misc_feature    3930..5453
+                     /label="6xHis-T7-tag-TEV-tdTomato with stop"
+                     /note="Assembly component role: protein coding region;
+                     sequence provenance Addgene #54856"
+     CDS             3930..3947
+                     /codon_start=1
+                     /product="6xHis affinity tag"
+                     /label="6xHis"
+                     /translation="HHHHHH"
+                     /note="Sequence provenance: pBAD 6xHis-TEV-tdTomato
+                     (Addgene #54856; protein coding region)"
+     CDS             3951..3983
+                     /codon_start=1
+                     /product="leader peptide from bacteriophage T7 gene 10"
+                     /label="T7 tag (gene 10 leader)"
+                     /note="promotes efficient translation in E. coli"
+                     /note="Sequence provenance: pBAD 6xHis-TEV-tdTomato
+                     (Addgene #54856; protein coding region)"
+                     /translation="MASMTGGQQMG"
+     CDS             3996..4016
+                     /codon_start=1
+                     /product="tobacco etch virus (TEV) protease recognition and
+                     cleavage site"
+                     /label="TEV site"
+                     /translation="ENLYFQG"
+                     /note="Sequence provenance: pBAD 6xHis-TEV-tdTomato
+                     (Addgene #54856; protein coding region)"
+     CDS             4023..5453
+                     /codon_start=1
+                     /product="tandem dimeric (pseudo-monomeric) derivative of
+                     DsRed (Shaner et al., 2004)"
+                     /label="tdTomato"
+                     /note="mammalian codon-optimized"
+                     /note="Sequence provenance: pBAD 6xHis-TEV-tdTomato
+                     (Addgene #54856; protein coding region)"
+                     /translation="MVSKGEEVIKEFMRFKVRMEGSMNGHEFEIEGEGEGRPYEGTQTA
+                     KLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYKKLSFPEGFKWERVMNFEDGG
+                     LVTVTQDSSLQDGTLIYKVKMRGTNFPPDGPVMQKKTMGWEASTERLYPRDGVLKGEIH
+                     QALKLKDGGHYLVEFKTIYMAKKPVQLPGYYYVDTKLDITSHNEDYTIVEQYERSEGRH
+                     HLFLGHGTGSTGSGSSGTASSEDNNMAVIKEFMRFKVRMEGSMNGHEFEIEGEGEGRPY
+                     EGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYKKLSFPEGFKWERVM
+                     NFEDGGLVTVTQDSSLQDGTLIYKVKMRGTNFPPDGPVMQKKTMGWEASTERLYPRDGV
+                     LKGEIHQALKLKDGGHYLVEFKTIYMAKKPVQLPGYYYVDTKLDITSHNEDYTIVEQYE
+                     RSEGRHHLFLYGMDELYK"
+     misc_feature    5454..6249
+                     /label="retained terminator-to-AmpR-promoter interval"
+                     /note="Assembly component role: backbone; sequence
+                     provenance Addgene #37237"
+     promoter        6145..6249
+                     /gene="bla"
+                     /label="AmpR promoter"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     terminator      5591..5638
+                     /label="T7 terminator"
+                     /note="transcription terminator for bacteriophage T7 RNA
+                     polymerase"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+     promoter        complement(join(6004..6009,6010..6026,6027..6032))
+                     /label="tet promoter"
+                     /note="E. coli promoter for tetracycline efflux protein
+                     gene"
+                     /note="Sequence provenance: pET MBP-6xHis (Addgene #37237;
+                     backbone)"
+ORIGIN
+        1 atgagccata ttcaacggga aacgtcttgc tctaggccgc gattaaattc caacatggat
+       61 gctgatttat atgggtataa atgggctcgc gataatgtcg ggcaatcagg tgcgacaatc
+      121 tatcgattgt atgggaagcc cgatgcgcca gagttgtttc tgaaacatgg caaaggtagc
+      181 gttgccaatg atgttacaga tgagatggtc agactaaact ggctgacgga atttatgcct
+      241 cttccgacca tcaagcattt tatccgtact cctgatgatg catggttact caccactgcg
+      301 atccccggga aaacagcatt ccaggtatta gaagaatatc ctgattcagg tgaaaatatt
+      361 gttgatgcgc tggcagtgtt cctgcgccgg ttgcattcga ttcctgtttg taattgtcct
+      421 tttaacagcg atcgcgtatt tcgtctcgct caggcgcaat cacgaatgaa taacggtttg
+      481 gttgatgcga gtgattttga tgacgagcgt aatggctggc ctgttgaaca agtctggaaa
+      541 gaaatgcata aacttttgcc attctcaccg gattcagtcg tcactcatgg tgatttctca
+      601 cttgataacc ttatttttga cgaggggaaa ttaataggtt gtattgatgt tggacgagtc
+      661 ggaatcgcag accgatacca ggatcttgcc atcctatgga actgcctcgg tgagttttct
+      721 ccttcattac agaaacggct ttttcaaaaa tatggtattg ataatcctga tatgaataaa
+      781 ttgcagtttc atttgatgct cgatgagttt ttctaactgt cagaccaagt ttactcatat
+      841 atactttaga ttgatttaaa acttcatttt taatttaaaa ggatctaggt gaagatcctt
+      901 tttgataatc tcatgaccaa aatcccttaa cgtgagtttt cgttccactg agcgtcagac
+      961 cccgtagaaa agatcaaagg atcttcttga gatccttttt ttctgcgcgt aatctgctgc
+     1021 ttgcaaacaa aaaaaccacc gctaccagcg gtggtttgtt tgccggatca agagctacca
+     1081 actctttttc cgaaggtaac tggcttcagc agagcgcaga taccaaatac tgtccttcta
+     1141 gtgtagccgt agttaggcca ccacttcaag aactctgtag caccgcctac atacctcgct
+     1201 ctgctaatcc tgttaccagt ggctgctgcc agtggcgata agtcgtgtct taccgggttg
+     1261 gactcaagac gatagttacc ggataaggcg cagcggtcgg gctgaacggg gggttcgtgc
+     1321 acacagccca gcttggagcg aacgacctac accgaactga gatacctaca gcgtgagcta
+     1381 tgagaaagcg ccacgcttcc cgaagggaga aaggcggaca ggtatccggt aagcggcagg
+     1441 gtcggaacag gagagcgcac gagggagctt ccagggggaa acgcctggta tctttatagt
+     1501 cctgtcgggt ttcgccacct ctgacttgag cgtcgatttt tgtgatgctc gtcagggggg
+     1561 cggagcctat ggaaaaacgc cagcaacgcg gcctttttac ggttcctggc cttttgctgg
+     1621 ccttttgctc acatgttctt tcctgcgtta tcccctgatt ctgtggataa ccgtattacc
+     1681 gcctttgagt gagctgatac cgctcgccgc agccgaacga ccgagcgcag cgagtcagtg
+     1741 agcgaggaag cggaagagcg cctgatgcgg tattttctcc ttacgcatct gtgcggtatt
+     1801 tcacaccgca tatatggtgc actctcagta caatctgctc tgatgccgca tagttaagcc
+     1861 agtatacact ccgctatcgc tacgtgactg ggtcatggct gcgccccgac acccgccaac
+     1921 acccgctgac gcgccctgac gggcttgtct gctcccggca tccgcttaca gacaagctgt
+     1981 gaccgtctcc gggagctgca tgtgtcagag gttttcaccg tcatcaccga aacgcgcgag
+     2041 gcagctgcgg taaagctcat cagcgtggtc gtgaagcgat tcacagatgt ctgcctgttc
+     2101 atccgcgtcc agctcgttga gtttctccag aagcgttaat gtctggcttc tgataaagcg
+     2161 ggccatgtta agggcggttt tttcctgttt ggtcactgat gcctccgtgt aagggggatt
+     2221 tctgttcatg ggggtaatga taccgatgaa acgagagagg atgctcacga tacgggttac
+     2281 tgatgatgaa catgcccggt tactggaacg ttgtgagggt aaacaactgg cggtatggat
+     2341 gcggcgggac cagagaaaaa tcactcaggg tcaatgccag cgcttcgtta atacagatgt
+     2401 aggtgttcca cagggtagcc agcagcatcc tgcgatgcag atccggaaca taatggtgca
+     2461 gggcgctgac ttccgcgttt ccagacttta cgaaacacgg aaaccgaaga ccattcatgt
+     2521 tgttgctcag gtcgcagacg ttttgcagca gcagtcgctt cacgttcgct cgcgtatcgg
+     2581 tgattcattc tgctaaccag taaggcaacc ccgccagcct agccgggtcc tcaacgacag
+     2641 gagcacgatc atgcgcaccc gtggccagga cccaacgctg cccgagatgc gccgcgtgcg
+     2701 gctgctggag atggcggacg cgatggatat gttctgccaa gggttggttt gcgcattcac
+     2761 agttctccgc aagaattgat tggctccaat tcttggagtg gtgaatccgt tagcgaggtg
+     2821 ccgccggctt ccattcaggt cgaggtggcc cggctccatg caccgcgacg caacgcgggg
+     2881 aggcagacaa ggtatagggc ggcgcctaca atccatgcca acccgttcca tgtgctcgcc
+     2941 gaggcggcat aaatcgccgt gacgatcagc ggtccagtga tcgaagttag gctggtaaga
+     3001 gccgcgagcg atccttgaag ctgtccctga tggtcgtcat ctacctgcct ggacagcatg
+     3061 gcctgcaacg cgggcatccc gatgccgccg gaagcgagaa gaatcataat ggggaaggcc
+     3121 atccagcctc gcgtcgcgaa cgccagcaag acgtagccca gcgcgtcggc cgccatgccg
+     3181 gcgataatgg cctgcttctc gccgaaacgt ttggtggcgg gaccagtgac gaaggcttga
+     3241 gcgagggcgt gcaagattcc gaataccgca agcgacaggc cgatcatcgt cgcgctccag
+     3301 cgaaagcggt cctcgccgaa aatgacccag agcgctgccg gcacctgtcc tacgagttgc
+     3361 atgataaaga agacagtcat aagtgcggcg acgatagtca tgccccgcgc ccaccggaag
+     3421 gagctgactg ggttgaaggc tctcaagggc atcggtcgac gctctccctt atgcgactcc
+     3481 tgcattagga agcagcccag tagtaggttg aggccgttga gcaccgccgc cgcaaggaat
+     3541 ggtgcatgca aggagatggc gcccaacagt cccccggcca cggggcctgc caccataccc
+     3601 acgccgaaac aagcgctcat gagcccgaag tggcgagccc gatcttcccc atcggtgatg
+     3661 tcggcgatat aggcgccagc aaccgcacct gtggcgccgg tgatgccggc cacgatgcgt
+     3721 ccggcgtaga ggatcgagat ctcgatcccg cgaaattaat acgactcact atagggagac
+     3781 cacaacggtt tccctctagt gccggctccg gagagctctt taattaagcg gccgccctgc
+     3841 aggactcgag ttctagaaat aattttgttt aactttaaga aggagatata gttaacctct
+     3901 acttccaatc cggctctagc ggctctatgc atcatcatca tcatcatggt atggctagca
+     3961 tgactggtgg acagcaaatg ggtcgggatc tgtacgagaa cctgtacttc cagggctcga
+     4021 gcatggtgag caagggcgag gaggtcatca aagagttcat gcgcttcaag gtgcgcatgg
+     4081 agggctccat gaacggccac gagttcgaga tcgagggcga gggcgagggc cgcccctacg
+     4141 agggcaccca gaccgccaag ctgaaggtga ccaagggcgg ccccctgccc ttcgcctggg
+     4201 acatcctgtc cccccagttc atgtacggct ccaaggcgta cgtgaagcac cccgccgaca
+     4261 tccccgatta caagaagctg tccttccccg agggcttcaa gtgggagcgc gtgatgaact
+     4321 tcgaggacgg cggtctggtg accgtgaccc aggactcctc cctgcaggac ggcacgctga
+     4381 tctacaaggt gaagatgcgc ggcaccaact tcccccccga cggccccgta atgcagaaga
+     4441 agaccatggg ctgggaggcc tccaccgagc gcctgtaccc ccgcgacggc gtgctgaagg
+     4501 gcgagatcca ccaggccctg aagctgaagg acggcggcca ctacctggtg gagttcaaga
+     4561 ccatctacat ggccaagaag cccgtgcaac tgcccggcta ctactacgtg gacaccaagc
+     4621 tggacatcac ctcccacaac gaggactaca ccatcgtgga acagtacgag cgctccgagg
+     4681 gccgccacca cctgttcctg gggcatggca ccggcagcac cggcagcggc agctccggca
+     4741 ccgcctcctc cgaggacaac aacatggccg tcatcaaaga gttcatgcgc ttcaaggtgc
+     4801 gcatggaggg ctccatgaac ggccacgagt tcgagatcga gggcgagggc gagggccgcc
+     4861 cctacgaggg cacccagacc gccaagctga aggtgaccaa gggcggcccc ctgcccttcg
+     4921 cctgggacat cctgtccccc cagttcatgt acggctccaa ggcgtacgtg aagcaccccg
+     4981 ccgacatccc cgattacaag aagctgtcct tccccgaggg cttcaagtgg gagcgcgtga
+     5041 tgaacttcga ggacggcggt ctggtgaccg tgacccagga ctcctccctg caggacggca
+     5101 cgctgatcta caaggtgaag atgcgcggca ccaacttccc ccccgacggc cccgtaatgc
+     5161 agaagaagac catgggctgg gaggcctcca ccgagcgcct gtacccccgc gacggcgtgc
+     5221 tgaagggcga gatccaccag gccctgaagc tgaaggacgg cggccactac ctggtggagt
+     5281 tcaagaccat ctacatggcc aagaagcccg tgcaactgcc cggctactac tacgtggaca
+     5341 ccaagctgga catcacctcc cacaacgagg actacaccat cgtggaacag tacgagcgct
+     5401 ccgagggccg ccaccacctg ttcctgtacg gcatggacga gctgtacaag taataataac
+     5461 caactccata aggatccgcg atcgcggcgc gccacctggt ggccggccgg taccacgcgt
+     5521 gcgcgctgat ccggctgcta acaaagcccg aaaggaagct gagttggctg ctgccaccgc
+     5581 tgagcaataa ctagcataac cccttggggc ctctaaacgg gtcttgaggg gttttttgct
+     5641 gaaaggagga actatatccg gacatccaca ggacgggtgt ggtcgccatg atcgcgtagt
+     5701 cgatagtggc tccaagtagc gaagcgagca ggactgggcg gcggccaaag cggtcggaca
+     5761 gtgctccgag aacgggtgcg catagaaatt gcatcaacgc atatagcgct agcagcacgc
+     5821 catagtgact ggcgatgctg tcggaatgga cgacatcccg caagaggccc ggcagtaccg
+     5881 gcataaccaa gcctatgcct acagcatcca gggtgacggt gccgaggatg acgatgagcg
+     5941 cattgttaga tttcatacac ggtgcctgac tgcgttagca atttaactgt gataaactac
+     6001 cgcattaaag cttatcgatg ataagctgtc aaacatgaga attcttgaag acgaaagggc
+     6061 ctcgtgatac gcctattttt ataggttaat gtcatgataa taatggtttc ttagacgtca
+     6121 ggtggcactt ttcggggaaa tgtgcgcgga acccctattt gtttattttt ctaaatacat
+     6181 tcaaatatgt atccgctcat gagacaataa ccctgataaa tgcttcaata acattgaaaa
+     6241 aggaagagt
+//
