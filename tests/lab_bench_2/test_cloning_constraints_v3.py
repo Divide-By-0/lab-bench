@@ -124,6 +124,46 @@ def test_accepted_protein_variants_are_deduplicated(tmp_path: Path) -> None:
     assert assessment.modules[0].observed_copies == 1
 
 
+def test_missing_initial_methionine_requires_explicit_acceptance(
+    tmp_path: Path,
+) -> None:
+    sequence = "GGGATTGAACAACCC"  # IEQ, without the standalone protein's initial M
+    module = {
+        "id": "selection_marker",
+        "description": "selection-marker protein",
+        "protein_sequences": ["MIEQ"],
+        "match": "protein",
+        "copies": 1,
+    }
+    strict = evaluate_construct_constraints(
+        sequence,
+        circular=True,
+        spec=ConstructSpec.from_mapping(
+            {"name": "strict protein", "modules": [module]}
+        ),
+        base_dir=tmp_path,
+    )
+    contextual = evaluate_construct_constraints(
+        sequence,
+        circular=True,
+        spec=ConstructSpec.from_mapping(
+            {
+                "name": "polyprotein-context protein",
+                "modules": [
+                    {**module, "allow_missing_initial_methionine": True}
+                ],
+            }
+        ),
+        base_dir=tmp_path,
+    )
+
+    assert not strict.passes
+    assert contextual.passes
+    assert contextual.modules[0].calls[0].source.endswith(
+        ":without-initial-methionine"
+    )
+
+
 def test_tag_location_is_enforced_only_by_explicit_fusion_constraint(
     tmp_path: Path,
 ) -> None:

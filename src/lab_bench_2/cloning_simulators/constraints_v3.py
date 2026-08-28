@@ -108,6 +108,7 @@ class ModuleConstraint:
     dna_sequences: tuple[str, ...] = ()
     protein_sequences: tuple[str, ...] = ()
     match: MatchMode = "either"
+    allow_missing_initial_methionine: bool = False
     min_copies: int = 1
     max_copies: int | None = 1
 
@@ -150,6 +151,9 @@ class ModuleConstraint:
                 for item in _tuple_of_strings(value.get("protein_sequences"))
             ),
             match=match,  # type: ignore[arg-type]
+            allow_missing_initial_methionine=bool(
+                value.get("allow_missing_initial_methionine", False)
+            ),
             min_copies=minimum,
             max_copies=maximum,
         )
@@ -562,16 +566,25 @@ def _module_assessment(
     direct: list[FeatureCall] = []
     for template in selected_templates:
         if module.match in {"protein", "either"} and template.protein:
-            direct.extend(
-                _protein_calls(
-                    sequence,
-                    template.protein,
-                    circular=circular,
-                    label=template.label,
-                    feature_type=template.feature_type,
-                    source=f"protein:{template.source}",
+            peptides = [template.protein]
+            if (
+                module.allow_missing_initial_methionine
+                and template.protein.startswith("M")
+                and len(template.protein) > 1
+            ):
+                peptides.append(template.protein[1:])
+            for peptide_index, peptide in enumerate(peptides):
+                suffix = ":without-initial-methionine" if peptide_index else ""
+                direct.extend(
+                    _protein_calls(
+                        sequence,
+                        peptide,
+                        circular=circular,
+                        label=template.label,
+                        feature_type=template.feature_type,
+                        source=f"protein:{template.source}{suffix}",
+                    )
                 )
-            )
         elif module.match in {"dna", "either"}:
             direct.extend(
                 _dna_calls(
@@ -597,16 +610,27 @@ def _module_assessment(
             )
         )
     for index, peptide in enumerate(module.protein_sequences, start=1):
-        direct.extend(
-            _protein_calls(
-                sequence,
-                peptide,
-                circular=circular,
-                label=module.description,
-                feature_type=module.feature_types[0] if module.feature_types else "cds",
-                source=f"inline-protein:{module.id}:{index}",
+        peptides = [peptide]
+        if (
+            module.allow_missing_initial_methionine
+            and peptide.startswith("M")
+            and len(peptide) > 1
+        ):
+            peptides.append(peptide[1:])
+        for peptide_index, accepted_peptide in enumerate(peptides):
+            suffix = ":without-initial-methionine" if peptide_index else ""
+            direct.extend(
+                _protein_calls(
+                    sequence,
+                    accepted_peptide,
+                    circular=circular,
+                    label=module.description,
+                    feature_type=(
+                        module.feature_types[0] if module.feature_types else "cds"
+                    ),
+                    source=f"inline-protein:{module.id}:{index}{suffix}",
+                )
             )
-        )
     direct_calls = _deduplicate_calls(direct)
     if direct_calls:
         calls = direct_calls

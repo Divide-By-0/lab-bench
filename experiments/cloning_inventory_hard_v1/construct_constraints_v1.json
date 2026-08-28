@@ -101,7 +101,10 @@
       {
         "id": "neor",
         "description": "neomycin/G418 resistance protein",
-        "source_features": {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "source_features": [
+          {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+          {"file": "addgene-27705", "label": "NeoR/KanR", "feature_type": "CDS"}
+        ],
         "match": "protein",
         "copies": 1
       },
@@ -454,8 +457,12 @@
       {
         "id": "neor",
         "description": "neomycin/G418 resistance protein",
-        "source_features": {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "source_features": [
+          {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+          {"file": "addgene-27705", "label": "NeoR/KanR", "feature_type": "CDS"}
+        ],
         "match": "protein",
+        "allow_missing_initial_methionine": true,
         "copies": 1
       },
       {

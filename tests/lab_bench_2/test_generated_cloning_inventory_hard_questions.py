@@ -332,6 +332,50 @@ def test_functional_constraint_specs_accept_references_and_reject_missing_parts(
         assert not rejected.passes
 
 
+@pytest.mark.parametrize(
+    ("slug", "remove_initial_methionine"),
+    [
+        ("lenti-mcherry-neor-two-locus", False),
+        ("lenti-guide-mcherry-p2a-neor", True),
+    ],
+)
+def test_neor_constraints_accept_the_supplied_alternate_allele(
+    slug: str, remove_initial_methionine: bool
+) -> None:
+    task = next(value for value in TASKS if value["slug"] == slug)
+    inventory = PILOT / "cloning" / task["id"]
+    donor = SeqIO.read(inventory / "addgene-27705.gbk", "genbank")
+    neor_feature = next(
+        feature
+        for feature in donor.features
+        if feature.type == "CDS"
+        and feature.qualifiers.get("label") == ["NeoR/KanR"]
+    )
+    alternate_neor = str(neor_feature.extract(donor.seq))
+    if remove_initial_methionine:
+        alternate_neor = alternate_neor[3:]
+
+    component = next(
+        value
+        for value in task["components"]
+        if value["label"] == "complete NeoR/KanR CDS"
+    )
+    start, end = component["reference_interval_zero_based_half_open"]
+    reference = str(_reference(task).seq)
+    alternate_construct = reference[:start] + alternate_neor + reference[end:]
+    assessment = evaluate_construct_constraints(
+        alternate_construct,
+        circular=True,
+        spec=ConstructSpec.from_mapping(CONSTRAINT_SPECS[task["id"]]),
+        base_dir=inventory,
+    )
+
+    assert assessment.passes, assessment.summary
+    neor = next(module for module in assessment.modules if module.id == "neor")
+    assert neor.observed_copies == 1
+    assert neor.calls[0].source.startswith("protein:addgene-27705.gbk")
+
+
 def test_review_references_retain_critical_annotations() -> None:
     records = {task["slug"]: _reference(task) for task in TASKS}
 

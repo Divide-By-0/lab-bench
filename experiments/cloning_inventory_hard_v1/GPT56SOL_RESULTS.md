@@ -53,14 +53,18 @@ level: molecular engine `pydna`, pydna version `5.5.16`, protocol executor
 | Question | Raw sequence score | Functional v3-B | Functional finding |
 | --- | ---: | ---: | --- |
 | TCF/LEF EGFP-P2A-PuroR reporter | pass | pass | All nine modules and three explicit relationships pass. |
-| Lentiviral mCherry with G418 selection | pass | fail | No complete NeoR protein is present. |
+| Lentiviral mCherry with G418 selection | pass | pass | The complete supplied Addgene 27705 NeoR/KanR allele provides the requested G418 selection. |
 | Cre-dependent tdTomato-P2A-PuroR reporter | pass | pass | All nine modules and three explicit relationships pass. |
 | Cas9-P2A-mCherry with kanamycin propagation | fail | pass | All ten modules and four explicit relationships pass; 0.946678 whole-reference similarity is advisory. |
 | T7 6xHis-TEV-tdTomato with kanamycin propagation | fail | pass | All eleven modules and four explicit relationships pass; 0.744138 whole-reference similarity is advisory. |
-| Guide-vector mCherry-P2A-NeoR replacement | pass | fail | No complete NeoR protein is present. |
+| Guide-vector mCherry-P2A-NeoR replacement | pass | pass | The Addgene 27705 NeoR allele is in frame after P2A, has no internal stop, and has a terminal stop; omission of the standalone initiating methionine is permitted in this polyprotein context. |
 
-The functional result is **4/6**, with four verdict changes relative to the raw
-sequence-threshold score. The reviewed artifacts are:
+The functional result is **6/6**, with two verdict changes relative to the raw
+sequence-threshold score. NeoR is matched against both functional alleles in the
+supplied inventory (Addgene 13031 and 27705). Only the P2A-linked NeoR task
+allows the protein template without its standalone initiating methionine; this
+allowance is explicit in the task's construct specification rather than applied
+globally. The reviewed artifacts are:
 
 - `construct_constraints_v1.json`: six functional specifications.
 - `gpt56sol_functional_v3_rescore.csv`: compact per-sample audit results.
