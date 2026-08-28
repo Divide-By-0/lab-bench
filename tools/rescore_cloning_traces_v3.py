@@ -8,6 +8,7 @@ import asyncio
 import csv
 import json
 import math
+from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,23 @@ from lab_bench_2.cloning_simulators.features_v3 import PlannotateAnnotator
 from lab_bench_2.cloning_simulators.rewards_v3 import verify_cloning_v3
 
 VERIFIER_TASK_VERSION = "3-B"
+
+
+def _simulator_manifest() -> dict[str, Any]:
+    """Identify the physical simulator pipeline used for this rescore."""
+    return {
+        "protocol_executor": (
+            "lab_bench_2.cloning_simulators.execution.execute_cloning_protocol_v2"
+        ),
+        "molecular_engine": "pydna",
+        "pydna_version": version("pydna"),
+        "operations": {
+            "pcr": "pcr_v2.simulate_pcr_v2",
+            "gibson": "gibson_v2.gibson_v2",
+            "golden_gate": "golden_gate_v2.goldengate_v2",
+            "restriction_ligation": "restriction_v2.restriction_assemble_v2",
+        },
+    }
 
 
 def parse_args() -> argparse.Namespace:
@@ -198,6 +216,7 @@ async def rescore_sample(
         "original_score_value": original_value,
         "original_score_explanation": original_explanation,
         "constraint_mode": constraint_mode,
+        "simulator_pipeline": _simulator_manifest(),
     }
     _sync_score_event(sample)
     changed = original_value != score.value
@@ -352,6 +371,7 @@ async def rescore_logs(args: argparse.Namespace) -> None:
                 if args.constraint_specs is not None
                 else None
             ),
+            "simulator_pipeline": _simulator_manifest(),
         }
         metadata_key = (
             "constraint_verifier_rescore"

@@ -36,6 +36,38 @@ The complete trace is
 contains an Inspect `InfoEvent` with the annotated candidate/reference sequence
 comparison and provenance visualization.
 
+## Pydna and functional-verifier review
+
+The raw score above is preserved as the original run result, but it is not the
+preferred biological review. The same recorded protocols were re-executed with
+`execute_cloning_protocol_v2`, whose PCR, Gibson, Golden Gate, and restriction-
+ligation operations use pydna. They were then scored by verifier v3-B with one
+scorer-owned functional `ConstructSpec` per question. Whole-reference similarity
+is diagnostic rather than a hard gate in this mode.
+
+The reviewed trace records the complete simulator manifest at log and sample
+level: molecular engine `pydna`, pydna version `5.5.16`, protocol executor
+`execute_cloning_protocol_v2`, verifier version `v3-B`, and
+`constraint_mode=true`.
+
+| Question | Raw sequence score | Functional v3-B | Functional finding |
+| --- | ---: | ---: | --- |
+| TCF/LEF EGFP-P2A-PuroR reporter | pass | pass | All nine modules and three explicit relationships pass. |
+| Lentiviral mCherry with G418 selection | pass | fail | No complete NeoR protein is present. |
+| Cre-dependent tdTomato-P2A-PuroR reporter | pass | pass | All nine modules and three explicit relationships pass. |
+| Cas9-P2A-mCherry with kanamycin propagation | fail | pass | All ten modules and four explicit relationships pass; 0.946678 whole-reference similarity is advisory. |
+| T7 6xHis-TEV-tdTomato with kanamycin propagation | fail | pass | All eleven modules and four explicit relationships pass; 0.744138 whole-reference similarity is advisory. |
+| Guide-vector mCherry-P2A-NeoR replacement | pass | fail | No complete NeoR protein is present. |
+
+The functional result is **4/6**, with four verdict changes relative to the raw
+sequence-threshold score. The reviewed artifacts are:
+
+- `construct_constraints_v1.json`: six functional specifications.
+- `gpt56sol_functional_v3_rescore.csv`: compact per-sample audit results.
+- `experiments/traces/gpt56sol_cloning_inventory_hard_6tasks_functional_v3_reviewed.eval`:
+  complete reviewed Inspect trace, retaining every original model message and
+  score in metadata.
+
 ## Reproduction
 
 ```bash
@@ -60,3 +92,17 @@ The post-run guard was:
 
 It reported that all six samples were within budget, unique, and used sandbox
 tools.
+
+The functional rescore used:
+
+```bash
+PYTHONPATH=src .venv/bin/python tools/rescore_cloning_traces_v3.py \
+  <directory-containing-only-the-raw-trace> experiments/traces \
+  --cache-dir <cache-dir> --reference-dir <reference-dir> \
+  --all-cloning-references-circular \
+  --constraint-specs \
+    experiments/cloning_inventory_hard_v1/construct_constraints_v1.json \
+  --suffix _functional_v3_reviewed \
+  --report-csv \
+    experiments/cloning_inventory_hard_v1/gpt56sol_functional_v3_rescore.csv
+```

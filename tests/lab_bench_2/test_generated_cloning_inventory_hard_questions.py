@@ -10,6 +10,10 @@ from Bio.SeqRecord import SeqRecord
 from evals.models import LabBenchQuestion
 from labbench2.cloning.sequence_models import BioSequence
 
+from lab_bench_2.cloning_simulators.constraints_v3 import (
+    ConstructSpec,
+    evaluate_construct_constraints,
+)
 from lab_bench_2.cloning_simulators.execution import execute_cloning_protocol_v2
 from lab_bench_2.cloning_simulators.sequence_similarity_v2 import (
     sequence_similarity_v2,
@@ -28,6 +32,9 @@ REAGENT_QUESTIONS = [
 ]
 REAGENT_TASKS: tuple[dict[str, Any], ...] = tuple(
     MANIFEST["reagent_inventory_tasks"]
+)
+CONSTRAINT_SPECS = json.loads(
+    (PILOT / "construct_constraints_v1.json").read_text()
 )
 
 
@@ -283,6 +290,46 @@ def test_frame_sensitive_open_reading_frames_are_intact() -> None:
     _translation_has_one_terminal_stop(
         records["lenti-guide-mcherry-p2a-neor"][:1560]
     )
+
+
+def test_functional_constraint_specs_accept_references_and_reject_missing_parts() -> None:
+    assert set(CONSTRAINT_SPECS) == {task["id"] for task in TASKS}
+
+    for task in TASKS:
+        task_id = task["id"]
+        spec = ConstructSpec.from_mapping(CONSTRAINT_SPECS[task_id])
+        reference = _reference(task)
+        inventory = PILOT / "cloning" / task_id
+        accepted = evaluate_construct_constraints(
+            str(reference.seq),
+            circular=True,
+            spec=spec,
+            base_dir=inventory,
+        )
+
+        assert accepted.passes, accepted.summary
+        assert all(
+            module.calls and module.evidence == "direct DNA/protein sequence evidence"
+            for module in accepted.modules
+            if module.min_copies > 0
+        )
+
+        start, end = task["components"][0][
+            "reference_interval_zero_based_half_open"
+        ]
+        reference_sequence = str(reference.seq)
+        mutant = (
+            reference_sequence[:start]
+            + "A" * (end - start)
+            + reference_sequence[end:]
+        )
+        rejected = evaluate_construct_constraints(
+            mutant,
+            circular=True,
+            spec=spec,
+            base_dir=inventory,
+        )
+        assert not rejected.passes
 
 
 def test_review_references_retain_critical_annotations() -> None:

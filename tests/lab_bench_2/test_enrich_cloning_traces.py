@@ -35,7 +35,7 @@ def test_question_ids_uses_effective_cache_and_reference_paths(tmp_path) -> None
         ]
     )
 
-    assert enrich_cloning_traces._question_ids(  # type: ignore[arg-type]
+    assert enrich_cloning_traces._question_ids(
         log,
         tmp_path,
         reference_dir,
@@ -66,3 +66,17 @@ def test_constraint_details_exposes_module_and_relationship_results() -> None:
     assert "payload: 5 complete copies (expected 5; pass)" in detail
     assert "ordered modules promoter -> payload (pass)" in detail
     assert "pLannotate calls are fallback annotation evidence only" in detail
+
+
+def test_v3_rescore_records_the_pydna_simulator_pipeline() -> None:
+    manifest = rescore_cloning_traces_v3._simulator_manifest()
+
+    assert manifest["molecular_engine"] == "pydna"
+    assert manifest["pydna_version"]
+    assert manifest["protocol_executor"].endswith("execute_cloning_protocol_v2")
+    assert set(manifest["operations"]) == {
+        "pcr",
+        "gibson",
+        "golden_gate",
+        "restriction_ligation",
+    }

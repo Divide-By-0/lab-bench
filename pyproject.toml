@@ -114,7 +114,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 # Test files import these helpers via runtime sys.path manipulation, so
 # mypy can't resolve them statically. Treat them as untyped.
-module = ["add_readme_section", "generate_readmes"]
+module = [
+    "add_readme_section",
+    "download_igem_distribution",
+    "download_igem_parts",
+    "enrich_cloning_traces",
+    "generate_readmes",
+    "rescore_cloning_traces_v3",
+]
 ignore_missing_imports = true
 
 [project]

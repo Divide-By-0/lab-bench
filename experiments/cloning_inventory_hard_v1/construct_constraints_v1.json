@@ -1,0 +1,529 @@
+{
+  "4568bc10-71e1-5ce5-92f1-1f2c772d96cb": {
+    "name": "TCF/LEF-responsive EGFP-P2A-PuroR reporter",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "tcf_lef",
+        "description": "TCF/LEF response-site array",
+        "dna_sequences": ["TTACGCGAGATCAAAGGGGGTAAGATCAAAGGGGGTAAGATCAAAGGGGCGCGAGATCAAAGGGGGTAAGATCAAAGGGGGTAAGATCAAAGGGGGTAAGATCAAAGGGGC"],
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "minimal_promoter",
+        "description": "minimal promoter",
+        "source_features": {"file": "addgene-12456", "label": "minP", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "egfp",
+        "description": "EGFP protein",
+        "source_features": {"file": "addgene-13031", "label": "EGFP", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "p2a",
+        "description": "P2A peptide",
+        "source_features": {"file": "addgene-52961", "label": "P2A", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "puror",
+        "description": "puromycin resistance protein",
+        "source_features": {"file": "addgene-52961", "label": "PuroR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "luciferase",
+        "description": "original luciferase reporter",
+        "source_features": {"file": "addgene-12456", "label": "luciferase", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "polya",
+        "description": "SV40 polyadenylation signal",
+        "source_features": {"file": "addgene-12456", "label": "SV40 poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "bacterial ampicillin resistance protein",
+        "source_features": {"file": "addgene-12456", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-12456", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["tcf_lef", "minimal_promoter", "egfp", "p2a", "puror", "polya"]],
+    "fusions": [
+      {"left": "egfp", "right": "p2a", "max_linker_bp": 30},
+      {"left": "p2a", "right": "puror", "max_linker_bp": 30}
+    ]
+  },
+  "b3ac8f3a-9b51-544d-a1ae-c9e6cc34d6c6": {
+    "name": "independent lentiviral mCherry and NeoR expression vector",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cmv",
+        "description": "CMV reporter promoter",
+        "source_features": {"file": "addgene-19319", "label": "CMV promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "mcherry",
+        "description": "mCherry protein",
+        "source_features": {"file": "addgene-27705", "label": "mCherry", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "hpgk",
+        "description": "independent hPGK selection-marker promoter",
+        "source_features": {"file": "addgene-19319", "label": "hPGK promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "neor",
+        "description": "neomycin/G418 resistance protein",
+        "source_features": {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "egfp",
+        "description": "original EGFP reporter",
+        "source_features": {"file": "addgene-19319", "label": "EGFP", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "puror",
+        "description": "original puromycin resistance protein",
+        "source_features": {"file": "addgene-19319", "label": "PuroR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "psi",
+        "description": "lentiviral packaging signal",
+        "source_features": {"file": "addgene-19319", "label": "HIV-1 Psi", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "rre",
+        "description": "Rev response element",
+        "source_features": {"file": "addgene-19319", "label": "RRE", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "five_ltr",
+        "description": "5-prime lentiviral LTR",
+        "source_features": {"file": "addgene-19319", "label": "5' LTR (truncated)", "feature_type": "LTR"},
+        "match": "dna",
+        "min_copies": 1,
+        "max_copies": 2
+      },
+      {
+        "id": "three_ltr",
+        "description": "3-prime self-inactivating lentiviral LTR",
+        "source_features": {"file": "addgene-19319", "label": "3' LTR (Delta-U3)", "feature_type": "LTR"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-19319", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [
+      ["five_ltr", "psi", "rre", "cmv", "mcherry", "hpgk", "neor", "three_ltr"]
+    ]
+  },
+  "9ca455db-61aa-5243-b0f5-676ecdbd2896": {
+    "name": "Cre-dependent tdTomato-P2A-PuroR reporter",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "cag",
+        "description": "CAG/chicken beta-actin promoter",
+        "source_features": {"file": "addgene-13770", "label": "chicken beta-actin promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "loxp",
+        "description": "loxP sites flanking the stop cassette",
+        "source_features": {"file": "addgene-13770", "label": "loxP", "feature_type": "protein_bind"},
+        "match": "dna",
+        "copies": 2
+      },
+      {
+        "id": "stop_marker",
+        "description": "floxed NeoR/stop cassette",
+        "source_features": {"file": "addgene-13770", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "tdtomato",
+        "description": "tdTomato protein",
+        "source_features": {"file": "addgene-54856", "label": "tdTomato", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "p2a",
+        "description": "P2A peptide",
+        "source_features": {"file": "addgene-52961", "label": "P2A", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "puror",
+        "description": "puromycin resistance protein",
+        "source_features": {"file": "addgene-52961", "label": "PuroR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "egfp",
+        "description": "original post-recombination EGFP reporter",
+        "source_features": {"file": "addgene-13770", "label": "EGFP", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "reporter_polya",
+        "description": "reporter polyadenylation signal",
+        "source_features": {"file": "addgene-13770", "label": "beta-globin poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-13770", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [
+      {
+        "modules": ["cag", "loxp", "stop_marker", "loxp", "tdtomato", "p2a", "puror", "reporter_polya"],
+        "same_strand": false
+      }
+    ],
+    "fusions": [
+      {"left": "tdtomato", "right": "p2a", "max_linker_bp": 30},
+      {"left": "p2a", "right": "puror", "max_linker_bp": 30}
+    ]
+  },
+  "de0083c7-8e33-5886-b09a-b6f17963ec69": {
+    "name": "CAG-Cas9-P2A-mCherry sgRNA plasmid with kanamycin selection",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "u6",
+        "description": "U6 guide-RNA promoter",
+        "source_features": {"file": "addgene-42230", "label": "U6 promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "grna",
+        "description": "guide-RNA scaffold",
+        "source_features": {"file": "addgene-42230", "label": "gRNA scaffold", "feature_type": "misc_RNA"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cag",
+        "description": "CAG/chicken beta-actin promoter",
+        "source_features": {"file": "addgene-42230", "label": "chicken beta-actin promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "cas9",
+        "description": "Cas9 protein",
+        "source_features": {"file": "addgene-42230", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "p2a",
+        "description": "P2A peptide",
+        "source_features": {"file": "addgene-52961", "label": "P2A", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "mcherry",
+        "description": "mCherry protein",
+        "source_features": {"file": "addgene-27705", "label": "mCherry", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "polya",
+        "description": "Cas9-cassette polyadenylation signal",
+        "source_features": {"file": "addgene-42230", "label": "bGH poly(A) signal", "feature_type": "polyA_signal"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "kanr",
+        "description": "bacterial kanamycin resistance protein",
+        "source_features": {"file": "addgene-69929", "label": "KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "original bacterial ampicillin resistance protein",
+        "source_features": {"file": "addgene-42230", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-42230", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [
+      ["u6", "grna"],
+      ["cag", "cas9", "p2a", "mcherry", "polya"]
+    ],
+    "fusions": [
+      {"left": "cas9", "right": "p2a", "max_linker_bp": 60},
+      {"left": "p2a", "right": "mcherry", "max_linker_bp": 30}
+    ]
+  },
+  "c5a544f6-2728-5fcc-b8ab-23a84af0ef19": {
+    "name": "T7 6xHis-T7-tag-TEV-tdTomato expression plasmid with kanamycin selection",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "t7_promoter",
+        "description": "T7 promoter",
+        "source_features": {"file": "addgene-37237", "label": "T7 promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "rbs",
+        "description": "T7 gene-10 ribosome binding site",
+        "source_features": {"file": "addgene-37237", "label": "efficient ribosome binding site from bacteriophage T7 gene 10 (Olins and Rangwala, 1989)", "feature_type": "RBS"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "his",
+        "description": "N-terminal 6xHis tag",
+        "source_features": {"file": "addgene-54856", "label": "6xHis", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "t7_tag",
+        "description": "T7 gene-10 leader tag",
+        "source_features": {"file": "addgene-54856", "label": "T7 tag (gene 10 leader)", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "tev",
+        "description": "TEV protease site",
+        "source_features": {"file": "addgene-54856", "label": "TEV site", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "tdtomato",
+        "description": "tdTomato protein",
+        "source_features": {"file": "addgene-54856", "label": "tdTomato", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "terminator",
+        "description": "T7 terminator",
+        "source_features": {"file": "addgene-37237", "label": "T7 terminator", "feature_type": "terminator"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "kanr",
+        "description": "bacterial kanamycin resistance protein",
+        "source_features": {"file": "addgene-69929", "label": "KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "ampr",
+        "description": "original bacterial ampicillin resistance protein",
+        "source_features": {"file": "addgene-37237", "label": "AmpR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "mbp",
+        "description": "original MBP protein",
+        "source_features": {"file": "addgene-37237", "label": "MBP", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-37237", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [["t7_promoter", "rbs", "his", "t7_tag", "tev", "tdtomato", "terminator"]],
+    "fusions": [
+      {"left": "his", "right": "t7_tag", "max_linker_bp": 30},
+      {"left": "t7_tag", "right": "tev", "max_linker_bp": 30},
+      {"left": "tev", "right": "tdtomato", "max_linker_bp": 30}
+    ]
+  },
+  "4214dfb9-eb38-5b69-992c-37f5ad4e6f32": {
+    "name": "guide-only lentivector expressing mCherry-P2A-NeoR",
+    "topology": "circular",
+    "modules": [
+      {
+        "id": "u6",
+        "description": "U6 guide-RNA promoter",
+        "source_features": {"file": "addgene-52961", "label": "U6 promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "grna",
+        "description": "guide-RNA scaffold",
+        "source_features": {"file": "addgene-52961", "label": "gRNA scaffold", "feature_type": "misc_RNA"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "ef1a",
+        "description": "EF-1-alpha expression promoter",
+        "source_features": {"file": "addgene-52961", "label": "EF-1-alpha core promoter", "feature_type": "promoter"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "mcherry",
+        "description": "mCherry protein",
+        "source_features": {"file": "addgene-27705", "label": "mCherry", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "p2a",
+        "description": "P2A peptide",
+        "source_features": {"file": "addgene-52961", "label": "P2A", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "neor",
+        "description": "neomycin/G418 resistance protein",
+        "source_features": {"file": "addgene-13031", "label": "NeoR/KanR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 1
+      },
+      {
+        "id": "cas9",
+        "description": "original Cas9 protein",
+        "source_features": {"file": "addgene-52961", "label": "Cas9", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "puror",
+        "description": "original puromycin resistance protein",
+        "source_features": {"file": "addgene-52961", "label": "PuroR", "feature_type": "CDS"},
+        "match": "protein",
+        "copies": 0
+      },
+      {
+        "id": "wpre",
+        "description": "WPRE",
+        "source_features": {"file": "addgene-52961", "label": "WPRE", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "psi",
+        "description": "lentiviral packaging signal",
+        "source_features": {"file": "addgene-52961", "label": "HIV-1 Psi", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "rre",
+        "description": "Rev response element",
+        "source_features": {"file": "addgene-52961", "label": "RRE", "feature_type": "misc_feature"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "five_ltr",
+        "description": "5-prime lentiviral LTR",
+        "source_features": {"file": "addgene-52961", "label": "5' LTR (truncated)", "feature_type": "LTR"},
+        "match": "dna",
+        "min_copies": 1,
+        "max_copies": 2
+      },
+      {
+        "id": "three_ltr",
+        "description": "3-prime self-inactivating lentiviral LTR",
+        "source_features": {"file": "addgene-52961", "label": "3' LTR (Delta-U3)", "feature_type": "LTR"},
+        "match": "dna",
+        "copies": 1
+      },
+      {
+        "id": "origin",
+        "description": "bacterial replication origin",
+        "source_features": {"file": "addgene-52961", "label": "ori", "feature_type": "rep_origin"},
+        "match": "dna",
+        "copies": 1
+      }
+    ],
+    "ordered": [
+      ["u6", "grna"],
+      ["ef1a", "mcherry", "p2a", "neor", "wpre"],
+      ["five_ltr", "psi", "rre", "u6", "ef1a", "wpre", "three_ltr"]
+    ],
+    "fusions": [
+      {"left": "mcherry", "right": "p2a", "max_linker_bp": 30},
+      {"left": "p2a", "right": "neor", "max_linker_bp": 30}
+    ]
+  }
+}
