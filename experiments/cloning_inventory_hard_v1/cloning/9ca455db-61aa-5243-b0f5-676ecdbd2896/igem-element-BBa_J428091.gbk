@@ -1,0 +1,14 @@
+LOCUS       BBa_J428091               43 bp    DNA     linear   SYN 14-JUN-2022
+DEFINITION  BBa_B0012 with 5' AA to form stop codon for Type IIS.
+ACCESSION   BBa_J428091
+VERSION     BBa_J428091
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..43
+                     /mol_type="genomic DNA"
+     terminator      1..43
+                     /label="Terminator"
+                     /note="SO:0000141 Terminator"
+ORIGIN
+        1 aatcacactg gctcaccttc gggtgggcct ttctgcgttt ata
+//

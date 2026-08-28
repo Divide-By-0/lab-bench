@@ -1,0 +1,29 @@
+LOCUS       BBa_J428330              391 bp    DNA     circular SYN 18-JAN-2023
+DEFINITION  lacZ reporter device for JUMP plasmids with flanking BsaI sites.
+ACCESSION   BBa_J428330
+VERSION     BBa_J428330
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..391
+                     /mol_type="genomic DNA"
+     misc_feature    1..391
+                     /label="Plasmid Vector"
+                     /note="SO:0000755 Plasmid Vector"
+     misc_feature    1..7
+                     /label="BBa_D1020"
+                     /note="iGEM component; DNA (IGEM:0000035); UUID f4ece5aa-9d93-477d-a7de-4314935bbb18"
+     misc_feature    8..384
+                     /label="BBa_J428328"
+                     /note="iGEM component; Miscellaneous (IGEM:0000037); UUID 5152c2f4-489f-48be-8899-59669f0f6581"
+     misc_feature    385..391
+                     /label="BBa_D1029"
+                     /note="iGEM component; DNA (IGEM:0000035); UUID 6e9d9ec8-1ad3-446c-9bd5-d74d3806b128"
+ORIGIN
+        1 tgagaccgga gttgacggct agctcagtcc taggtacagt gctagcgtac ttgtttaact
+       61 ttaagaagga gatatacaat ggtagccggt gacccgaaac tgctgctgga agttccgcac
+      121 gctatctctt cttctccggg taactctctg gctgttgttc tgcaacgtcg tgactgggaa
+      181 aacccgggtg ttacccagct gaaccgtctg gctgctcacc cgccgttcgc ttcttggcgt
+      241 aactctgaag aagctcgtac cgaccgtccg tcccagcagc tgcgttctct gatccgtctg
+      301 ctgaccaaac cggaacgtaa actgtcttgg ctgctgccgc cgctgtctaa caacggttcg
+      361 taacttctga ctgagttgca cgctggtctc t
+//

@@ -184,9 +184,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j428091",
-      "length_bp": 2432,
-      "sha256": "d0c7745b3f06a245a42e777537289589df88c297b5c72d9d2c1235fd1f302b1a",
-      "filename": "igem-1-A1_BBa_J428091.gbk"
+      "plasmid_length_bp": 2432,
+      "plasmid_sha256": "d0c7745b3f06a245a42e777537289589df88c297b5c72d9d2c1235fd1f302b1a",
+      "plasmid_filename": "igem-plasmid-1-A1_BBa_J428091.gbk",
+      "element_length_bp": 43,
+      "element_topology": "linear",
+      "element_sha256": "28507092bdc54d59d4187af20ab748c3f405e1219995987b2f3f21bd332fe3e8",
+      "element_filename": "igem-element-BBa_J428091.gbk"
     },
     {
       "plate_well": "1-A2",
@@ -202,9 +206,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j428012",
-      "length_bp": 2658,
-      "sha256": "05b909704dfb2f27c641a42464b3865a224345114c477d7ce83e39925bc6dc60",
-      "filename": "igem-1-A2_BBa_J428012.gbk"
+      "plasmid_length_bp": 2658,
+      "plasmid_sha256": "05b909704dfb2f27c641a42464b3865a224345114c477d7ce83e39925bc6dc60",
+      "plasmid_filename": "igem-plasmid-1-A2_BBa_J428012.gbk",
+      "element_length_bp": 612,
+      "element_topology": "linear",
+      "element_sha256": "c7262b2723dce708b763a0ab17ada95cdf78fc80b77ecd8c45299507d2166c5b",
+      "element_filename": "igem-element-BBa_J428012.gbk"
     },
     {
       "plate_well": "1-A3",
@@ -220,9 +228,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-e0020",
-      "length_bp": 2769,
-      "sha256": "fc53900420bbd8865e8b7b0d01b1288197691471a803cf2c7b56c4ab5cbd47a3",
-      "filename": "igem-1-A3_BBa_E0020.gbk"
+      "plasmid_length_bp": 2769,
+      "plasmid_sha256": "fc53900420bbd8865e8b7b0d01b1288197691471a803cf2c7b56c4ab5cbd47a3",
+      "plasmid_filename": "igem-plasmid-1-A3_BBa_E0020.gbk",
+      "element_length_bp": 723,
+      "element_topology": "linear",
+      "element_sha256": "8f2393db3e493e8eeeefcdb7b758d268c9ee4cd211bccb89c6bb88efeac1ee5d",
+      "element_filename": "igem-element-BBa_E0020.gbk"
     },
     {
       "plate_well": "1-A4",
@@ -238,9 +250,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j428020",
-      "length_bp": 2688,
-      "sha256": "d26b7b2a3e85365803e937ea1b6f19f457e8562bb5141b974ba71ed7ebccfeb5",
-      "filename": "igem-1-A4_BBa_J428020.gbk"
+      "plasmid_length_bp": 2688,
+      "plasmid_sha256": "d26b7b2a3e85365803e937ea1b6f19f457e8562bb5141b974ba71ed7ebccfeb5",
+      "plasmid_filename": "igem-plasmid-1-A4_BBa_J428020.gbk",
+      "element_length_bp": 642,
+      "element_topology": "linear",
+      "element_sha256": "f7ac63c48f3e9c067cdf6d35ed6e6bb500d30f8e1f8aa797686faf8b27cebce4",
+      "element_filename": "igem-element-BBa_J428020.gbk"
     },
     {
       "plate_well": "1-A5",
@@ -256,9 +272,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j23100",
-      "length_bp": 2424,
-      "sha256": "032778e3c1b7e706dae15a3ff101bfc4a0251f727551eac31b671f32778e08b2",
-      "filename": "igem-1-A5_BBa_J23100.gbk"
+      "plasmid_length_bp": 2424,
+      "plasmid_sha256": "032778e3c1b7e706dae15a3ff101bfc4a0251f727551eac31b671f32778e08b2",
+      "plasmid_filename": "igem-plasmid-1-A5_BBa_J23100.gbk",
+      "element_length_bp": 35,
+      "element_topology": "linear",
+      "element_sha256": "427d3e798196f55b71588d06e11b1ea2588f32750cb68458c1b6d895fe988044",
+      "element_filename": "igem-element-BBa_J23100.gbk"
     },
     {
       "plate_well": "1-A7",
@@ -274,9 +294,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j428034",
-      "length_bp": 2473,
-      "sha256": "748a4dca8f017afbb39fe09b1407a146e61634b0e683d6a4ea9babf9cffa6675",
-      "filename": "igem-1-A7_BBa_J428034.gbk"
+      "plasmid_length_bp": 2473,
+      "plasmid_sha256": "748a4dca8f017afbb39fe09b1407a146e61634b0e683d6a4ea9babf9cffa6675",
+      "plasmid_filename": "igem-plasmid-1-A7_BBa_J428034.gbk",
+      "element_length_bp": 84,
+      "element_topology": "linear",
+      "element_sha256": "5cf48281181eeb1f4bb8c11744afff0cdb816fa8c8f67b0e05e4bb2d30dc5ec2",
+      "element_filename": "igem-element-BBa_J428034.gbk"
     },
     {
       "plate_well": "1-A12",
@@ -292,9 +316,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-j428330",
-      "length_bp": 3371,
-      "sha256": "ce3531e10a85f7abb1614078c1777efd99f680a89b82101b7d446cdfa9b5c978",
-      "filename": "igem-1-A12_BBa_J428330.gbk"
+      "plasmid_length_bp": 3371,
+      "plasmid_sha256": "ce3531e10a85f7abb1614078c1777efd99f680a89b82101b7d446cdfa9b5c978",
+      "plasmid_filename": "igem-plasmid-1-A12_BBa_J428330.gbk",
+      "element_length_bp": 391,
+      "element_topology": "circular",
+      "element_sha256": "b0eb5f559c42b9c865e3519fde0fc845f9ea2ffdd18f315d36535bde847a7e9b",
+      "element_filename": "igem-element-BBa_J428330.gbk"
     },
     {
       "plate_well": "1-A21",
@@ -310,9 +338,13 @@
       "qc_status": "Correct",
       "is_valid": true,
       "part_url": "https://registry.igem.org/parts/bba-k2680537",
-      "length_bp": 3128,
-      "sha256": "84d6b791185e409057137574fb69d205d06238a91319d5ee519d45ea63245abc",
-      "filename": "igem-1-A21_BBa_K2680537.gbk"
+      "plasmid_length_bp": 3128,
+      "plasmid_sha256": "84d6b791185e409057137574fb69d205d06238a91319d5ee519d45ea63245abc",
+      "plasmid_filename": "igem-plasmid-1-A21_BBa_K2680537.gbk",
+      "element_length_bp": 1082,
+      "element_topology": "linear",
+      "element_sha256": "e04d11fefd37d51f62c23ce3501ca962eb477e640b811d2470cdb50f8c37a947",
+      "element_filename": "igem-element-BBa_K2680537.gbk"
     }
   ],
   "tasks": [
@@ -334,7 +366,9 @@
         69929,
         1864
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 4702,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -440,7 +474,9 @@
         48138,
         52961
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 8269,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -562,7 +598,9 @@
         54856,
         69929
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 8206,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -661,7 +699,9 @@
         54856,
         69929
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 9227,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -806,7 +846,9 @@
         69929,
         181752
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 6249,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -928,7 +970,9 @@
         27705,
         52961
       ],
-      "inventory_igem_part_count": 8,
+      "inventory_igem_plasmid_count": 8,
+      "inventory_igem_element_count": 8,
+      "inventory_enzyme_count": 16,
       "reference_length_bp": 11594,
       "reference_is_circular": true,
       "canonical_method": "Gibson",
@@ -1039,7 +1083,8 @@
       "slug": "wnt-egfp-p2a-puro",
       "canonical_product_count": 1,
       "canonical_exact_circular_match": true,
-      "igem_part_count": 8,
+      "igem_plasmid_count": 8,
+      "igem_element_count": 8,
       "primer_count": 12,
       "canonical_primer_count": 6,
       "decoy_primer_count": 6,
@@ -1136,30 +1181,62 @@
         },
         {
           "filename": "enzyme-02.txt",
-          "enzyme": "BsaI"
+          "enzyme": "BbsI"
         },
         {
           "filename": "enzyme-03.txt",
-          "enzyme": "BsmBI"
+          "enzyme": "BsaI"
         },
         {
           "filename": "enzyme-04.txt",
-          "enzyme": "EcoRI"
+          "enzyme": "BsmBI"
         },
         {
           "filename": "enzyme-05.txt",
-          "enzyme": "HindIII"
+          "enzyme": "EcoRI"
         },
         {
           "filename": "enzyme-06.txt",
-          "enzyme": "NdeI"
+          "enzyme": "EcoRV"
         },
         {
           "filename": "enzyme-07.txt",
-          "enzyme": "NotI"
+          "enzyme": "HindIII"
         },
         {
           "filename": "enzyme-08.txt",
+          "enzyme": "KpnI"
+        },
+        {
+          "filename": "enzyme-09.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-10.txt",
+          "enzyme": "NheI"
+        },
+        {
+          "filename": "enzyme-11.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-12.txt",
+          "enzyme": "PstI"
+        },
+        {
+          "filename": "enzyme-13.txt",
+          "enzyme": "SacI"
+        },
+        {
+          "filename": "enzyme-14.txt",
+          "enzyme": "SpeI"
+        },
+        {
+          "filename": "enzyme-15.txt",
+          "enzyme": "XbaI"
+        },
+        {
+          "filename": "enzyme-16.txt",
           "enzyme": "XhoI"
         }
       ]
@@ -1169,7 +1246,8 @@
       "slug": "lenti-mcherry-neor-two-locus",
       "canonical_product_count": 1,
       "canonical_exact_circular_match": true,
-      "igem_part_count": 8,
+      "igem_plasmid_count": 8,
+      "igem_element_count": 8,
       "primer_count": 16,
       "canonical_primer_count": 8,
       "decoy_primer_count": 8,
@@ -1294,30 +1372,62 @@
         },
         {
           "filename": "enzyme-02.txt",
-          "enzyme": "BsaI"
+          "enzyme": "BbsI"
         },
         {
           "filename": "enzyme-03.txt",
-          "enzyme": "BsmBI"
+          "enzyme": "BsaI"
         },
         {
           "filename": "enzyme-04.txt",
-          "enzyme": "EcoRI"
+          "enzyme": "BsmBI"
         },
         {
           "filename": "enzyme-05.txt",
-          "enzyme": "HindIII"
+          "enzyme": "EcoRI"
         },
         {
           "filename": "enzyme-06.txt",
-          "enzyme": "NdeI"
+          "enzyme": "EcoRV"
         },
         {
           "filename": "enzyme-07.txt",
-          "enzyme": "NotI"
+          "enzyme": "HindIII"
         },
         {
           "filename": "enzyme-08.txt",
+          "enzyme": "KpnI"
+        },
+        {
+          "filename": "enzyme-09.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-10.txt",
+          "enzyme": "NheI"
+        },
+        {
+          "filename": "enzyme-11.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-12.txt",
+          "enzyme": "PstI"
+        },
+        {
+          "filename": "enzyme-13.txt",
+          "enzyme": "SacI"
+        },
+        {
+          "filename": "enzyme-14.txt",
+          "enzyme": "SpeI"
+        },
+        {
+          "filename": "enzyme-15.txt",
+          "enzyme": "XbaI"
+        },
+        {
+          "filename": "enzyme-16.txt",
           "enzyme": "XhoI"
         }
       ]
@@ -1327,7 +1437,8 @@
       "slug": "cas9-p2a-mcherry-kanr",
       "canonical_product_count": 1,
       "canonical_exact_circular_match": true,
-      "igem_part_count": 8,
+      "igem_plasmid_count": 8,
+      "igem_element_count": 8,
       "primer_count": 20,
       "canonical_primer_count": 10,
       "decoy_primer_count": 10,
@@ -1480,30 +1591,62 @@
         },
         {
           "filename": "enzyme-02.txt",
-          "enzyme": "BsaI"
+          "enzyme": "BbsI"
         },
         {
           "filename": "enzyme-03.txt",
-          "enzyme": "BsmBI"
+          "enzyme": "BsaI"
         },
         {
           "filename": "enzyme-04.txt",
-          "enzyme": "EcoRI"
+          "enzyme": "BsmBI"
         },
         {
           "filename": "enzyme-05.txt",
-          "enzyme": "HindIII"
+          "enzyme": "EcoRI"
         },
         {
           "filename": "enzyme-06.txt",
-          "enzyme": "NdeI"
+          "enzyme": "EcoRV"
         },
         {
           "filename": "enzyme-07.txt",
-          "enzyme": "NotI"
+          "enzyme": "HindIII"
         },
         {
           "filename": "enzyme-08.txt",
+          "enzyme": "KpnI"
+        },
+        {
+          "filename": "enzyme-09.txt",
+          "enzyme": "NdeI"
+        },
+        {
+          "filename": "enzyme-10.txt",
+          "enzyme": "NheI"
+        },
+        {
+          "filename": "enzyme-11.txt",
+          "enzyme": "NotI"
+        },
+        {
+          "filename": "enzyme-12.txt",
+          "enzyme": "PstI"
+        },
+        {
+          "filename": "enzyme-13.txt",
+          "enzyme": "SacI"
+        },
+        {
+          "filename": "enzyme-14.txt",
+          "enzyme": "SpeI"
+        },
+        {
+          "filename": "enzyme-15.txt",
+          "enzyme": "XbaI"
+        },
+        {
+          "filename": "enzyme-16.txt",
           "enzyme": "XhoI"
         }
       ]

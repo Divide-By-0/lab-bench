@@ -1,0 +1,15 @@
+LOCUS       BBa_J428034               84 bp    DNA     linear   SYN 27-JUN-2022
+DEFINITION  BCD1.
+ACCESSION   BBa_J428034
+VERSION     BBa_J428034
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..84
+                     /mol_type="genomic DNA"
+     RBS             1..84
+                     /label="Ribosome Entry Site"
+                     /note="SO:0000139 Ribosome Entry Site"
+ORIGIN
+        1 gggcccaagt tcacttaaaa aggagatcaa caatgaaagc aattttcgta ctgaaacatc
+       61 ttaatcatgc acaggagact ttct
+//

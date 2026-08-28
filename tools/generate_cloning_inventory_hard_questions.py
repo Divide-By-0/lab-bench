@@ -25,6 +25,7 @@ from lab_bench_2.prompt_composer import CLONING_PROTOCOL_SUFFIX
 VERSION = "inventory-hard-1.1"
 TASK_ID_SEED_VERSION = "inventory-hard-1.0"
 OUTPUT_DEFAULT = Path("experiments/cloning_inventory_hard_v1")
+IGEM_ELEMENTS_DEFAULT = OUTPUT_DEFAULT / "igem_element_sources"
 OVERLAP_LENGTH = 24
 ANNEAL_LENGTH = 24
 MIN_FEATURE_LENGTH = 10
@@ -99,6 +100,7 @@ class HardTask:
     slug: str
     title: str
     request: str
+    solution_summary: str
     components: tuple[Component, ...]
     inventory_ids: tuple[int, ...]
     manual_features: tuple[ManualFeature, ...] = ()
@@ -112,6 +114,11 @@ TASKS = (
             "Could you turn one of our TCF/LEF-responsive mammalian reporters into "
             "an EGFP reporter with puromycin selection? I want EGFP and PuroR made "
             "as separate proteins from the same reporter transcript, using P2A"
+        ),
+        solution_summary=(
+            "Identify the TOPFlash reporter backbone, replace luciferase with "
+            "EGFP-P2A-PuroR, and assemble three PCR products while keeping the "
+            "coding junction in frame"
         ),
         components=(
             Component(
@@ -162,6 +169,11 @@ TASKS = (
             "reporter and uses G418 rather than puromycin for mammalian selection? "
             "Keep reporter expression and drug selection independent"
         ),
+        solution_summary=(
+            "Identify the pLJM1 transfer vector, replace EGFP with mCherry and "
+            "replace the independently expressed PuroR CDS with NeoR; the canonical "
+            "build uses four PCR products"
+        ),
         components=(
             Component(
                 "mCherry without terminal stop",
@@ -207,6 +219,11 @@ TASKS = (
             "after Cre activation, it produces tdTomato and puromycin resistance as "
             "separate proteins from one transcript? Please use P2A between them"
         ),
+        solution_summary=(
+            "Identify the lox-stop-lox conditional reporter, preserve its Cre-control "
+            "architecture, and replace GFP with tdTomato-P2A-PuroR using three PCR "
+            "products"
+        ),
         components=(
             Component(
                 "tdTomato without terminal stop",
@@ -247,6 +264,11 @@ TASKS = (
             "mCherry as a separate protein using P2A? I also need the finished "
             "plasmid to use kanamycin, rather than ampicillin, for bacterial "
             "selection"
+        ),
+        solution_summary=(
+            "Identify the pX330 CAG-Cas9/sgRNA backbone, append P2A-mCherry to the "
+            "Cas9 reading frame, and replace AmpR with the correctly oriented KanR "
+            "CDS; the canonical build uses five PCR products"
         ),
         components=(
             Component("P2A", Segment(52961, 8677, 8734), "linker"),
@@ -295,6 +317,11 @@ TASKS = (
             "N-terminal 6xHis/T7-tag/TEV leader, and the finished plasmid should use "
             "kanamycin rather than ampicillin for bacterial selection"
         ),
+        solution_summary=(
+            "Identify the T7 MBP destination, replace MBP with the donor's "
+            "6xHis/T7-tag/TEV-tdTomato segment, and replace AmpR with correctly "
+            "oriented KanR using four PCR products"
+        ),
         components=(
             Component(
                 "complete KanR CDS in expression orientation",
@@ -341,6 +368,11 @@ TASKS = (
             "using P2A? The finished vector should use G418 for mammalian selection "
             "and should no longer contain Cas9"
         ),
+        solution_summary=(
+            "Identify lentiCRISPR v2 and replace its Cas9-P2A-PuroR coding region "
+            "with mCherry-P2A-NeoR while retaining the guide and lentiviral "
+            "architecture; the canonical build uses four PCR products"
+        ),
         components=(
             Component(
                 "mCherry without terminal stop",
@@ -384,12 +416,20 @@ REAGENT_TASK_SLUGS = (
 
 ENZYME_REAGENTS = (
     "BamHI",
+    "BbsI",
     "BsaI",
     "BsmBI",
     "EcoRI",
+    "EcoRV",
     "HindIII",
+    "KpnI",
     "NdeI",
+    "NheI",
     "NotI",
+    "PstI",
+    "SacI",
+    "SpeI",
+    "XbaI",
     "XhoI",
 )
 
@@ -402,6 +442,12 @@ IGEM_PLATE_WELLS = (
     "1-A7",  # BCD1 RBS
     "1-A12",  # pJUMP29-1A(lacZ) backbone
     "1-A21",  # LacI-AM CDS
+)
+
+TASK_INVENTORY_SUFFIX = (
+    "All available Addgene plasmids, iGEM carrier plasmids and element records, "
+    "and stocked enzymes are in the attached task inventory. Do not synthesize "
+    "genes de novo; obtain the gene sequences you need from that inventory."
 )
 
 
@@ -418,6 +464,12 @@ def parse_args() -> argparse.Namespace:
         required=True,
         type=Path,
         help="Root of the 2026 iGEM kit snapshot containing manifest.json.",
+    )
+    parser.add_argument(
+        "--igem-elements-dir",
+        type=Path,
+        default=IGEM_ELEMENTS_DEFAULT,
+        help="Directory containing the selected element-level iGEM GenBank files.",
     )
     parser.add_argument("--output", type=Path, default=OUTPUT_DEFAULT)
     return parser.parse_args()
@@ -441,7 +493,10 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _load_igem_parts(igem_dir: Path) -> list[dict[str, Any]]:
+def _load_igem_parts(
+    igem_dir: Path,
+    igem_elements_dir: Path,
+) -> list[dict[str, Any]]:
     manifest_path = igem_dir / "manifest.json"
     payload = json.loads(manifest_path.read_text())
     by_well = {record["plate_well"]: record for record in payload["records"]}
@@ -459,6 +514,10 @@ def _load_igem_parts(igem_dir: Path) -> list[dict[str, Any]]:
             raise ValueError(f"Selected iGEM part {plate_well} is not circular")
         if len(str(record.seq)) != source["actual_sequence_length"]:
             raise ValueError(f"Selected iGEM part {plate_well} has a length mismatch")
+        element_source_path = igem_elements_dir / f"{source['plasmid_id']}.gbk"
+        element_record = SeqIO.read(element_source_path, "genbank")
+        if not str(element_record.seq):
+            raise ValueError(f"Selected iGEM element {plate_well} has no sequence")
         parts.append(
             {
                 "plate_well": plate_well,
@@ -474,10 +533,15 @@ def _load_igem_parts(igem_dir: Path) -> list[dict[str, Any]]:
                 "qc_status": source["qc_status"],
                 "is_valid": source["is_valid"],
                 "part_url": source["part_url"],
-                "length_bp": len(str(record.seq)),
-                "sha256": _sha256(source_path),
-                "filename": f"igem-{source_path.stem}.gbk",
-                "source_path": source_path,
+                "plasmid_length_bp": len(str(record.seq)),
+                "plasmid_sha256": _sha256(source_path),
+                "plasmid_filename": f"igem-plasmid-{source_path.stem}.gbk",
+                "plasmid_source_path": source_path,
+                "element_length_bp": len(str(element_record.seq)),
+                "element_topology": element_record.annotations.get("topology"),
+                "element_sha256": _sha256(element_source_path),
+                "element_filename": f"igem-element-{source['plasmid_id']}.gbk",
+                "element_source_path": element_source_path,
             }
         )
     return parts
@@ -485,7 +549,8 @@ def _load_igem_parts(igem_dir: Path) -> list[dict[str, Any]]:
 
 def _copy_igem_inventory(parts: list[dict[str, Any]], task_dir: Path) -> None:
     columns = (
-        "filename",
+        "plasmid_filename",
+        "element_filename",
         "plate_well",
         "part_id",
         "plasmid_id",
@@ -497,16 +562,28 @@ def _copy_igem_inventory(parts: list[dict[str, Any]], task_dir: Path) -> None:
         "flanking_3",
         "resistance",
         "qc_status",
+        "plasmid_length_bp",
+        "element_length_bp",
     )
     rows = ["\t".join(columns)]
+    for stale_path in task_dir.glob("igem-*.gbk"):
+        stale_path.unlink()
     for part in parts:
-        shutil.copy2(part["source_path"], task_dir / part["filename"])
+        shutil.copy2(
+            part["plasmid_source_path"],
+            task_dir / part["plasmid_filename"],
+        )
+        shutil.copy2(
+            part["element_source_path"],
+            task_dir / part["element_filename"],
+        )
         rows.append("\t".join(str(part[column] or "") for column in columns))
     (task_dir / "igem_inventory.tsv").write_text("\n".join(rows) + "\n")
 
 
 def _public_igem_part(part: dict[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in part.items() if key != "source_path"}
+    private_keys = {"plasmid_source_path", "element_source_path"}
+    return {key: value for key, value in part.items() if key not in private_keys}
 
 
 def _reverse_complement(sequence: str) -> str:
@@ -796,12 +873,7 @@ def _reference_record(
 
 
 def _question_text(task: HardTask) -> str:
-    return (
-        f"{task.request.rstrip('.')}.\n\n"
-        "All available Addgene and iGEM plasmids are in the attached task inventory. "
-        "Do not synthesize genes de novo; obtain the gene sequences you need from "
-        "that inventory."
-    )
+    return f"{task.request.rstrip('.')}.\n\n{TASK_INVENTORY_SUFFIX}"
 
 
 def _question_record(
@@ -834,7 +906,9 @@ def _question_record(
             "materials": "addgene_and_igem_inventory",
             "architecture": "functional_multifragment",
             "component_count": len(task.components),
-            "igem_part_count": len(igem_parts),
+            "igem_plasmid_count": len(igem_parts),
+            "igem_element_count": len(igem_parts),
+            "enzyme_count": len(ENZYME_REAGENTS),
         },
     }
 
@@ -849,9 +923,8 @@ def _reagent_question_record(
     record["files"] = f"reagent_inventory/{task_id}"
     record["question"] = (
         _question_text(task)
-        + "\n\nThis version also has a fixed primer and enzyme stock in the same "
-        "task inventory. Use only the stocked primers and enzymes; some of them "
-        "will not be relevant to this build."
+        + "\n\nThis version also has a fixed primer stock. Use only the stocked "
+        "primers; some of them will not be relevant to this build."
     )
     record["difficulty"] = {
         "name": "hard_reagent_inventory",
@@ -861,7 +934,8 @@ def _reagent_question_record(
         "component_count": len(task.components),
         "primer_count": primer_count,
         "enzyme_count": len(ENZYME_REAGENTS),
-        "igem_part_count": len(igem_parts),
+        "igem_plasmid_count": len(igem_parts),
+        "igem_element_count": len(igem_parts),
         "novel_primers_allowed": False,
     }
     return record
@@ -890,6 +964,22 @@ def _reagent_protocol(
             f"{primer_filenames[primers['reverse_5_to_3']]})"
         )
     return "<protocol>\ngibson(\n" + ",\n".join(calls) + "\n)\n</protocol>"
+
+
+def _write_enzyme_inventory(task_dir: Path) -> list[dict[str, str]]:
+    for stale_path in task_dir.glob("enzyme-*.txt"):
+        stale_path.unlink()
+    enzyme_rows = []
+    for index, enzyme in enumerate(ENZYME_REAGENTS, start=1):
+        filename = f"enzyme-{index:02d}.txt"
+        (task_dir / filename).write_text(enzyme + "\n")
+        enzyme_rows.append({"filename": filename, "enzyme": enzyme})
+    index_lines = ["filename\tenzyme"]
+    index_lines.extend(
+        f"{row['filename']}\t{row['enzyme']}" for row in enzyme_rows
+    )
+    (task_dir / "enzyme_inventory.tsv").write_text("\n".join(index_lines) + "\n")
+    return enzyme_rows
 
 
 def _write_reagent_inventory(
@@ -949,11 +1039,7 @@ def _write_reagent_inventory(
             }
         )
 
-    enzyme_rows: list[dict[str, str]] = []
-    for index, enzyme in enumerate(ENZYME_REAGENTS, start=1):
-        filename = f"enzyme-{index:02d}.txt"
-        (task_dir / filename).write_text(enzyme + "\n")
-        enzyme_rows.append({"filename": filename, "enzyme": enzyme})
+    enzyme_rows = _write_enzyme_inventory(task_dir)
 
     index_lines = ["filename\treagent_class\tvalue"]
     index_lines.extend(
@@ -985,27 +1071,17 @@ def _write_fasta(record: SeqRecord, path: Path) -> None:
 
 
 def _write_clean_readme(output: Path) -> None:
-    rows = "\n".join(
-        f"| {task.title} | {len(task.components)} | {len(task.inventory_ids)} | 8 |"
+    question_rows = "\n".join(
+        f"| {task.title} | {task.request.rstrip('.')}. | "
+        f"{task.solution_summary.rstrip('.')}. |"
         for task in TASKS
     )
-    review_lines = [
-        "## Reagent-inventory questions for review (3 of 6)",
-        "",
-        "These show the shortened question wording. The reagent variant adds one "
-        "sentence requiring use of the stocked primers and enzymes. The shared "
-        "protocol-syntax suffix is not repeated here.",
-    ]
-    review_tasks = [task for task in TASKS if task.slug in REAGENT_TASK_SLUGS]
-    for task in review_tasks:
-        review_lines.extend(
-            [
-                "",
-                f"### {task.title}",
-                "",
-                _question_text(task),
-            ]
-        )
+    reagent_rows = "\n".join(
+        f"| {task.title} reagent variant | 1 | 12 | 8 | 8 | "
+        f"{4 * len(task.components)} | {len(ENZYME_REAGENTS)} |"
+        for task in TASKS
+        if task.slug in REAGENT_TASK_SLUGS
+    )
     lines = [
         "# Hard mixed-inventory cloning pilot",
         "",
@@ -1018,16 +1094,30 @@ def _write_clean_readme(output: Path) -> None:
         "inventories are under `reagent_inventory/<task-id>/`. The runner attaches "
         "or copies every file from that directory into the model's working directory.",
         "",
-        "| Construct | Canonical components | Addgene plasmids | iGEM plasmids |",
-        "| --- | ---: | ---: | ---: |",
-        rows,
+        "## Inventory supplied",
+        "",
+        "Each selected iGEM item is represented twice: once as the circular physical "
+        "carrier plasmid from the 2026 kit snapshot and once as the actual "
+        "element-level Registry sequence. Thus the inventory includes the promoter, "
+        "RBS, terminator, CDS, and backbone/device elements themselves, not merely "
+        "the plasmids carrying them.",
+        "",
+        "| Question set | Tasks | Addgene plasmids/task | iGEM carrier plasmids/task | iGEM element records/task | Primers/task | Enzymes/task |",
+        "| --- | ---: | ---: | ---: | ---: | ---: | ---: |",
+        f"| Base questions | 6 | 12 | 8 | 8 | 0 | {len(ENZYME_REAGENTS)} |",
+        reagent_rows,
+        "",
+        "The enzyme stock is non-empty for every task and contains: "
+        f"{', '.join(ENZYME_REAGENTS)}. The three reagent variants additionally "
+        "contain equal numbers of useful and decoy primers.",
         "",
         "## What makes these harder",
         "",
         "- No assembly method, backbone, insert source, plasmid name, or exact "
         "coordinates are disclosed.",
-        "- Each task supplies 12 accession-only Addgene GenBank files and eight "
-        "QC-valid iGEM GenBank files, including irrelevant alternatives.",
+        "- Each task supplies 12 accession-only Addgene plasmids, eight QC-valid "
+        "iGEM carrier plasmids, the corresponding eight iGEM elements, and a "
+        "stocked enzyme panel, including irrelevant alternatives.",
         "- The exact products require three to five PCR-derived components.",
         "- All six tasks require frame-sensitive coding or tag junctions; three require "
         "two coding changes, and two require reverse-orienting a bacterial marker.",
@@ -1055,13 +1145,13 @@ def _write_clean_readme(output: Path) -> None:
         "removed. Those details made the intended reference easier to infer and were "
         "more useful for constraining the verifier than for stating a normal request.",
         "",
-        "## Primer and enzyme inventory subset",
+        "## Primer inventory subset",
         "",
         "`questions_reagent_inventory.jsonl` contains three representative tasks: "
         "the 3-component TCF/LEF reporter, 4-component two-locus lentiviral edit, "
         "and 5-component Cas9/marker edit. Each has an equal number of canonical "
-        "and decoy primer stocks plus eight enzyme stocks. Primer filenames and "
-        "enzyme filenames are opaque; the model must select them by inspecting "
+        "and decoy primer stocks. Primer and enzyme filenames are opaque; the model "
+        "must select them by inspecting "
         "`reagent_inventory.tsv` or the individual stock files. Novel primers are "
         "not permitted in these variants. Both canonical and decoy primer stocks "
         "are drawn deterministically from primer designs against the attached "
@@ -1070,22 +1160,28 @@ def _write_clean_readme(output: Path) -> None:
         "Every base task and reagent task includes eight QC-valid plasmids sampled from the "
         "2026 iGEM distribution kit: a promoter, RBS, terminator, three unrelated "
         "CDS parts, a fluorescent-protein decoy, and a Type IIS destination "
-        "backbone. Only the circular GenBank files and a filtered "
-        "`igem_inventory.tsv` are attached. The FASTA copies are sequence-identical "
-        "and therefore redundant; the full 573-record manifests and raw JSON are "
-        "useful for dataset curation but unnecessarily large for an individual "
-        "model task. The filtered TSV preserves the useful plate, role, assembly, "
-        "flanking-overhang, resistance, and QC metadata. The source kit does not "
-        "provide nucleotide coordinates for the named parts, so the model still "
-        "has to inspect the whole-plasmid sequence.",
+        "backbone/device. Each carrier is paired with its separate element-level "
+        "GenBank record. `igem_inventory.tsv` maps the pair and preserves plate, "
+        "role, assembly, flanking-overhang, resistance, QC, and length metadata.",
         "",
         "The reagent-inventory prompt adds only this rule:",
         "",
-        "> This version also has a fixed primer and enzyme stock in the same task "
-        "inventory. Use only the stocked primers and enzymes; some of them will not "
-        "be relevant to this build.",
+        "> This version also has a fixed primer stock. Use only the stocked primers; "
+        "some of them will not be relevant to this build.",
         "",
-        *review_lines,
+        "## Shared inventory suffix used on all questions",
+        "",
+        f"> {TASK_INVENTORY_SUFFIX}",
+        "",
+        "The suffix is present in each JSONL question but is shown only once here.",
+        "",
+        "## All six questions and intended work",
+        "",
+        "The intended-work column is reviewer-only and is not shown to the model.",
+        "",
+        "| Name | Question shown before the shared suffix | Intended solution/work |",
+        "| --- | --- | --- |",
+        question_rows,
         "",
         "## Regeneration",
         "",
@@ -1094,6 +1190,7 @@ def _write_clean_readme(output: Path) -> None:
         "tools/generate_cloning_inventory_hard_questions.py \\",
         "  --input-dir /path/to/addgene-genbank-files \\",
         "  --igem-dir /path/to/igem-distribution-kit-2026 \\",
+        "  --igem-elements-dir experiments/cloning_inventory_hard_v1/igem_element_sources \\",
         "  --output experiments/cloning_inventory_hard_v1",
         "```",
         "",
@@ -1112,14 +1209,19 @@ def _write_clean_readme(output: Path) -> None:
     (output / "README.md").write_text("\n".join(lines) + "\n")
 
 
-async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
+async def generate(
+    input_dir: Path,
+    igem_dir: Path,
+    igem_elements_dir: Path,
+    output: Path,
+) -> None:
     used_ids = sorted({item for task in TASKS for item in task.inventory_ids})
     input_paths = {addgene_id: _input_path(input_dir, addgene_id) for addgene_id in used_ids}
     records = {
         addgene_id: SeqIO.read(path, "genbank")
         for addgene_id, path in input_paths.items()
     }
-    igem_parts = _load_igem_parts(igem_dir)
+    igem_parts = _load_igem_parts(igem_dir, igem_elements_dir)
     for addgene_id, record in records.items():
         if record.annotations.get("topology") != "circular":
             raise ValueError(f"Addgene #{addgene_id} is not annotated as circular")
@@ -1150,6 +1252,7 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
         for addgene_id in task.inventory_ids:
             shutil.copy2(input_paths[addgene_id], task_dir / f"addgene-{addgene_id}.gbk")
         _copy_igem_inventory(igem_parts, task_dir)
+        _write_enzyme_inventory(task_dir)
 
         reference, components = _reference_record(task, task_id, records)
         protocol, primers = _canonical_protocol(task, records)
@@ -1226,7 +1329,8 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
                     "slug": task.slug,
                     "canonical_product_count": len(reagent_products),
                     "canonical_exact_circular_match": True,
-                    "igem_part_count": len(igem_parts),
+                    "igem_plasmid_count": len(igem_parts),
+                    "igem_element_count": len(igem_parts),
                     **reagent_details,
                 }
             )
@@ -1238,7 +1342,9 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
                 "slug": task.slug,
                 "title": task.title,
                 "inventory_addgene_ids": list(task.inventory_ids),
-                "inventory_igem_part_count": len(igem_parts),
+                "inventory_igem_plasmid_count": len(igem_parts),
+                "inventory_igem_element_count": len(igem_parts),
+                "inventory_enzyme_count": len(ENZYME_REAGENTS),
                 "reference_length_bp": len(str(reference.seq)),
                 "reference_is_circular": True,
                 "canonical_method": "Gibson",
@@ -1293,7 +1399,14 @@ async def generate(input_dir: Path, igem_dir: Path, output: Path) -> None:
 
 def main() -> None:
     args = parse_args()
-    asyncio.run(generate(args.input_dir, args.igem_dir, args.output))
+    asyncio.run(
+        generate(
+            args.input_dir,
+            args.igem_dir,
+            args.igem_elements_dir,
+            args.output,
+        )
+    )
 
 
 if __name__ == "__main__":
