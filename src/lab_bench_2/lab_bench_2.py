@@ -90,8 +90,12 @@ def lab_bench_2(
             is given provider-native, **server-side** tools — WebSearch and
             CodeExecution — and runs Inspect's tool-use loop.
             - ``agentic``: the client-side agentic configuration. The model is
-            given ``python``/``bash`` (and, with an external provider
-            key, ``web_search``) tools in a Docker sandbox.
+              given ``python``/``bash`` (and, with an external provider
+              key, ``web_search``) tools in a Docker sandbox.
+            - ``agentic_web``: an opt-in OpenAI exploratory configuration using
+              a network-enabled Docker sandbox plus OpenAI's server-side web
+              search. Do not use this on tasks whose public files contain an
+              answer key.
         strip_method_hint: Remove explicit assembly-method wording from cloning
             prompts while retaining the underlying sequence files and task data.
         dataset_path: Optional path to a local CloningQA JSONL package. Its
@@ -119,7 +123,7 @@ def lab_bench_2(
         scorer = multi_tags_scorer()
     if strip_method_hint:
         _strip_method_hint(dataset)
-    if solver == "agentic":
+    if solver in {"agentic", "agentic_web"}:
         _strip_attachments_for_sandbox(dataset)
     return Task(
         dataset=dataset,
