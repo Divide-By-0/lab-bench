@@ -39,5 +39,9 @@ agent_artefacts/trajectory_analysis/inspect_scout/scout_results/
 agent_artefacts/trajectory_analysis/inspect_scout/logs/
 agent_artefacts/trajectory_analysis/inspect_scout/__pycache__/
 
+# Generated Harbor task trees / zips (built by tools/package_addgene_harbor_tasks.py)
+experiments/harbor_addgene_subset_v1/tasks/
+experiments/harbor_addgene_subset_v1/*.zip
+
 # uv
 .python-version

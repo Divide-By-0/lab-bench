@@ -87,12 +87,9 @@ def test_addgene_subset_loads_as_local_file_mode_dataset() -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "task_id",
-    [
-        REVIEWS[0]["id"],
-        next(
-            review["id"] for review in REVIEWS if review["catalog_method"] == "oligo_gg"
-        ),
-        next(review["id"] for review in REVIEWS if review["replace_strand"] == -1),
+    [review["id"] for review in REVIEWS],
+    ids=[
+        f"{review['backbone_addgene_id']}-{review['id'][:8]}" for review in REVIEWS
     ],
 )
 async def test_pydna_simulators_reproduce_addgene_subset_references(
