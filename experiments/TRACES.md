@@ -26,6 +26,8 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `gpt56sol_cloning_pilot_3tasks_reviewed.eval` | same answers rescored under 2-B quoted-filename normalization | **3/3**; all exact assemblies |
 | `gpt56sol_cloning_inventory_hard_6tasks.eval` | six hard mixed Addgene/iGEM inventory tasks, model-selected methods | **4/6** |
 | `gpt56sol_cloning_inventory_hard_6tasks_functional_v3_reviewed.eval` | same six answers, pydna simulator pipeline and functional verifier v3-B | **6/6**; 2 verdicts changed |
+| `gpt56sol_addgene_subset_55tasks.eval` | 55 Addgene-subset CDS-swap drafts, `gpt-5.6-sol` max, 100k novel-token cap | **38/55** raw (3 edlib score errors, 4 bio_policy) |
+| `gpt56sol_addgene_subset_55tasks_edlib_rescored.eval` | same answers, host edlib installed | **41/55**; three iGABASnFR samples now pass |
 | `gpt56sol_8tasks_method_blind_constraint_v3_reviewed.eval` | same method-blind answers, constraint verifier v3-B | **8/8** |
 | `gpt56sol_cloning_pilot_3tasks_constraint_v3_reviewed.eval` | same pilot answers, constraint verifier v3-B | **3/3** |
 | `gpt56sol_smoke_2tasks_hinted_constraint_v3_reviewed.eval` | same smoke answers, constraint verifier v3-B | **2/2** |

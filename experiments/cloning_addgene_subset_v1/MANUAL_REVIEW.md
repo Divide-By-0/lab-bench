@@ -9,6 +9,14 @@ plasmid's advertised payload.
 Scoring still uses one exact circular FASTA. A biologically nicer
 architecture can fail even when the prompt is fair.
 
+Soul Max run (see `GPT56SOL_RESULTS.md`): **41/55** after edlib rescore
+(38 raw passes + 3 iGABASnFR rescored passes; 10 sequence fails; 4 OpenAI
+`bio_policy` on VSV-G/HIV-1 gag helpers). Several **high** flags still
+**passed** the exact FASTA (pLKO AmpR, lentiGuide AmpR, pGGAselect CmR,
+gRNA NeoR). That means the model can solve the generated question even
+when the question is the wrong cloning job — those rows still need a
+scientist rewrite before the score is treated as GG/stuffer skill.
+
 ## Flag for manual review
 
 | Priority | Addgene | Question as generated | Why it may be the wrong category |
