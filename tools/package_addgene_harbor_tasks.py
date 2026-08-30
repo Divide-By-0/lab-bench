@@ -63,12 +63,13 @@ LABBENCH2_FILES = (
 
 DOCKERFILE = """FROM python:3.12-slim-bookworm
 
-# REASON: edlib and primer3-py ship as source on some platforms; a compiler
-# is required at image build. Purging gcc afterwards keeps the agent image
-# smaller. Removing this block reintroduces the host edlib hole that scored
-# finished iGABASnFR protocols as errors.
+# REASON: edlib and primer3-py ship as source on some platforms; gcc/make
+# and Python headers are required at image build. primer3-py 2.3.0 fails on
+# aarch64 without `make` (missing amplicon3_core). Purging the toolchain
+# afterwards keeps the agent image smaller. Removing edlib reintroduces the
+# host scoring hole that recorded finished iGABASnFR protocols as errors.
 RUN apt-get update && apt-get install -y --no-install-recommends \\
-        gcc g++ \\
+        gcc g++ make python3-dev \\
     && pip install --no-cache-dir \\
         biopython==1.87 \\
         pydna==5.5.12 \\
@@ -78,7 +79,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \\
         scipy==1.17.1 \\
         edlib==1.3.9.post1 \\
         pytest==8.4.1 \\
-    && apt-get purge -y gcc g++ \\
+    && apt-get purge -y gcc g++ make python3-dev \\
     && apt-get autoremove -y \\
     && rm -rf /var/lib/apt/lists/*
 
