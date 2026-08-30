@@ -59,6 +59,23 @@ Cas9→EGFP/EYFP on AAV/lenti/PX/lentiCRISPR/pX330/SaCas9/plant Cas9; EGFP↔mCh
 
 26973 6236 vs 6225 (ITR 11 bp), 20298 7256 vs 7266, 112168 7028 vs 7025, 62988 9171 vs 9172. Shared inventory contains **both** files. The prompt names the bp length so the exact FASTA is identifiable. Still easy for a model to assemble the sibling map and fail.
 
+## Live Soul Max run notes (in progress)
+
+Host scoring needed `edlib` (`lab_bench_2` extra). The first two dual-map
+iGABASnFR samples finished generation and then error'd on
+`ModuleNotFoundError: edlib`. That package is now installed in the venv;
+later samples should score. Those two should be **rescored from the log**,
+not treated as model failures.
+
+OpenAI `bio_policy` 400s (not a cloning error):
+
+- 12260 psPAX2 HIV-1 gag → tdTomato
+- 12259 pMD2.G VSV-G → mCherry (same request family)
+
+Packaging-helper questions that name HIV-1 gag or VSV-G can be refused
+before a protocol is produced. Flag as unscorable on this provider, not as
+wrong biology.
+
 ## Suggested scientist actions
 
 1. Reject or rewrite the **high** rows before treating scores as cloning skill.
