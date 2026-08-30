@@ -323,6 +323,57 @@ class TestJudgeScorer:
 
 
 class TestCloningScorer:
+    async def test_adds_sequence_comparison_to_transcript(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        reference = tmp_path / "clone_1_assembled.fa"
+        reference.write_text(">ref\nACGT\n")
+        events: list[tuple[str, str | None]] = []
+
+        async def fake_cloning_reward(**kwargs: Any) -> tuple[float, str]:
+            return 0.0, "Sequence mismatch"
+
+        async def fake_comparison(**kwargs: Any) -> str:
+            assert kwargs == {
+                "answer": "<protocol>assemble</protocol>",
+                "base_dir": tmp_path,
+                "reference_path": reference,
+                "validator_params": {},
+            }
+            return "comparison markdown"
+
+        def record_info(content: str, source: str | None = None) -> None:
+            events.append((content, source))
+
+        monkeypatch.setattr(
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
+        )
+        monkeypatch.setattr(
+            "lab_bench_2.cloning_visualization.cloning_comparison_markdown",
+            fake_comparison,
+        )
+        monkeypatch.setattr(
+            "evals.utils.resolve_file_path",
+            lambda filename, _: reference,
+        )
+        monkeypatch.setattr(
+            "inspect_ai.log.transcript",
+            lambda: SimpleNamespace(info=record_info),
+        )
+
+        result = await _score(
+            cloning_scorer(),
+            _task_state(
+                "<protocol>assemble</protocol>",
+                {"tag": "cloning", "id": "clone_1", "files_path": str(tmp_path)},
+            ),
+            Target(""),
+        )
+
+        assert result.value == INCORRECT
+        assert events == [("comparison markdown", "cloning sequence comparison")]
+
     async def test_scores_correct_when_reward_passes(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
@@ -337,7 +388,8 @@ class TestCloningScorer:
             return 1.0, "Cloning validation passed"
 
         monkeypatch.setattr(
-            "labbench2.cloning.rewards.cloning_reward", fake_cloning_reward
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
         )
         monkeypatch.setattr(
             "evals.utils.resolve_file_path",
@@ -362,18 +414,57 @@ class TestCloningScorer:
             metadata={"cloning_score": 1.0},
         )
 
+    async def test_uses_explicit_local_reference(
+        self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    ) -> None:
+        reference = tmp_path / "local-reference.fa"
+        reference.write_text(">ref: circular (circular)\nACGT\n")
+
+        async def fake_cloning_reward(**kwargs: Any) -> tuple[float, str]:
+            assert kwargs["reference_path"] == reference
+            return 1.0, "Cloning validation passed"
+
+        monkeypatch.setattr(
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
+        )
+        monkeypatch.setattr(
+            "evals.utils.resolve_file_path",
+            lambda *_: pytest.fail("local reference should bypass global resolution"),
+        )
+
+        result = await _score(
+            cloning_scorer(),
+            _task_state(
+                "<protocol>assemble</protocol>",
+                {
+                    "tag": "cloning",
+                    "id": "clone_1",
+                    "files_path": str(tmp_path),
+                    "reference_path": str(reference),
+                },
+            ),
+            Target(""),
+        )
+
+        assert result.value == CORRECT
+
     async def test_scores_incorrect_when_reward_fails(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         # given a cloning reward below the pass threshold
+        reference = tmp_path / "clone_1_assembled.fa"
+        reference.write_text(">ref\nACGT\n")
+
         async def fake_cloning_reward(**kwargs: Any) -> tuple[float, str]:
             return 0.0, "Accuracy failed: output does not match reference"
 
         monkeypatch.setattr(
-            "labbench2.cloning.rewards.cloning_reward", fake_cloning_reward
+            "lab_bench_2.cloning_simulators.rewards_v2.cloning_reward_v2",
+            fake_cloning_reward,
         )
         monkeypatch.setattr(
-            "evals.utils.resolve_file_path", lambda filename, _: tmp_path / filename
+            "evals.utils.resolve_file_path", lambda filename, _: reference
         )
 
         # when

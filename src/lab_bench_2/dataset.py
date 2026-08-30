@@ -19,7 +19,7 @@ from inspect_ai.dataset import Dataset, MemoryDataset, Sample, hf_dataset
 from inspect_ai.model import ChatMessage, ChatMessageUser, Content, ContentText
 
 from lab_bench_2 import attachment_builder, file_downloader, prompt_composer
-from lab_bench_2.prompt_composer import Mode
+from lab_bench_2.prompt_composer import CLONING_FILE_REFERENCE_GUIDANCE, Mode
 from utils.sample_ids import create_stable_id
 
 if TYPE_CHECKING:
@@ -45,6 +45,17 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample:
     Precondition: the record's question supports ``mode``. The loader filters
     unsupported records via ``_question_supports_mode`` before calling this.
     """
+    return _record_to_sample(record, mode=mode)
+
+
+def _record_to_sample(
+    record: dict[str, Any],
+    mode: Mode,
+    *,
+    files_dir: Path | None = None,
+    reference_path: Path | None = None,
+) -> Sample:
+    """Map one record, optionally using local files and a local reference."""
     from evals.models import LabBenchQuestion
 
     question = LabBenchQuestion.model_validate(record)
@@ -61,23 +72,38 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample:
     }
     if record.get("difficulty") is not None:
         metadata["difficulty"] = record["difficulty"]
+    if reference_path is not None:
+        metadata["reference_path"] = str(reference_path)
 
     files: list[Path] = []
     attachments: list[Content] = []
     if question.files:
-        files_dir = file_downloader.fetch(question.files)
-        metadata["files_path"] = str(files_dir)
-        files = file_downloader.list_files(files_dir)
+        resolved_files_dir = files_dir or file_downloader.fetch(question.files)
+        if not resolved_files_dir.is_dir():
+            raise FileNotFoundError(
+                f"Question files directory not found: {resolved_files_dir}"
+            )
+        metadata["files_path"] = str(resolved_files_dir)
+        files = file_downloader.list_files(resolved_files_dir)
         if mode == "file":
             attachments = attachment_builder.build(files)
         elif mode == "retrieve":
             metadata["expected_file_stems"] = [f.stem for f in files]
 
+    prompt_suffix = question.prompt_suffix or ""
+    if (
+        question.tag == "cloning"
+        and CLONING_FILE_REFERENCE_GUIDANCE not in prompt_suffix
+    ):
+        prompt_suffix = "\n\n".join(
+            value for value in (prompt_suffix, CLONING_FILE_REFERENCE_GUIDANCE) if value
+        )
+
     question_text = prompt_composer.compose(
         question.question,
         mode=mode,
         files=files,
-        prompt_suffix=question.prompt_suffix,
+        prompt_suffix=prompt_suffix,
     )
 
     sample_input: str | list[ChatMessage]
@@ -94,6 +120,51 @@ def record_to_sample(record: dict[str, Any], mode: Mode = "inject") -> Sample:
         id=create_stable_id(question.tag, mode, question.id, prefix="labbench2"),
         metadata=metadata,
     )
+
+
+def load_local_cloning_dataset(path: Path | str, mode: Mode = "file") -> Dataset:
+    """Load self-contained local CloningQA records and their references.
+
+    The JSONL records use the same schema as the Hugging Face dataset, but each
+    ``files`` value is resolved relative to the JSONL's parent directory. A
+    reference must exist at ``validation/<id>_assembled.fa``.
+    """
+    from evals.models import LabBenchQuestion
+
+    dataset_path = Path(path).resolve()
+    root = dataset_path.parent
+    samples: list[Sample] = []
+    for line_number, line in enumerate(dataset_path.read_text().splitlines(), start=1):
+        if not line.strip():
+            continue
+        record = json.loads(line)
+        question = LabBenchQuestion.model_validate(record)
+        if question.tag != "cloning":
+            raise ValueError(
+                f"Local dataset line {line_number} has tag {question.tag!r}; "
+                "only cloning is supported."
+            )
+        if not question.files:
+            raise ValueError(
+                f"Local cloning dataset line {line_number} has no files directory."
+            )
+        if not _question_supports_mode(question, mode):
+            continue
+        files_dir = root / question.files
+        reference_path = root / "validation" / f"{question.id}_assembled.fa"
+        if not reference_path.is_file():
+            raise FileNotFoundError(f"Cloning reference not found: {reference_path}")
+        samples.append(
+            _record_to_sample(
+                record,
+                mode,
+                files_dir=files_dir,
+                reference_path=reference_path,
+            )
+        )
+    if not samples:
+        raise ValueError(f"Local cloning dataset has no samples for mode {mode!r}")
+    return MemoryDataset(samples=samples, name=f"local-cloning-{dataset_path.stem}")
 
 
 def load_lab_bench_2_dataset(

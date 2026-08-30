@@ -1,0 +1,95 @@
+LOCUS       BBa_J428330                    3371 bp    DNA     circular SYN 16-MAY-2026
+DEFINITION  2026 iGEM Distribution Kit plasmid BBa_J428330, carrying pJUMP29-1A(lacZ).
+ACCESSION   BBa_J428330
+VERSION     BBa_J428330
+KEYWORDS    iGEM; distribution kit; synthetic biology.
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+            other sequences; artificial sequences.
+COMMENT     iGEM Distribution Kit: 2026
+            Plate/well: 1-A12
+            Physical plasmid: BBa_J428330
+            Carried part: pJUMP29-1A(lacZ)
+            Role: Plasmid Vector (SO:0000755)
+            Collection: JUMP
+            Assembly format: Type IIS L1 Cloning Plasmid
+            Backbone: BBa_J428341
+            Resistance: Kanamycin
+            Copy number: medium
+            Origin: OriV 9 (pBBR322/ROP)
+            QC: Correct (valid=True)
+            Sequence length: 3371 bp (dataset reports 3371 bp)
+            Registry: https://registry.igem.org/parts/bba-j428330
+            Inventory source: https://registry.igem.org/distribution
+            Flanking site: BsmBI
+            5' fusion: GGAG
+            3' fusion: AATG
+            Assembly restriction site: BsaI
+            Assembly 5' fusion: GGAG
+            Assembly 3' fusion: CGCT
+FEATURES             Location/Qualifiers
+     source          1..3371
+                     /organism="synthetic DNA construct"
+                     /mol_type="other DNA"
+     misc_feature    1..3371
+                     /label="BBa_J428330 distribution plasmid"
+                     /note="2026 iGEM Distribution Kit 1-A12; carries pJUMP29-1A(lacZ); Plasmid Vector (SO:0000755); QC Correct"
+ORIGIN
+        1 ttaattaagg agttttgcag gtgccttgga acacctgctt ttcgctgaat tcgcggccgc
+       61 ttctagagcg tctctggagt gagaccggag ttgacggcta gctcagtcct aggtacagtg
+      121 ctagcgtact tgtttaactt taagaaggag atatacaatg gtagccggtg acccgaaact
+      181 gctgctggaa gttccgcacg ctatctcttc ttctccgggt aactctctgg ctgttgttct
+      241 gcaacgtcgt gactgggaaa acccgggtgt tacccagctg aaccgtctgg ctgctcaccc
+      301 gccgttcgct tcttggcgta actctgaaga agctcgtacc gaccgtccgt cccagcagct
+      361 gcgttctctg atccgtctgc tgaccaaacc ggaacgtaaa ctgtcttggc tgctgccgcc
+      421 gctgtctaac aacggttcgt aacttctgac tgagttgcac gctggtctct cgctaatgtg
+      481 agacgtacta gtagcggccg ctgcagggag ttgtcttcga agacttcgct ctagtcttgg
+      541 actcctgttg atagatccag taatgacctc agaactccat ctggatttgt tcagaacgct
+      601 cggttgccgc cgggcgtttt ttattggtga gaatccaggg gtccccaata attacgattt
+      661 aaatttgtgt ctcaaaatct ctgatgttac attgcacaag ataaaaatat atcatcatga
+      721 acaataaaac tgtctgctta cataaacagt aatacaaggg gtgttatgag ccatattcag
+      781 cgtgaaacga gctgtagccg tccgcgtctg aacagcaaca tggatgcgga tctgtatggc
+      841 tataaatggg cgcgtgataa cgtgggtcag agcggcgcga ccatttatcg tctgtatggc
+      901 aaaccggatg cgccggaact gtttctgaaa catggcaaag gcagcgtggc gaacgatgtg
+      961 accgatgaaa tggtgcgtct gaactggctg accgaattta tgccgctgcc gaccattaaa
+     1021 cattttattc gcaccccgga tgatgcgtgg ctgctgacca ccgcgattcc gggcaaaacc
+     1081 gcgtttcagg tgctggaaga atatccggat agcggcgaaa acattgtgga tgcgctggcc
+     1141 gtgtttctgc gtcgtctgca tagcattccg gtgtgcaact gcccgtttaa cagcgatcgt
+     1201 gtgtttcgtc tggcccaggc gcagagccgt atgaacaacg gcctggtgga tgcgagcgat
+     1261 tttgatgatg aacgtaacgg ctggccggtg gaacaggtgt ggaaagaaat gcataaactg
+     1321 ctgccgttta gcccggatag cgtggtgacc cacggcgatt ttagcctgga taacctgatt
+     1381 ttcgatgaag gcaaactgat tggctgcatt gatgtgggcc gtgtgggcat tgcggatcgt
+     1441 tatcaggatc tggccattct gtggaactgc ctgggcgaat ttagcccgag cctgcaaaaa
+     1501 cgtctgtttc agaaatatgg cattgataat ccggatatga acaaactgca atttcatctg
+     1561 atgctggatg aatttttcta ataattaatt ggaccgcggt ccgcgcgttg tccttttccg
+     1621 ctgcataacc ctgcttcggg gtcattatag cgattttttc ggtatatcca tcctttttcg
+     1681 cacgatatac aggattttgc caaagggttc gtgtagactt tccttggtgt atccaacggc
+     1741 gtcagccggg caggataggt gaagtaggcc cacccgcgag cgggtgttcc ttcttcactg
+     1801 tcccttattc gcacctggcg gtgctcaacg ggaatcctgc tctgcgaggc tggccgtagg
+     1861 ccggccccgt agaaaagatc aaaggatctt cttgagatcc tttttttctg cgcgtaatct
+     1921 gctgcttgca aacaaaaaaa ccaccgctac cagcggtggt ttgtttgccg gatcaagagc
+     1981 taccaactct ttttccgaag gtaactggct tcagcagagc gcagatacca aatactgtcc
+     2041 ttctagtgta gccgtagtta ggccaccact tcaagaactc tgtagcaccg cctacatacc
+     2101 tcgctctgct aatcctgtta ccagtggctg ctgccagtgg cgataagtcg tgtcttaccg
+     2161 ggttggactc aagacgatag ttaccggata aggcgcagcg gtcgggctga acggggggtt
+     2221 cgtgcacaca gcccagcttg gagcgaacga cctacaccga actgagatac ctacagcgtg
+     2281 agctatgaga aagcgccacg cttcccgaag ggagaaaggc ggacaggtat ccggtaagcg
+     2341 gcagggtcgg aacaggagag cgcacgaggg agcttccagg gggaaacgcc tggtatcttt
+     2401 atagtcctgt cgggtttcgc cacctctgac ttgagcgtcg atttttgtga tgctcgtcag
+     2461 gggggcggag cctatggaaa aacgccagca acgcggcctt tttacggttc ctggcctttt
+     2521 gctggccttt tgctcacatg ttctttcctg cgttatcccc tgattctgtg gataaccgta
+     2581 ttaccgcctt tgagtgagct gataccgctc gccgcagccg aacgaccgag cgcagcgagt
+     2641 cagtgagcga ggaagcggaa gagcgcctga tgcggtattt tctccttacg catctgtgcg
+     2701 gtatttcaca ccgcatatgg tgcactctca gtacaatctg ctctgatgcc gcatagttaa
+     2761 gccagtatac actccgctat cgctacgtga ctgggtcatg gctgcgcccc gacacccgcc
+     2821 aacacccgct gacgcgccct gacgggcttg tctgctcccg gcatccgctt acagacaagc
+     2881 tgtgacagtc tccgggagct gcatgtgtca gaggttttca ccgtcatcac cgaaacgcgc
+     2941 gaggcagctg cggtaaagct catcagcgtg gtcgtgcagc gattcacaga tgtctgcctg
+     3001 ttcatccgcg tccagctcgt tgagtttctc cagaagcgtt aatgtctggc ttctgataaa
+     3061 gcgggccatg ttaagggcgg ttttttcctg tttggtcact gatgcctccg tgtaaggggg
+     3121 atttctgttc atgggggtaa tgataccgat gaaacgagag aggatgctca cgatacgggt
+     3181 tactgatgat gaacatgccc ggttactgga acgttgtgag ggtaaacaac tggcggtatg
+     3241 gatgcggcgg gggcgcgccc agctgtctag ggcggcggat ttgtcctact caggagagcg
+     3301 ttcaccgaca aacaacagat aaaacgaaag gcccagtctt tcgactgagc ctttcgtttt
+     3361 atttgatgcc t
+//

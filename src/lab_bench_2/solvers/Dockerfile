@@ -16,4 +16,17 @@ RUN pip install --no-cache-dir \
     numpy==2.4.6 \
     scipy==1.17.1 \
     pymupdf==1.27.2.3 \
-    pdfplumber==0.11.9
+    pdfplumber==0.11.9 \
+    dill==0.4.0
+
+# REASON: agents were burning tool calls reading pydna's own source
+# (/usr/local/lib/.../pydna/design.py) and issuing web searches to work out its API --
+# it is a small library with a non-obvious surface (assembly2 vs the deprecated
+# assembly, circular_assembly_fragments, primer_design). Bake the API reference into
+# the image so that is a local file read instead.
+RUN mkdir -p /opt/docs && \
+    for m in pydna.design pydna.assembly2 pydna.amplify pydna.dseqrecord pydna.primer \
+             pydna.parsers pydna.readers pydna.tm Bio.Restriction primer3; do \
+      python -m pydoc "$m" > "/opt/docs/${m}.txt" 2>/dev/null || true; \
+    done && \
+    ls /opt/docs

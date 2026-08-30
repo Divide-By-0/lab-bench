@@ -1,0 +1,9 @@
+plasmid_filename	element_filename	plate_well	part_id	plasmid_id	part_type	part_role	assembly_format	flanking_site	flanking_5	flanking_3	resistance	qc_status	plasmid_length_bp	element_length_bp
+igem-plasmid-1-A1_BBa_J428091.gbk	igem-element-BBa_J428091.gbk	1-A1	BBa_B0012	BBa_J428091	terminator	Terminator	Type IIS L0 Part	BsaI	GCTT	CGCT	Chloramphenicol	Correct	2432	43
+igem-plasmid-1-A2_BBa_J428012.gbk	igem-element-BBa_J428012.gbk	1-A2	HapR	BBa_J428012	cds	CDS	Type IIS L0 Part	BsaI	AATG	GCTT	Chloramphenicol	Correct	2658	612
+igem-plasmid-1-A3_BBa_E0020.gbk	igem-element-BBa_E0020.gbk	1-A3	eCFP	BBa_E0020	cds	CDS	Type IIS L0 Part	BsaI	AATG	GCTT	Chloramphenicol	Correct	2769	723
+igem-plasmid-1-A4_BBa_J428020.gbk	igem-element-BBa_J428020.gbk	1-A4	SrpR	BBa_J428020	cds	CDS	Type IIS L0 Part	BsaI	AATG	GCTT	Chloramphenicol	Correct	2688	642
+igem-plasmid-1-A5_BBa_J23100.gbk	igem-element-BBa_J23100.gbk	1-A5	BBa_J23100	BBa_J23100	promoter	Promoter	Type IIS L0 Part	BsaI	GGAG	TACT	Chloramphenicol	Correct	2424	35
+igem-plasmid-1-A7_BBa_J428034.gbk	igem-element-BBa_J428034.gbk	1-A7	BCD1	BBa_J428034	rbs	Ribosome Entry Site	Type IIS L0 Part	BsaI	TACT	AATG	Chloramphenicol	Correct	2473	84
+igem-plasmid-1-A12_BBa_J428330.gbk	igem-element-BBa_J428330.gbk	1-A12	pJUMP29-1A(lacZ)	BBa_J428330	plasmid backbone	Plasmid Vector	Type IIS L1 Cloning Plasmid	BsmBI	GGAG	AATG	Kanamycin	Correct	3371	391
+igem-plasmid-1-A21_BBa_K2680537.gbk	igem-element-BBa_K2680537.gbk	1-A21	LacI-AM	BBa_K2680537	cds	CDS	Type IIS L0 Part	BsaI	AATG	GCTT	Chloramphenicol	Correct	3128	1082

@@ -1,0 +1,196 @@
+LOCUS       wnt-egfp-p2a-pur        4702 bp    DNA     circular UNK 01-JAN-1980
+DEFINITION  TCF/LEF EGFP-P2A-PuroR reporter; circular multi-fragment reference
+            assembly.
+ACCESSION   4568bc10-71e1-5ce5-92f1-1f2c772d96cb
+VERSION     4568bc10-71e1-5ce5-92f1-1f2c772d96cb
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+     source          1..4702
+     misc_feature    1..732
+                     /label="native TOPFlash initiation context plus EGFP
+                     without stop"
+                     /note="Assembly component role: reporter; sequence
+                     provenance Addgene #12456, #13031"
+     CDS             join(16..18,19..21,22..732)
+                     /codon_start=1
+                     /product="enhanced GFP"
+                     /label="EGFP"
+                     /translation="MVSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTL
+                     KFICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDD
+                     GNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIK
+                     VNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLL
+                     EFVTAAGITLGMDELYK"
+                     /note="Sequence provenance: pcDNA3-EGFP (Addgene #13031;
+                     reporter)"
+     misc_feature    733..1386
+                     /label="P2A-PuroR with terminal stop"
+                     /note="Assembly component role: linked selection cassette;
+                     sequence provenance Addgene #52961"
+     CDS             733..789
+                     /codon_start=1
+                     /product="2A peptide from porcine teschovirus-1
+                     polyprotein"
+                     /label="P2A"
+                     /note="Eukaryotic ribosomes fail to insert a peptide bond
+                     between the Gly and Pro residues, yielding separate
+                     polypeptides."
+                     /note="Sequence provenance: lentiCRISPR v2 (Addgene #52961;
+                     linked selection cassette)"
+                     /translation="ATNFSLLKQAGDVEENPGP"
+     CDS             790..1386
+                     /codon_start=1
+                     /gene="pac from Streptomyces alboniger"
+                     /product="puromycin N-acetyltransferase"
+                     /label="PuroR"
+                     /note="confers resistance to puromycin"
+                     /note="Sequence provenance: lentiCRISPR v2 (Addgene #52961;
+                     linked selection cassette)"
+                     /translation="TEYKPTVRLATRDDVPRAVRTLAAAFADYPATRHTVDPDRHIERV
+                     TELQELFLTRVGLDIGKVWVADDGAAVAVWTTPESVEAGAVFAEIGPRMAELSGSRLAA
+                     QQQMEGLLAPHRPKEPAWFLATVGVSPDHQGKGLGSAVVLPGVEAAERAGVPAFLETSA
+                     PRNLPFYERLGFTVTADVEVPEGPRTWCMTRKPGA"
+     misc_feature    1387..4702
+                     /label="retained TOPFlash backbone"
+                     /note="Assembly component role: backbone; sequence
+                     provenance Addgene #12456"
+     misc_feature    4366..4457
+                     /label="pause site"
+                     /note="RNA polymerase II transcriptional pause signal from
+                     the human alpha-2 globin gene"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     promoter        4625..4656
+                     /label="minP"
+                     /note="minimal TATA-box promoter with low basal activity"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     polyA_signal    1427..1548
+                     /label="SV40 poly(A) signal"
+                     /note="SV40 polyadenylation signal"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     rep_origin      complement(1967..2555)
+                     /direction=LEFT
+                     /label="ori"
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of
+                     replication"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     CDS             complement(join(2726..3517,3518..3586))
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /label="AmpR"
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     promoter        complement(3587..3691)
+                     /gene="bla"
+                     /label="AmpR promoter"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     rep_origin      3718..4173
+                     /direction=RIGHT
+                     /label="f1 ori"
+                     /note="f1 bacteriophage origin of replication; arrow
+                     indicates direction of (+) strand synthesis"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     polyA_signal    join(4304..4322,4323..4352)
+                     /note="synthetic polyadenylation signal"
+                     /note="Sequence provenance: M50 Super 8x TOPFlash (Addgene
+                     #12456; backbone)"
+     protein_bind    4477..4587
+                     /label="TCF/LEF response-site array"
+                     /note="Manually identified sequence from Addgene #12456"
+ORIGIN
+        1 gttggtaaag ccaccatggt gagcaagggc gaggagctgt tcaccggggt ggtgcccatc
+       61 ctggtcgagc tggacggcga cgtaaacggc cacaagttca gcgtgtccgg cgagggcgag
+      121 ggcgatgcca cctacggcaa gctgaccctg aagttcatct gcaccaccgg caagctgccc
+      181 gtgccctggc ccaccctcgt gaccaccctg acctacggcg tgcagtgctt cagccgctac
+      241 cccgaccaca tgaagcagca cgacttcttc aagtccgcca tgcccgaagg ctacgtccag
+      301 gagcgcacca tcttcttcaa ggacgacggc aactacaaga cccgcgccga ggtgaagttc
+      361 gagggcgaca ccctggtgaa ccgcatcgag ctgaagggca tcgacttcaa ggaggacggc
+      421 aacatcctgg ggcacaagct ggagtacaac tacaacagcc acaacgtcta tatcatggcc
+      481 gacaagcaga agaacggcat caaggtgaac ttcaagatcc gccacaacat cgaggacggc
+      541 agcgtgcagc tcgccgacca ctaccagcag aacaccccca tcggcgacgg ccccgtgctg
+      601 ctgcccgaca accactacct gagcacccag tccgccctga gcaaagaccc caacgagaag
+      661 cgcgatcaca tggtcctgct ggagttcgtg accgccgccg ggatcactct cggcatggac
+      721 gagctgtaca aggcaacaaa cttctctctg ctgaaacaag ccggagatgt cgaagagaat
+      781 cctggaccga ccgagtacaa gcccacggtg cgcctcgcca cccgcgacga cgtccccagg
+      841 gccgtacgca ccctcgccgc cgcgttcgcc gactaccccg ccacgcgcca caccgtcgat
+      901 ccggaccgcc acatcgagcg ggtcaccgag ctgcaagaac tcttcctcac gcgcgtcggg
+      961 ctcgacatcg gcaaggtgtg ggtcgcggac gacggcgccg cggtggcggt ctggaccacg
+     1021 ccggagagcg tcgaagcggg ggcggtgttc gccgagatcg gcccgcgcat ggccgagttg
+     1081 agcggttccc ggctggccgc gcagcaacag atggaaggcc tcctggcgcc gcaccggccc
+     1141 aaggagcccg cgtggttcct ggccaccgtc ggagtctcgc ccgaccacca gggcaagggt
+     1201 ctgggcagcg ccgtcgtgct ccccggagtg gaggcggccg agcgcgccgg ggtgcccgcc
+     1261 ttcctggaga cctccgcgcc ccgcaacctc cccttctacg agcggctcgg cttcaccgtc
+     1321 accgccgacg tcgaggtgcc cgaaggaccg cgcacctggt gcatgacccg caagcccggt
+     1381 gcctgattct agagtcgggg cggccggccg cttcgagcag acatgataag atacattgat
+     1441 gagtttggac aaaccacaac tagaatgcag tgaaaaaaat gctttatttg tgaaatttgt
+     1501 gatgctattg ctttatttgt aaccattata agctgcaata aacaagttaa caacaacaat
+     1561 tgcattcatt ttatgtttca ggttcagggg gaggtgtggg aggtttttta aagcaagtaa
+     1621 aacctctaca aatgtggtaa aatcgataag gatccgtcga ccgatgccct tgagagcctt
+     1681 caacccagtc agctccttcc ggtgggcgcg gggcatgact atcgtcgccg cacttatgac
+     1741 tgtcttcttt atcatgcaac tcgtaggaca ggtgccggca gcgctcttcc gcttcctcgc
+     1801 tcactgactc gctgcgctcg gtcgttcggc tgcggcgagc ggtatcagct cactcaaagg
+     1861 cggtaatacg gttatccaca gaatcagggg ataacgcagg aaagaacatg tgagcaaaag
+     1921 gccagcaaaa ggccaggaac cgtaaaaagg ccgcgttgct ggcgtttttc cataggctcc
+     1981 gcccccctga cgagcatcac aaaaatcgac gctcaagtca gaggtggcga aacccgacag
+     2041 gactataaag ataccaggcg tttccccctg gaagctccct cgtgcgctct cctgttccga
+     2101 ccctgccgct taccggatac ctgtccgcct ttctcccttc gggaagcgtg gcgctttctc
+     2161 atagctcacg ctgtaggtat ctcagttcgg tgtaggtcgt tcgctccaag ctgggctgtg
+     2221 tgcacgaacc ccccgttcag cccgaccgct gcgccttatc cggtaactat cgtcttgagt
+     2281 ccaacccggt aagacacgac ttatcgccac tggcagcagc cactggtaac aggattagca
+     2341 gagcgaggta tgtaggcggt gctacagagt tcttgaagtg gtggcctaac tacggctaca
+     2401 ctagaagaac agtatttggt atctgcgctc tgctgaagcc agttaccttc ggaaaaagag
+     2461 ttggtagctc ttgatccggc aaacaaacca ccgctggtag cggtggtttt tttgtttgca
+     2521 agcagcagat tacgcgcaga aaaaaaggat ctcaagaaga tcctttgatc ttttctacgg
+     2581 ggtctgacgc tcagtggaac gaaaactcac gttaagggat tttggtcatg agattatcaa
+     2641 aaaggatctt cacctagatc cttttaaatt aaaaatgaag ttttaaatca atctaaagta
+     2701 tatatgagta aacttggtct gacagttacc aatgcttaat cagtgaggca cctatctcag
+     2761 cgatctgtct atttcgttca tccatagttg cctgactccc cgtcgtgtag ataactacga
+     2821 tacgggaggg cttaccatct ggccccagtg ctgcaatgat accgcgagac ccacgctcac
+     2881 cggctccaga tttatcagca ataaaccagc cagccggaag ggccgagcgc agaagtggtc
+     2941 ctgcaacttt atccgcctcc atccagtcta ttaattgttg ccgggaagct agagtaagta
+     3001 gttcgccagt taatagtttg cgcaacgttg ttgccattgc tacaggcatc gtggtgtcac
+     3061 gctcgtcgtt tggtatggct tcattcagct ccggttccca acgatcaagg cgagttacat
+     3121 gatcccccat gttgtgcaaa aaagcggtta gctccttcgg tcctccgatc gttgtcagaa
+     3181 gtaagttggc cgcagtgtta tcactcatgg ttatggcagc actgcataat tctcttactg
+     3241 tcatgccatc cgtaagatgc ttttctgtga ctggtgagta ctcaaccaag tcattctgag
+     3301 aatagtgtat gcggcgaccg agttgctctt gcccggcgtc aatacgggat aataccgcgc
+     3361 cacatagcag aactttaaaa gtgctcatca ttggaaaacg ttcttcgggg cgaaaactct
+     3421 caaggatctt accgctgttg agatccagtt cgatgtaacc cactcgtgca cccaactgat
+     3481 cttcagcatc ttttactttc accagcgttt ctgggtgagc aaaaacagga aggcaaaatg
+     3541 ccgcaaaaaa gggaataagg gcgacacgga aatgttgaat actcatactc ttcctttttc
+     3601 aatattattg aagcatttat cagggttatt gtctcatgag cggatacata tttgaatgta
+     3661 tttagaaaaa taaacaaata ggggttccgc gcacatttcc ccgaaaagtg ccacctgacg
+     3721 cgccctgtag cggcgcatta agcgcggcgg gtgtggtggt tacgcgcagc gtgaccgcta
+     3781 cacttgccag cgccctagcg cccgctcctt tcgctttctt cccttccttt ctcgccacgt
+     3841 tcgccggctt tccccgtcaa gctctaaatc gggggctccc tttagggttc cgatttagtg
+     3901 ctttacggca cctcgacccc aaaaaacttg attagggtga tggttcacgt agtgggccat
+     3961 cgccctgata gacggttttt cgccctttga cgttggagtc cacgttcttt aatagtggac
+     4021 tcttgttcca aactggaaca acactcaacc ctatctcggt ctattctttt gatttataag
+     4081 ggattttgcc gatttcggcc tattggttaa aaaatgagct gatttaacaa aaatttaacg
+     4141 cgaattttaa caaaatatta acgcttacaa tttgccattc gccattcagg ctgcgcaact
+     4201 gttgggaagg gcgatcggtg cgggcctctt cgctattacg ccagcccaag ctaccatgat
+     4261 aagtaagtaa tattaaggta cgggaggtac ttggagcggc cgcaataaaa tatctttatt
+     4321 ttcattacat ctgtgtgttg gttttttgtg tgaatcgata gtactaacat acgctctcca
+     4381 tcaaaacaaa acgaaacaaa acaaactagc aaaataggct gtccccagtg caagtgcagg
+     4441 tgccagaaca tttctctatc gataggtacc gagctcttac gcgagatcaa agggggtaag
+     4501 atcaaagggg gtaagatcaa aggggcgcga gatcaaaggg ggtaagatca aagggggtaa
+     4561 gatcaaaggg ggtaagatca aaggggcgcg cccgcgtgct agcccgggct cgagatctag
+     4621 actctagagg gtatataatg gaagctcgaa ttccagcttg gcattccggt actgttggta
+     4681 aaaagcttgg cattccggta ct
+//

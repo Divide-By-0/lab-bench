@@ -188,6 +188,30 @@ class TestFileModeIntegration:
         image = message.content[2]
         assert isinstance(image, ContentImage)
 
+    def test_cloning_prompt_explains_bare_and_quoted_filenames(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        (tmp_path / "vector.gbk").write_text("LOCUS", encoding="utf-8")
+        _stub_file_downloader(tmp_path, monkeypatch)
+        record = _file_bearing_record(
+            tag="cloning",
+            id="clone-1",
+            question="Build a plasmid.",
+            ideal="",
+            prompt_suffix="Use the cloning DSL.",
+        )
+
+        sample = record_to_sample(record, mode="file")
+
+        assert isinstance(sample.input, list)
+        message = sample.input[0]
+        assert isinstance(message, ChatMessageUser)
+        content = message.content[0]
+        assert isinstance(content, ContentText)
+        prompt = content.text
+        assert "canonical form for a sequence file is a bare filename" in prompt
+        assert 'quoted filename such as `"vector.gbk"` is also accepted' in prompt
+
     def test_retrieve_mode_lists_file_stems_and_skips_attachments(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
