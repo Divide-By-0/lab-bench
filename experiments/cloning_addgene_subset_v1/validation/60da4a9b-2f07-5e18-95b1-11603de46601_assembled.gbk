@@ -1,0 +1,56 @@
+LOCUS       swap-195714             2280 bp    DNA     circular UNK 01-JAN-1980
+DEFINITION  addgene-plasmid-195714-sequence-385697.gbk CDS 'CmR' replaced with
+            'EGFP' from addgene-plasmid-37825-sequence-448204.gbk.
+ACCESSION   60da4a9b-2f07-5e18-95b1-11603de46601
+VERSION     60da4a9b-2f07-5e18-95b1-11603de46601
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+COMMENT     addgene-plasmid-195714-sequence-385697.gbk CDS 'CmR' replaced with
+            'EGFP' from addgene-plasmid-37825-sequence-448204.gbk
+FEATURES             Location/Qualifiers
+     source          1..2280
+     CDS             1..720
+                     /label="EGFP"
+                     /note="from addgene-plasmid-37825-sequence-448204.gbk"
+ORIGIN
+        1 ttacttgtac agctcgtcca tgccgagagt gatcccggcg gcggtcacga actccagcag
+       61 gaccatgtga tcgcgcttct cgttggggtc tttgctcagg gcggactggg tgctcaggta
+      121 gtggttgtcg ggcagcagca cggggccgtc gccgatgggg gtgttctgct ggtagtggtc
+      181 ggcgagctgc acgctgccgt cctcgatgtt gtggcggatc ttgaagttca ccttgatgcc
+      241 gttcttctgc ttgtcggcca tgatatagac gttgtggctg ttgtagttgt actccagctt
+      301 gtgccccagg atgttgccgt cctccttgaa gtcgatgccc ttcagctcga tgcggttcac
+      361 cagggtgtcg ccctcgaact tcacctcggc gcgggtcttg tagttgccgt cgtccttgaa
+      421 gaagatggtg cgctcctgga cgtagccttc gggcatggcg gacttgaaga agtcgtgctg
+      481 cttcatgtgg tcggggtagc ggctgaagca ctgcacgccg taggtcaggg tggtcacgag
+      541 ggtgggccag ggcacgggca gcttgccggt ggtgcaaatg aacttcaggg tcagcttgcc
+      601 gtaggtggca tcgccctcgc cctcgccgga cacgctgaac ttgtggccgt ttacgtcgcc
+      661 gtccagctcg accaggatgg gcaccacccc ggtgaacagc tcctcgccct tgctcaccat
+      721 tttagcttcc ttagctcctg aaaatctcga taactcaaaa aatacgcccg gtagtgatct
+      781 tatttcatta tggtgaaagt tggaacctct tacgtgccga tcaaagtctc attttcgcca
+      841 aaagttgtca tgaccaaaat cccttaacgt gagttttcgt tccactgagc gtcagacccc
+      901 gtagaaaaga tcaaaggatc ttcttgagat cctttttttc tgcgcgtaat ctgctgcttg
+      961 caaacaaaaa aaccaccgct accagcggtg gtttgtttgc cggatcaaga gctaccaact
+     1021 ctttttccga aggtaactgg cttcagcaga gcgcagatac caaatactgt tcttctagtg
+     1081 tagccgtagt taggccacca cttcaagaac tctgtagcac cgcctacata cctcgctctg
+     1141 ctaatcctgt taccagtggc tgctgccagt ggcgataagt cgtgtcttac cgggttggac
+     1201 tcaagacgat agttaccgga taaggcgcag cggtcgggct gaacgggggg ttcgtgcaca
+     1261 cagcccagct tggagcgaac gacctacacc gaactgagat acctacagcg tgagctatga
+     1321 gaaagcgcca cgcttcccga agggagaaag gcggacaggt atccggtaag cggcagggtc
+     1381 ggaacaggag agcgcacgag ggagcttcca gggggaaacg cctggtatct ttatagtcct
+     1441 gtcgggtttc gccacctctg acttgagcgt cgatttttgt gatgctcgtc aggggggcgg
+     1501 agcctatgga aaaacgccag caatgcggcc tttttacggt tcctggcctt ttgctggcct
+     1561 tttgctcaca tgttctttcc tgcgttatcc cctgattctg tggataaccg tattaccgcc
+     1621 tttgagtgag ctgataccgc tcgccgcagc cgaacgaccg agcgcagcga gtcagtgagc
+     1681 gaggaagccg aaaaatcaat aatcagacaa caagatgtgc gaactcgata ttttacacga
+     1741 ctctctttac caattctgcc ccgaattaca cttaaaacga ctcaacagct taacgttggc
+     1801 ttgccacgca ttacttgact gtaaaactct cactcttacc gaacttggcc gtaacctgcc
+     1861 aaccaaagcg agaacaaaac ataacatcaa acgaatcgac cgattgttag gtaatcgtca
+     1921 cctgcaggaa ggtttaaacg catttaggtg acactataga agtgtgtatc gctcgaggga
+     1981 tccgaattcg aagtcttggt acggagcgag accggagcga gacgggagtc gtcttcgctt
+     2041 tccagatctg ataacttgtg aagacgacca tcgtctcacc atggtctcac cattcctgta
+     2101 gacttcttaa ttaagacgtc agaattctcg aggcggccgc atgtgagtct ccctatagtg
+     2161 agtcgtatta atttcgcggg cggaacccct atttgtttat ttttctaaat acattcaaat
+     2221 atgtatccgc tcatgagtag caccaggcgt ttaagggcac caataactgc cttaaaaaaa
+//

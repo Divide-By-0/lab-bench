@@ -1,0 +1,108 @@
+LOCUS       sequence-385697-        2220 bp    DNA     circular SYN 15-DEC-2025
+DEFINITION  pGGAselect is a cloning vector for Golden Gate Assembly using BsaI, 
+            BsmBI, and BbsI Type IIS restriction enzymes..
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2220)
+  AUTHORS   Potapov V, Ong JL, Kucera RB, Langhorst BW, Bilotti K, Pryor JM, 
+            Cantor EJ, Canton B, Knight TF, Evans TC Jr, Lohman GJS
+  TITLE     Comprehensive Profiling of Four Base Overhang Ligation Fidelity by 
+            T4 DNA Ligase and Application to DNA Assembly.
+  JOURNAL   ACS Synth Biol. 2018 Nov 16;7(11):2665-2674. doi: 
+            10.1021/acssynbio.8b00333. Epub 2018 Oct 29.
+  PUBMED    30335370
+REFERENCE   2  (bases 1 to 2220)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Dec 15, 2025 from SnapGene Server 8.0.1
+            https://www.snapgene.com
+COMMENT     SGRef: number: 1; type: "Journal Article"; doi: 
+            "10.1021/acssynbio.8b00333"; journalName: "ACS Synth Biol"; date: 
+            "2018-11-16- 16"; volume: "7"; issue: "11"; pages: "2665-2674"
+COMMENT     Sequence Label: pGGAselect
+FEATURES             Location/Qualifiers
+     source          1..2220
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     promoter        254..272
+                     /label=SP6 promoter
+                     /note="promoter for bacteriophage SP6 RNA polymerase"
+     primer_bind     254..271
+                     /label=SP6
+                     /note="SP6 promoter, forward primer"
+     primer_bind     complement(463..482)
+                     /label=T7
+                     /note="T7 promoter, forward primer"
+     promoter        complement(464..482)
+                     /label=T7 promoter
+                     /note="promoter for bacteriophage T7 RNA polymerase"
+     CDS             complement(593..1252)
+                     /codon_start=1
+                     /gene="cat"
+                     /product="chloramphenicol acetyltransferase"
+                     /label=CmR
+                     /note="confers resistance to chloramphenicol"
+                     /translation="MEKKITGYTTVDISQWHRKEHFEAFQSVAQCTYNQTVQLDITAFL
+                     KTVKKNKHKFYPAFIHILARLMNAHPEFRMAMKDGELVIWDSVHPCYTVFHEQTETFSS
+                     LWSEYHDDFRQFLHIYSQDVACYGENLAYFPKGFIENMFFVSANPWVSFTSFDLNVANM
+                     DNFFAPVFTMGKYYTQGDKVLMPLAIQVHHAVCDGFHVGRMLNELQQYCDEWQGGA"
+     primer_bind     1167..1186
+                     /label=CAT-R
+                     /note="Chloramphenicol resistance gene, reverse primer"
+     promoter        complement(1253..1355)
+                     /label=cat promoter
+                     /note="promoter of the E. coli cat gene encoding 
+                     chloramphenicol acetyltransferase"
+     rep_origin      1456..2044
+                     /direction=RIGHT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     primer_bind     1945..1964
+                     /label=pBR322ori-F
+                     /note="pBR322 origin, forward primer"
+     primer_bind     2198..2215
+                     /label=L4440
+                     /note="L4440 vector, forward primer"
+ORIGIN
+        1 cgaaaaatca ataatcagac aacaagatgt gcgaactcga tattttacac gactctcttt
+       61 accaattctg ccccgaatta cacttaaaac gactcaacag cttaacgttg gcttgccacg
+      121 cattacttga ctgtaaaact ctcactctta ccgaacttgg ccgtaacctg ccaaccaaag
+      181 cgagaacaaa acataacatc aaacgaatcg accgattgtt aggtaatcgt cacctgcagg
+      241 aaggtttaaa cgcatttagg tgacactata gaagtgtgta tcgctcgagg gatccgaatt
+      301 cgaagtcttg gtacggagcg agaccggagc gagacgggag tcgtcttcgc tttccagatc
+      361 tgataacttg tgaagacgac catcgtctca ccatggtctc accattcctg tagacttctt
+      421 aattaagacg tcagaattct cgaggcggcc gcatgtgagt ctccctatag tgagtcgtat
+      481 taatttcgcg ggcggaaccc ctatttgttt atttttctaa atacattcaa atatgtatcc
+      541 gctcatgagt agcaccaggc gtttaagggc accaataact gccttaaaaa aattacgccc
+      601 cgccctgcca ctcatcgcag tactgttgta attcattaag cattctgccg acatggaagc
+      661 catcacaaac ggcatgatga acctgaatcg ccagcggcat cagcaccttg tcgccttgcg
+      721 tataatattt gcccatggtg aaaacggggg cgaagaagtt gtccatattg gccacgttta
+      781 aatcaaaact ggtgaaactc acccagggat tggctgagac aaaaaacata ttctcaataa
+      841 accctttagg gaaataggcc aggttttcac cgtaacacgc cacatcttgc gaatatatgt
+      901 gtagaaactg ccggaaatcg tcgtggtatt cactccagag cgatgaaaac gtttcagttt
+      961 gctcatggaa aacggtgtaa caagggtgaa cactatccca tatcaccagc tcaccgtctt
+     1021 tcattgccat acgaaattcc ggatgagcat tcatcaggcg ggcaagaatg tgaataaagg
+     1081 ccggataaaa cttgtgctta tttttcttta cggtctttaa aaaggccgta atatccagct
+     1141 gaacggtctg gttataggta cattgagcaa ctgactgaaa tgcctcaaaa tgttctttac
+     1201 gatgccattg ggatatatca acggtggtat atccagtgat ttttttctcc attttagctt
+     1261 ccttagctcc tgaaaatctc gataactcaa aaaatacgcc cggtagtgat cttatttcat
+     1321 tatggtgaaa gttggaacct cttacgtgcc gatcaaagtc tcattttcgc caaaagttgt
+     1381 catgaccaaa atcccttaac gtgagttttc gttccactga gcgtcagacc ccgtagaaaa
+     1441 gatcaaagga tcttcttgag atcctttttt tctgcgcgta atctgctgct tgcaaacaaa
+     1501 aaaaccaccg ctaccagcgg tggtttgttt gccggatcaa gagctaccaa ctctttttcc
+     1561 gaaggtaact ggcttcagca gagcgcagat accaaatact gttcttctag tgtagccgta
+     1621 gttaggccac cacttcaaga actctgtagc accgcctaca tacctcgctc tgctaatcct
+     1681 gttaccagtg gctgctgcca gtggcgataa gtcgtgtctt accgggttgg actcaagacg
+     1741 atagttaccg gataaggcgc agcggtcggg ctgaacgggg ggttcgtgca cacagcccag
+     1801 cttggagcga acgacctaca ccgaactgag atacctacag cgtgagctat gagaaagcgc
+     1861 cacgcttccc gaagggagaa aggcggacag gtatccggta agcggcaggg tcggaacagg
+     1921 agagcgcacg agggagcttc cagggggaaa cgcctggtat ctttatagtc ctgtcgggtt
+     1981 tcgccacctc tgacttgagc gtcgattttt gtgatgctcg tcaggggggc ggagcctatg
+     2041 gaaaaacgcc agcaatgcgg cctttttacg gttcctggcc ttttgctggc cttttgctca
+     2101 catgttcttt cctgcgttat cccctgattc tgtggataac cgtattaccg cctttgagtg
+     2161 agctgatacc gctcgccgca gccgaacgac cgagcgcagc gagtcagtga gcgaggaagc
+//

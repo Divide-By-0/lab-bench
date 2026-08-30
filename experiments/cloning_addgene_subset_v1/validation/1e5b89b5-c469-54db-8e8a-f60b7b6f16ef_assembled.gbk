@@ -1,0 +1,55 @@
+LOCUS       swap-17398              2204 bp    DNA     circular UNK 01-JAN-1980
+DEFINITION  addgene-plasmid-17398-sequence-239091.gbk CDS 'KanR' replaced with
+            'EYFP' from addgene-plasmid-20298-sequence-191904.gbk.
+ACCESSION   1e5b89b5-c469-54db-8e8a-f60b7b6f16ef
+VERSION     1e5b89b5-c469-54db-8e8a-f60b7b6f16ef
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+COMMENT     addgene-plasmid-17398-sequence-239091.gbk CDS 'KanR' replaced with
+            'EYFP' from addgene-plasmid-20298-sequence-191904.gbk
+FEATURES             Location/Qualifiers
+     source          1..2204
+     CDS             1..720
+                     /label="EYFP"
+                     /note="from addgene-plasmid-20298-sequence-191904.gbk"
+ORIGIN
+        1 atggtgagca agggcgagga gctgttcacc ggggtggtgc ccatcctggt cgagctggac
+       61 ggcgacgtaa acggccacaa gttcagcgtg tccggcgagg gcgagggcga tgccacctac
+      121 ggcaagctga ccctgaagtt catctgcacc accggcaagc tgcccgtgcc ctggcccacc
+      181 ctcgtgacca ccttcggcta cggcctgcag tgcttcgccc gctaccccga ccacatgaag
+      241 cagcacgact tcttcaagtc cgccatgccc gaaggctacg tccaggagcg caccatcttc
+      301 ttcaaggacg acggcaacta caagacccgc gccgaggtga agttcgaggg cgacaccctg
+      361 gtgaaccgca tcgagctgaa gggcatcgac ttcaaggagg acggcaacat cctggggcac
+      421 aagctggagt acaactacaa cagccacaac gtctatatca tggccgacaa gcagaagaac
+      481 ggcatcaagg tgaacttcaa gatccgccac aacatcgagg acggcagcgt gcagctcgcc
+      541 gaccactacc agcagaacac ccccatcggc gacggccccg tgctgctgcc cgacaaccac
+      601 tacctgagct accagtccgc cctgagcaaa gaccccaacg agaagcgcga tcacatggtc
+      661 ctgctggagt tcgtgaccgc cgccgggatc actctcggca tggacgagct gtacaagtaa
+      721 tcagaattgg ttaattggtt gtaacattat tcagattggg ccccgttcca ctgagcgtca
+      781 gaccccgtag aaaagatcaa aggatcttct tgagatcctt tttttctgcg cgtaatctgc
+      841 tgcttgcaaa caaaaaaacc accgctacca gcggtggttt gtttgccgga tcaagagcta
+      901 ccaactcttt ttccgaaggt aactggcttc agcagagcgc agataccaaa tactgttctt
+      961 ctagtgtagc cgtagttagg ccaccacttc aagaactctg tagcaccgcc tacatacctc
+     1021 gctctgctaa tcctgttacc agtggctgct gccagtggcg ataagtcgtg tcttaccggg
+     1081 ttggactcaa gacgatagtt accggataag gcgcagcggt cgggctgaac ggggggttcg
+     1141 tgcacacagc ccagcttgga gcgaacgacc tacaccgaac tgagatacct acagcgtgag
+     1201 ctatgagaaa gcgccacgct tcccgaaggg agaaaggcgg acaggtatcc ggtaagcggc
+     1261 agggtcggaa caggagagcg cacgagggag cttccagggg gaaacgcctg gtatctttat
+     1321 agtcctgtcg ggtttcgcca cctctgactt gagcgtcgat ttttgtgatg ctcgtcaggg
+     1381 gggcggagcc tatggaaaaa cgccagcaac gcggcctttt tacggttcct ggccttttgc
+     1441 tggccttttg ctcacatgtt ctttcctgcg ttatcccctg attctgtgga taaccgtatt
+     1501 accgctagca tggatctcgg ggacgtctaa ctactaagcg agagtaggga actgccaggc
+     1561 atcaaataaa acgaaaggct cagtcggaag actgggcctt tcgttttatc tgttgtttgt
+     1621 cggtgaacgc tctcctgagt aggacaaatc cgccgggagc ggatttgaac gttgtgaagc
+     1681 aacggcccgg agggtggcgg gcaggacgcc cgccataaac tgccaggcat caaactaagc
+     1741 agaaggccat cctgacggat ggcctttttg cgtttctaca aactcttcct gttagttagt
+     1801 tacttaagct cgggccccaa ataatgattt tattttgact gatagtgacc tgttcgttgc
+     1861 aacaaattga taagcaatgc ttttttataa tgccaacttt gtacaaaaaa gcaggcttta
+     1921 aaggaaccaa ttcagtcgac tggatccggt accgaattcg cggccgcact cgagatatct
+     1981 agacccagct ttcttgtaca aagttggcat tataagaaag cattgcttat caatttgttg
+     2041 caacgaacag gtcactatca gtcaaaataa aatcattatt tgccatccag ctgcagctct
+     2101 ggcccgtgtc tcaaaatctc tgatgttaca ttgcacaaga taaaaatata tcatcatgaa
+     2161 caataaaact gtctgcttac ataaacagta atacaagggg tgtt
+//
