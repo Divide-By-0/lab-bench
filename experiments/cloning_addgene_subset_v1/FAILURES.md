@@ -76,3 +76,24 @@ The key is a *witness* that the request is solvable from the attached
 files, not a string the model is shown. Ambiguous prompts (“one of our
 AAV reporter plasmids”, “one of our mammalian CRISPR plasmids”) make
 several circles biologically reasonable and only one graded correct.
+
+## Gemini 2.5 Pro on the same 14 (500k novel-token cap)
+
+Inspect in this checkout does not know `google/gemini-3.7-flash`. Ran
+`google/gemini-2.5-pro` with `--cost-limit 0.5` (500k novel). Trace:
+`experiments/traces/gemini25pro_addgene_sol_fail14.eval`.
+
+**4/14 pass.** Mean ~33k novel tokens; nobody hit 500k.
+
+| Addgene | Sol | Gemini | What changed |
+| ---: | --- | --- | --- |
+| 12259 pMD2.G VSV-G | bio_policy | **pass 1.000** | Gemini was allowed to answer |
+| 8454 pCMV-VSV-G | bio_policy | **pass 0.993** | same |
+| 20298 7266 bp inverted ChR2 | PCR fail (14 bp primer) | **pass 0.952** | Valid PCR this time |
+| 26973 6236 bp ChR2 | 0.878 extra MCS | **pass 1.000** | Clean CDS swap on the intended map |
+| 12260 / 8455 HIV-1 gag | bio_policy | fail (PCR / 0.67) | No provider refuse; still wrong product |
+| 181752, 23007, 65202, 42230, 48138, 83900, 37825, 26973 6225 bp | fail lookalike or flanks | fail | Same sibling-plasmid / PCR-break pattern |
+
+Gemini does **not** fix the inventory-ambiguity failures. Extra budget
+was unused. It mainly recovers the OpenAI-refused envelope plasmids and
+one of the two ITR-length ChR2 maps.
