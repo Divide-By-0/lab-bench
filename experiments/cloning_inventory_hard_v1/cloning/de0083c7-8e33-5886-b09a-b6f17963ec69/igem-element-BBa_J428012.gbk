@@ -1,0 +1,24 @@
+LOCUS       BBa_J428012              612 bp    DNA     linear   SYN 16-JUN-2022
+DEFINITION  HapR.
+ACCESSION   BBa_J428012
+VERSION     BBa_J428012
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..612
+                     /mol_type="genomic DNA"
+     CDS             1..612
+                     /label="CDS"
+                     /note="SO:0000316 CDS"
+ORIGIN
+        1 atggatgcaa gcattgaaaa acgtccgcgt acccgtctga gtccgcagaa acgtaaactg
+       61 cagctgatgg aaattgccct ggaagttttt gcaaaacgtg gtattggtcg tggtggtcat
+      121 gcagatattg cagaaattgc acaggttagc gttgcaaccg tgtttaacta ttttccgacc
+      181 cgtgaagatc tggttgatga tgttctgaat tttgtggttc gccagtatag caattttctg
+      241 accgatcaca tcgatctgga tctggatgtt aaaaccaatc tgcagaccgt ttgcaaagaa
+      301 atggttaaac tggcaatgac cgattgtcat tggctgaaag tttggtttga atggtcagca
+      361 agcacccgtg atgaagtttg gcctctgttt gttagcacca atcgtaccaa tcagctgctg
+      421 attcgcaaca tgtttatgaa agcaatggaa cgtggtgaac tgtgcgaaaa acatgatgtt
+      481 gataatatgg ccagcctgtt tcacggtatc ttttatagca tctttctgca ggttaatcgc
+      541 ctgggtgaac aagaagcagt ttataaactg gcagatagct atctgaacat gctgtgcatc
+      601 tataaaaact aa
+//

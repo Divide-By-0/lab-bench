@@ -1,0 +1,26 @@
+LOCUS       BBa_E0020                723 bp    DNA     linear   SYN 08-SEP-2021
+DEFINITION  engineered cyan fluorescent protein derived from A. victoria GFP.
+ACCESSION   BBa_E0020
+VERSION     BBa_E0020
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..723
+                     /mol_type="genomic DNA"
+     CDS             1..723
+                     /label="CDS"
+                     /note="SO:0000316 CDS"
+ORIGIN
+        1 atggtgagca agggcgagga gctgttcacc ggggtggtgc ccatcctggt cgagctggac
+       61 ggcgacgtga acggccacaa gttcagcgtg tccggcgagg gcgagggcga tgccacctac
+      121 ggcaagctga ccctgaagtt catctgcacc accggcaagc tgcccgtgcc ctggcccacc
+      181 ctcgtgacca ccctgacctg gggcgtgcag tgcttcagcc gctaccccga ccacatgaag
+      241 cagcacgact tcttcaagtc cgccatgccc gaaggctacg tccaggagcg caccatcttc
+      301 ttcaaggacg acggcaacta caagacccgc gccgaggtga agttcgaggg cgacaccctg
+      361 gtgaaccgca tcgagctgaa gggcatcgac ttcaaggagg acggcaacat cctggggcac
+      421 aagctggagt acaactacat cagccacaac gtctatatca ccgccgacaa gcagaagaac
+      481 ggcatcaagg ccaacttcaa gatccgccac aacatcgagg acggcagcgt gcagctcgcc
+      541 gaccactacc agcagaacac ccccatcggc gacggccccg tgctgctgcc cgacaaccac
+      601 tacctgagca cccagtccgc cctgagcaaa gaccccaacg agaagcgcga tcacatggtc
+      661 ctgctggagt tcgtgaccgc cgccgggatc actctcggca tggacgagct gtacaagtaa
+      721 taa
+//

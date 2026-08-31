@@ -1,0 +1,26 @@
+LOCUS       PTRE_supplied            451 bp    DNA     linear   UNK 01-JAN-1980
+DEFINITION  Lab-supplied tetracycline-response promoter; derived from NCBI
+            KY053834.1 bases 58..508.
+ACCESSION   KY053834.1:58-508
+VERSION     KY053834.1:58-508
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+     source          1..451
+                     /db_xref="NCBI:KY053834.1"
+     promoter        1..451
+                     /label="PTRE"
+                     /note="tetracycline-response promoter sequence supplied by
+                     the lab; source NCBI KY053834.1 bases 58..508"
+ORIGIN
+        1 tttacgaggg taggaagtgg tacggaaagt tggtataaga caaaagtgtt gtggaattgc
+       61 tccaggcgat ctgacggttc actaaacgag ctctgctttt ataggcgccc accgtacacg
+      121 cctaaagctt atacgttctc tatcactgat agggagtaaa ctggatatac gttctctatc
+      181 actgataggg agtaaactgt agatacgttc tctatcactg atagggagta aactggtcat
+      241 acgttctcta tcactgatag ggagtaaact ccttatacgt tctctatcac tgatagggag
+      301 taaagtctgc atacgttctc tatcactgat agggagtaaa ctcttcatac gttctctatc
+      361 actgataggg agtaaactcg agtatgtcga ggtggcgtgt acggtgggag gcctatataa
+      421 gcagagctcg tttagtgaac cgtcagatcg c
+//

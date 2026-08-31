@@ -1,0 +1,32 @@
+{
+  "context_version": "1.0",
+  "human_cell_model": "human iPSC-derived astrocytes",
+  "reference_genome": "GRCh38",
+  "stable_transgene": {
+    "gene_product": "human APOE4",
+    "control": "tetracycline-responsive",
+    "requirements": [
+      "stable genomic integration",
+      "inducibility after expansion without continued plasmid maintenance",
+      "low uninduced expression",
+      "no constitutive expression of the transgene from a second promoter"
+    ]
+  },
+  "knockout": {
+    "target_gene": "ABCA1",
+    "requirement": "disrupt all functional target copies in the chosen clone",
+    "reference_for_guide_design": "GRCh38 plus current MANE transcript annotation",
+    "off_target_requirement": "report the fixed algorithm and thresholds used; avoid high-risk coding or splice-site off-targets"
+  },
+  "supplied_part": {
+    "filename": "supplied_tetracycline_response_promoter.gbk",
+    "source": "NCBI KY053834.1 bases 58..508",
+    "role": "tetracycline-response promoter",
+    "sha256": "6da483c2baa6a8b5369278f9b16d37449a6c383d16f52c1453de75d84152be7a"
+  },
+  "allowed_plasmid_construction_methods": [
+    "Gibson assembly",
+    "Golden Gate assembly",
+    "restriction-enzyme assembly"
+  ]
+}

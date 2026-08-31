@@ -1,0 +1,6 @@
+<protocol>
+gibson(
+    pcr(addgene-plasmid-47676-sequence-68092.gbk, "AGCGGCCGCCCGGCTGCA", "GGATCCGACGTTGGCAGC"),
+    pcr(addgene-plasmid-37825-sequence-448204.gbk, "AGAAGTGCTGCCAACGTCGGATCCATGGTGAGCAAGGGCGAG", "ACGATCTGCAGCCGGGCGGCCGCTTTACTTGTACAGCTCGTC")
+)
+</protocol>

@@ -1,0 +1,52 @@
+# Prices input+output at $1/million and cache at $0, so Inspect's cost accounting
+# equals NOVEL tokens / 1e6. --cost-limit 0.1 is then a 100,000-novel-token budget.
+#
+# REASON: --token-limit counts total_tokens including cache reads, which dominate an
+# agentic run (14.6M cache vs 5.0M novel on one cloning batch) and make the cap measure
+# transcript length rather than work done.
+#
+# The grader is priced at 0: it is not what we are budgeting, and for cloning it never
+# runs at all (deterministic scorer). Inspect refuses --cost-limit unless every model in
+# the run has cost data, hence the entry.
+#
+# NOTE: it must be lab_bench_2's DEFAULT_GRADER_MODEL rather than gemini-3.7-flash,
+# because set_model_cost() only accepts models already in Inspect's model database and
+# gemini-3.7-flash is not in it. Harmless here: cloning never invokes a grader.
+#
+# Swap these for real $/million rates to turn --cost-limit into a true dollar ceiling
+# with cache priced correctly.
+openai/gpt-5.6-sol:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+anthropic/claude-sonnet-4-5:
+  input: 0.0
+  output: 0.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+google/gemini-2.5-pro:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+google/gemini-2.5-flash:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+google/gemini-3.5-flash:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+google/gemini-3.7-flash:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0
+google/gemini-3-flash:
+  input: 1.0
+  output: 1.0
+  input_cache_read: 0.0
+  input_cache_write: 0.0

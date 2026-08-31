@@ -5,7 +5,7 @@ single-turn) and an agentic configuration with provider-native tools. This packa
 groups the solver factories and the registry that maps a ``SolverType`` to them.
 """
 
-from lab_bench_2.solvers.agent import agentic
+from lab_bench_2.solvers.agent import agentic, agentic_web
 from lab_bench_2.solvers.registry import (
     SOLVERS_BY_TYPE,
     SolverType,
@@ -19,6 +19,7 @@ __all__ = [
     "SOLVERS_BY_TYPE",
     "SolverType",
     "agentic",
+    "agentic_web",
     "bare",
     "native_tools",
     "sandbox_for_solver",

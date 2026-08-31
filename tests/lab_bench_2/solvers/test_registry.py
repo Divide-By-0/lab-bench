@@ -13,8 +13,13 @@ from lab_bench_2.solvers.registry import (
 
 class TestSolverForType:
     def test_registered_solver_types(self) -> None:
-        # given / when / then the supported types are bare, tools, and agentic
-        assert set(SOLVERS_BY_TYPE) == {"bare", "tools", "agentic"}
+        # given / when / then every supported solver type is registered
+        assert set(SOLVERS_BY_TYPE) == {
+            "bare",
+            "tools",
+            "agentic",
+            "agentic_web",
+        }
 
     def test_returns_a_solver_for_each_registered_type(self) -> None:
         # given each registered solver type
@@ -39,6 +44,14 @@ class TestSandboxForSolver:
         sandbox_type, compose = spec
         assert sandbox_type == "docker"
         assert compose.endswith("compose.yaml")
+
+    def test_agentic_web_uses_a_separate_network_enabled_sandbox(self) -> None:
+        spec = sandbox_for_solver("agentic_web")
+
+        assert isinstance(spec, tuple)
+        sandbox_type, compose = spec
+        assert sandbox_type == "docker"
+        assert compose.endswith("compose.web.yaml")
 
     def test_server_side_solvers_need_no_sandbox(self) -> None:
         # given the server-side solvers

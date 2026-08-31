@@ -1,0 +1,466 @@
+{
+  "version": "inventory-pilot-1.0",
+  "generator": "tools/generate_cloning_inventory_questions.py",
+  "question_sets": {
+    "baseline": {
+      "path": "questions.jsonl",
+      "dials": {
+        "name": "baseline",
+        "method": "named",
+        "materials": "roles_named",
+        "architecture": "exact"
+      }
+    },
+    "method_blind": {
+      "path": "questions_method_blind.jsonl",
+      "dials": {
+        "name": "method_blind",
+        "method": "model_chooses",
+        "materials": "roles_named",
+        "architecture": "exact"
+      }
+    },
+    "inventory_functional": {
+      "path": "questions_inventory_functional.jsonl",
+      "dials": {
+        "name": "inventory_functional",
+        "method": "model_chooses",
+        "materials": "inventory",
+        "architecture": "functional"
+      }
+    }
+  },
+  "inventory": [
+    {
+      "addgene_id": 1864,
+      "name": "pLKO.1 scrambled shRNA",
+      "description": "a third-generation lentiviral U6 scrambled-shRNA control with puromycin selection",
+      "input_filename": "addgene-plasmid-1864-sequence-106096.gbk",
+      "sha256": "9ed4de0d64d257d3cd5157f13f5168b1fcfa2347a19f2eb1a4f76b8a2b9d12bf",
+      "length_bp": 7085,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 8449,
+      "name": "pUMVC",
+      "description": "a MuLV gag-pol packaging plasmid rather than a transfer vector",
+      "input_filename": "addgene-plasmid-8449-sequence-272509.gbk",
+      "sha256": "f6f97c4e0c6deb523d44445733a3421dfaaf82b39b89772dcc3c1da1524506f9",
+      "length_bp": 9289,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    },
+    {
+      "addgene_id": 10878,
+      "name": "pLKO.1",
+      "description": "a third-generation lentiviral U6-shRNA transfer plasmid with puromycin selection",
+      "input_filename": "addgene-plasmid-10878-sequence-438456.gbk",
+      "sha256": "63805fc1fb8d882652eb2c55d9e82c63a0e9da1bbe2a2369b5a915ec4d40933b",
+      "length_bp": 8901,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    },
+    {
+      "addgene_id": 12253,
+      "name": "pRSV-Rev",
+      "description": "a lentiviral Rev packaging plasmid rather than a transfer vector",
+      "input_filename": "addgene-plasmid-12253-sequence-443803.gbk",
+      "sha256": "7bfec3996d4b77b4dc5463249778da6660393416b24d7c3632231c69163ded6e",
+      "length_bp": 4180,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    },
+    {
+      "addgene_id": 12259,
+      "name": "pMD2.G",
+      "description": "a CMV-driven VSV-G lentiviral envelope plasmid",
+      "input_filename": "addgene-plasmid-12259-sequence-443804.gbk",
+      "sha256": "68ba24cd1507445d1284c2a79f3b2cbc2539a47b5850eb7e1b7c75275ef3d8bd",
+      "length_bp": 5822,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 12260,
+      "name": "psPAX2",
+      "description": "a second-generation lentiviral gag-pol packaging plasmid",
+      "input_filename": "addgene-plasmid-12260-sequence-467229.gbk",
+      "sha256": "4009aec0c7fda35ef8b2abee3b4429e533c1aa44300f9985e84eeeed1fdcb8c1",
+      "length_bp": 10712,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    },
+    {
+      "addgene_id": 12456,
+      "name": "M50 Super 8x TOPFlash",
+      "description": "a TCF/LEF minimal-promoter firefly-luciferase reporter plasmid",
+      "input_filename": "addgene-plasmid-12456-sequence-354510.gbk",
+      "sha256": "1b1cbf20b8f1e993a5bdf4497a804c281d513f0da21c092d89a5fffbd859f713",
+      "length_bp": 4984,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 13031,
+      "name": "pcDNA3-EGFP",
+      "description": "a CMV-EGFP mammalian expression plasmid with neomycin selection",
+      "input_filename": "addgene-plasmid-13031-sequence-513020.gbk",
+      "sha256": "acf5cff071c69f1981bcbdf0092566cbc606ff635dacde63cc4f6e1af687cbf6",
+      "length_bp": 6159,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 13770,
+      "name": "pCALNL-GFP",
+      "description": "a Cre-dependent GFP plasmid with a loxP-flanked transcriptional stop",
+      "input_filename": "addgene-plasmid-13770-sequence-7759.gbk",
+      "sha256": "cada641a2462f018be374032cd73ec3a40b3287e45678ff81fb0b6f06d5f38e0",
+      "length_bp": 6844,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 19319,
+      "name": "pLJM1-EGFP",
+      "description": "a third-generation CMV-EGFP lentiviral transfer vector with an independent hPGK-puromycin cassette",
+      "input_filename": "addgene-plasmid-19319-sequence-444690.gbk",
+      "sha256": "886fd7ce5c15ab4fb3c36ddf28941a2432a84f05bff96637f4b21ca638b392a3",
+      "length_bp": 8083,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 21915,
+      "name": "Tet-pLKO-puro",
+      "description": "a Tet-inducible lentiviral shRNA plasmid with TetR-IRES-puromycin",
+      "input_filename": "addgene-plasmid-21915-sequence-326721.gbk",
+      "sha256": "bc8a3a53cac994e23bc239887f4ff903b3f8bb702e71746662a26b112b7c92c5",
+      "length_bp": 10633,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 27705,
+      "name": "pmCherry-N1",
+      "description": "a constitutive mammalian mCherry plasmid with neomycin selection",
+      "input_filename": "addgene-plasmid-27705-sequence-516845.gbk",
+      "sha256": "e15ff7b8c321cb069f04a319a9738ee0339f93701c54ce1f59e23e3eba041799",
+      "length_bp": 5274,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 37237,
+      "name": "pET MBP-6xHis",
+      "description": "a T7 bacterial expression plasmid encoding MBP followed by a C-terminal 6xHis tag",
+      "input_filename": "addgene-plasmid-37237-sequence-47247.gbk",
+      "sha256": "343839073bf58632a73f5c57e1d7e7d2cdc8d410a6323114962b634cd49d8b2d",
+      "length_bp": 5895,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 40315,
+      "name": "pET OmpA-6xHis",
+      "description": "a T7 bacterial expression vector with an OmpA signal peptide and 6xHis tag",
+      "input_filename": "addgene-plasmid-40315-sequence-222548.gbk",
+      "sha256": "e6599676f9582107f568486a71897274faab881404ee197331aa36ffdad20dcd",
+      "length_bp": 5806,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 42230,
+      "name": "pX330",
+      "description": "a CAG-Cas9 and U6-guide-RNA plasmid without a linked reporter or mammalian selectable marker",
+      "input_filename": "addgene-plasmid-42230-sequence-419908.gbk",
+      "sha256": "27b1db2a4fb54de84dc065f5ab49553a8082e9c28b27ac1372b573462c522724",
+      "length_bp": 8504,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 48138,
+      "name": "pSpCas9(BB)-2A-GFP (PX458)",
+      "description": "a CAG-Cas9-T2A-EGFP plasmid with a U6 guide-RNA cassette",
+      "input_filename": "addgene-plasmid-48138-sequence-418767.gbk",
+      "sha256": "ed6361488a13044bb47cadaf5915f12cb7d6ad73807549518739eac0237c458c",
+      "length_bp": 9288,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 52961,
+      "name": "lentiCRISPR v2",
+      "description": "a third-generation lentiviral Cas9-P2A-puromycin plasmid with a U6 guide-RNA cassette",
+      "input_filename": "addgene-plasmid-52961-sequence-244694.gbk",
+      "sha256": "d85a0ba68fe52d0d10ea4e9bc7666e52145ccfca96e54fea86167c41a366a4a3",
+      "length_bp": 14873,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 54856,
+      "name": "pBAD 6xHis-TEV-tdTomato",
+      "description": "an arabinose-inducible bacterial plasmid encoding 6xHis-TEV-tdTomato",
+      "input_filename": "addgene-plasmid-54856-sequence-142928.gbk",
+      "sha256": "72ff59bb3591f3d3c52e8da5e2a6d8faf4e68880769eb7870c42fa83a2b03437",
+      "length_bp": 6140,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 69929,
+      "name": "pET His-MBP-TEV",
+      "description": "a T7 bacterial MBP-TEV N-terminal fusion vector with kanamycin selection",
+      "input_filename": "addgene-plasmid-69929-sequence-322059.gbk",
+      "sha256": "a6468db6934d39ac367282ce26546b4aabcf05e0936185461c7f30819733e7c5",
+      "length_bp": 7034,
+      "topology": "circular",
+      "used_in_generated_tasks": true
+    },
+    {
+      "addgene_id": 112867,
+      "name": "pAdDeltaF6",
+      "description": "a large AAV helper plasmid rather than an expression-vector backbone",
+      "input_filename": "addgene-plasmid-112867-sequence-372973.gbk",
+      "sha256": "caac514dc717d13a44c9a7095e50f1d483dfbcd6e517c2a64dab42adf9264e57",
+      "length_bp": 15420,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    },
+    {
+      "addgene_id": 181752,
+      "name": "pCMV-MMLVgag-3xNES-Cas9",
+      "description": "a CMV-driven MMLV-Gag-3xNES-Cas9 virus-like-particle cargo plasmid",
+      "input_filename": "addgene-plasmid-181752-sequence-353936.gbk",
+      "sha256": "f7d8fd6b2aa1a7b8694a77cac6652d66d5669d2b81f9c433edcfbd65d430a01a",
+      "length_bp": 10783,
+      "topology": "circular",
+      "used_in_generated_tasks": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "cc35af86-9942-5f75-a152-c4215a04df21",
+      "slug": "lenti-mcherry",
+      "title": "Lentiviral mCherry reporter",
+      "destination_addgene_id": 19319,
+      "deleted_interval_zero_based_half_open": [
+        537,
+        1254
+      ],
+      "source_addgene_id": 27705,
+      "source_interval_zero_based_half_open": [
+        1228,
+        1936
+      ],
+      "restored_destination_prefix": null,
+      "inventory_addgene_ids": [
+        19319,
+        27705,
+        13031,
+        1864,
+        12259,
+        12456
+      ],
+      "insert_length_bp": 708,
+      "reference_length_bp": 8074,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "TCCGGACTCAGATCTCGAGCTCAA",
+        "backbone_reverse": "GGTGGCGACCGGTAGCGCTAGCGG",
+        "insert_forward": "CCGCTAGCGCTACCGGTCGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+        "insert_reverse": "TTGAGCTCGAGATCTGAGTCCGGACTTGTACAGCTCGTCCATGCCGCC"
+      }
+    },
+    {
+      "id": "8ebf218b-e1a6-5544-9b3c-861ceb667182",
+      "slug": "topflash-egfp",
+      "title": "TCF/LEF-responsive EGFP reporter",
+      "destination_addgene_id": 12456,
+      "deleted_interval_zero_based_half_open": [
+        380,
+        2048
+      ],
+      "source_addgene_id": 13031,
+      "source_interval_zero_based_half_open": [
+        742,
+        1462
+      ],
+      "restored_destination_prefix": [
+        380,
+        395
+      ],
+      "inventory_addgene_ids": [
+        12456,
+        13031,
+        27705,
+        19319,
+        13770,
+        42230
+      ],
+      "insert_length_bp": 735,
+      "reference_length_bp": 4051,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "TTCTAGAGTCGGGGCGGCCGGCCG",
+        "backbone_reverse": "AGTACCGGAATGCCAAGCTTTTTA",
+        "insert_forward": "TAAAAAGCTTGGCATTCCGGTACTGTTGGTAAAGCCACCATGGTGAGCAAGGGCGAGGAGCTG",
+        "insert_reverse": "CGGCCGGCCGCCCCGACTCTAGAATTACTTGTACAGCTCGTCCATGCC"
+      }
+    },
+    {
+      "id": "e0fb037a-5bf8-5a00-acba-c5577144cfed",
+      "slug": "cre-mcherry",
+      "title": "Cre-dependent mCherry reporter",
+      "destination_addgene_id": 13770,
+      "deleted_interval_zero_based_half_open": [
+        3061,
+        3781
+      ],
+      "source_addgene_id": 27705,
+      "source_interval_zero_based_half_open": [
+        1228,
+        1939
+      ],
+      "restored_destination_prefix": null,
+      "inventory_addgene_ids": [
+        13770,
+        27705,
+        13031,
+        12456,
+        19319,
+        21915
+      ],
+      "insert_length_bp": 711,
+      "reference_length_bp": 6835,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "AGCGGCCGCACTCCTCAGGTGCAG",
+        "backbone_reverse": "GGTGGCGACCGGTGGATCCCGGGC",
+        "insert_forward": "GCCCGGGATCCACCGGTCGCCACCATGGTGAGCAAGGGCGAGGAGGAT",
+        "insert_reverse": "CTGCACCTGAGGAGTGCGGCCGCTTTACTTGTACAGCTCGTCCATGCC"
+      }
+    },
+    {
+      "id": "703c23ec-6109-5fcb-9a7f-8bec776a4f44",
+      "slug": "lenti-egfp-neor",
+      "title": "Lentiviral EGFP with G418 selection",
+      "destination_addgene_id": 19319,
+      "deleted_interval_zero_based_half_open": [
+        2022,
+        2622
+      ],
+      "source_addgene_id": 13031,
+      "source_interval_zero_based_half_open": [
+        2629,
+        3424
+      ],
+      "restored_destination_prefix": null,
+      "inventory_addgene_ids": [
+        19319,
+        13031,
+        27705,
+        13770,
+        1864,
+        52961
+      ],
+      "insert_length_bp": 795,
+      "reference_length_bp": 8278,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "CGCCCGCCCCACGACCCGCAGCGC",
+        "backbone_reverse": "GGTAAGCTCCGGTGGATCCCCCTG",
+        "insert_forward": "CAGGGGGATCCACCGGAGCTTACCATGATTGAACAAGATGGATTGCAC",
+        "insert_reverse": "GCGCTGCGGGTCGTGGGGCGGGCGTCAGAAGAACTCGTCAAGAAGGCG"
+      }
+    },
+    {
+      "id": "75a9db45-ff20-5746-8afa-6f0128a279f5",
+      "slug": "cas9-p2a-puro",
+      "title": "Cas9-P2A-puromycin plasmid",
+      "destination_addgene_id": 48138,
+      "deleted_interval_zero_based_half_open": [
+        889,
+        1657
+      ],
+      "source_addgene_id": 52961,
+      "source_interval_zero_based_half_open": [
+        8677,
+        9331
+      ],
+      "restored_destination_prefix": null,
+      "inventory_addgene_ids": [
+        48138,
+        52961,
+        42230,
+        19319,
+        21915,
+        13031
+      ],
+      "insert_length_bp": 654,
+      "reference_length_bp": 9174,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "GAATTCTAACTAGAGCTCGCTGAT",
+        "backbone_reverse": "TCCACTGCCGAATTCCTTTTTCTT",
+        "insert_forward": "AAGAAAAAGGAATTCGGCAGTGGAGCAACAAACTTCTCTCTGCTGAAA",
+        "insert_reverse": "ATCAGCGAGCTCTAGTTAGAATTCTCAGGCACCGGGCTTGCGGGTCAT"
+      }
+    },
+    {
+      "id": "da37a6fe-a93f-57a1-a3f0-a0a56b84da18",
+      "slug": "t7-tdtomato-his",
+      "title": "T7 tdTomato-6xHis expression plasmid",
+      "destination_addgene_id": 37237,
+      "deleted_interval_zero_based_half_open": [
+        4179,
+        5280
+      ],
+      "source_addgene_id": 54856,
+      "source_interval_zero_based_half_open": [
+        1888,
+        3316
+      ],
+      "restored_destination_prefix": null,
+      "inventory_addgene_ids": [
+        37237,
+        54856,
+        69929,
+        40315,
+        12456,
+        27705
+      ],
+      "insert_length_bp": 1428,
+      "reference_length_bp": 6222,
+      "reference_is_circular": true,
+      "canonical_method": "Gibson",
+      "canonical_product_count": 1,
+      "canonical_exact_circular_match": true,
+      "primers_5_to_3": {
+        "backbone_forward": "GGCAGTAGCCACCATCACCATCAC",
+        "backbone_reverse": "AGAGCCGCTAGAGCCGGATTGGAA",
+        "insert_forward": "TTCCAATCCGGCTCTAGCGGCTCTATGGTGAGCAAGGGCGAGGAGGTC",
+        "insert_reverse": "GTGATGGTGATGGTGGCTACTGCCCTTGTACAGCTCGTCCATGCCGTA"
+      }
+    }
+  ]
+}

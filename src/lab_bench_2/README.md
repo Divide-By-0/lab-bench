@@ -2,6 +2,10 @@
 
 LABBench2 evaluates language models and research agents on life-science tasks spanning literature reasoning, database access, figures, tables, protocols, source quality, sequence analysis, cloning, patents, and clinical trials.
 
+For cloning attachment acquisition, feature/primer/enzyme inventories, the
+current data audit, and the proposed question-difficulty graph, see
+[Cloning sequence data](CLONING_SEQUENCE_DATA.md).
+
 <!-- Contributors: Automatically Generated -->
 Contributed by [@iphan](https://github.com/iphan), [@ItsTania](https://github.com/ItsTania), [@lewtun](https://github.com/lewtun), [@Sunishchal](https://github.com/Sunishchal)
 <!-- /Contributors: Automatically Generated -->
@@ -52,6 +56,9 @@ Go toolchain (1.21+) must be available on the host the first time you score
 reused. To install Go: `brew install go` (macOS), `sudo apt install golang-go` (Linux),
 or <https://go.dev/dl/>.
 
+For the reference-derived structural cloning shadow verifier and offline
+rescoring workflow, see [`CLONING_VERIFIER_V3.md`](CLONING_VERIFIER_V3.md).
+
 <!-- Options: Automatically Generated -->
 ## Options
 
@@ -74,6 +81,8 @@ See `uv run inspect eval --help` for all available options.
 - `tags` (str | list[str] | None): Which LAB-Bench 2 subset(s) to run. Supported tags: ``cloning``, ``dbqa2``, ``figqa2`` (and ``figqa2-img`` / ``figqa2-pdf``), ``litqa3``, ``patentqa``, ``protocolqa2``, ``seqqa2``, ``sourcequality``, ``suppqa2``, ``tableqa2`` (and ``tableqa2-img`` / ``tableqa2-pdf``), ``trialqa``., A single tag (e.g. ``"litqa3"``) runs just that subset and reports one accuracy., A list (e.g. ``["litqa3", "cloning"]``) or ``None`` (the default, meaning every tag) runs the subsets together at the chosen ``mode``, reporting accuracy per tag plus an overall aggregate. (default: `None`)
 - `mode` (Mode): How a question's data files are delivered to the model. A no-op for tags without files (such as litqa3). Options: ``file``: Files uploaded via API. PDFs/images attached as context; other files as document attachments., ``inject``: Text file contents concatenated into the prompt as text., ``retrieve``: Only file names/stems are given; prompt instructs the agent to retrieve the necessary sequences or data from a source of its choosing. File contents are withheld. (default: `'file'`)
 - `solver` (SolverType): The solver to run. Options: ``bare``: a plain single-turn `generate()`., ``tools``: the server-side agentic configuration. The model is given provider-native, **server-side** tools — WebSearch and CodeExecution — and runs Inspect's tool-use loop., ``agentic``: the client-side agentic configuration. The model is given ``python``/``bash`` (and, with an external provider key, ``web_search``) tools in a Docker sandbox. (default: `'bare'`)
+- `strip_method_hint` (bool): Remove explicit assembly-method wording from cloning prompts while retaining the underlying sequence files and task data. (default: `False`)
+- `dataset_path` (str | None): Optional path to a local CloningQA JSONL package. Its ``files`` paths are resolved relative to the JSONL, and references are read from the sibling ``validation`` directory. When supplied, ``tags`` must be omitted or select only ``cloning``. (default: `None`)
 <!-- /Parameters: Automatically Generated -->
 
 ### Reference run configs
@@ -253,12 +262,101 @@ uv run inspect eval lab_bench_2/lab_bench_2 \
 ### Deterministic scorers
 
 The `cloning` tag is not graded by an LLM judge: it is scored deterministically
-by labbench2's reward pipeline, which parses the submitted protocol, executes it
-(including Polymerase Chain Reaction simulation), and compares the result to the
-reference assembly via sequence-similarity and restriction-digest checks.
-PCR simulation requires that Go be available on the host. Without Go,
-protocol execution fails gracefully: PCR-based samples score 0.0 with an explanatory
-reason rather than crashing the run.
+by the candidate-aware v2 cloning pipeline, which parses the submitted protocol,
+executes it, and compares every plausible top-level product to the reference
+assembly via sequence-similarity and restriction-digest checks.
+The `lab_bench_2` extra installs pydna for molecular simulation and Edlib for
+exact circular edit-distance scoring; PCR does not require a Go toolchain.
+
+Simulator v2 fixes several reproducibility defects in the pinned upstream behavior:
+
+- PCR uses pydna's primer-annealing model for linear, inverse, and
+  circular-origin amplification, including 5' tails and non-specific products.
+- Golden Gate and ordinary restriction/ligation use the enzymes' actual
+  double-stranded cut geometry instead of unsigned overhang lengths.
+- Gibson uses pydna's homologous-assembly graph and double-stranded SEGUID
+  deduplication. Assembly input subsets retain compatible competing products.
+- Edlib scores exact circular edit distance without anchor guesses and treats
+  reverse complements as the same dsDNA molecule. Digest fragments are paired
+  with a one-to-one matching instead of length-sort order.
+
+Multiple products are allowed only at the protocol's top level, where the hidden
+reference can select a matching outcome. A multi-product operation used as an input
+to another operation fails as an ambiguous intermediate because the current DSL has
+no explicit product-selection operator. Archived wrappers for the original pinned
+behavior are retained in `lab_bench_2.cloning_simulators.legacy`.
+
+See [CLONING_SIMULATOR_V2.md](CLONING_SIMULATOR_V2.md) for the simulator audit,
+candidate-selection rationale, and explicit modeling boundaries.
+
+Each newly scored cloning sample also includes a **Cloning sequence comparison**
+Info event in its Inspect transcript. The event contains annotated predicted and
+reference assembly tracks, aligned similarity and length metrics, locations and
+sequence windows for the first differences, and expandable FASTA sequences. Since
+the generated and reference assemblies contain sequence and topology but not full
+GenBank annotations, the display transfers annotations only when a feature from an
+input GenBank file exactly matches an assembled sequence. This display is a
+reviewer aid: it is generated on a best-effort basis and never changes the cloning
+score. Existing eval logs are immutable and do not gain the panel retroactively;
+rerun the sample to include it, or create enriched copies with:
+
+```bash
+uv run python tools/enrich_cloning_traces.py path/to/logs path/to/enriched-logs \
+  --cache-dir path/to/writable-cache
+```
+
+For local cloning datasets, the backfill utility uses the `files_path` and
+`reference_path` stored in each sample instead of downloading public benchmark
+assets. Pass `--replace-existing` to refresh panels after visualization code
+changes. Version 2-B accepts both bare filenames and quoted strings that exactly
+resolve to files inside the sample directory. The prompt shows both forms and
+identifies the bare form as canonical. Quoted primer strings, nonexistent files,
+and paths outside the sample directory remain literal strings and are not
+rewritten.
+
+The backfill utility downloads the public cloning inputs and hidden reference
+assemblies and leaves the source logs unchanged. It requires the `lab_bench_2`
+extra used by ordinary cloning scoring. It adds the panel to both the transcript
+and the cloning scorer explanation; the latter keeps
+the visualization accessible from the **Scoring** tab when Inspect suppresses
+transcript events for an exceptionally large sample.
+
+To correct missing circular topology without modifying the original FASTA files
+or eval logs, create corrected reference and rescored log copies:
+
+```bash
+uv run python tools/rescore_cloning_traces.py path/to/original-logs \
+  path/to/rescored-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --all-cloning-references-circular
+```
+
+Use `--all-cloning-references-circular` only for a corpus known to contain final
+plasmid/vector assemblies. Without it, the tool repairs topology only when the
+dataset's expected digest fragments uniquely support a circular reference. The
+tool reruns the digest stage for affected digest failures, preserves the original
+score and explanation in metadata, and reports every score change. Render those
+rescored logs against the corrected references with:
+
+```bash
+uv run python tools/enrich_cloning_traces.py path/to/rescored-logs \
+  path/to/reviewed-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --suffix _reviewed
+```
+
+To rerun every stored cloning submission with simulator v2 and preserve the
+original score in metadata:
+
+```bash
+uv run python tools/rescore_cloning_traces_v2.py path/to/original-logs \
+  path/to/v2-rescored-logs \
+  --cache-dir path/to/writable-cache \
+  --reference-dir path/to/corrected-references \
+  --all-cloning-references-circular
+```
 
 The `seqqa2` tag is also scored deterministically. A
 per-question validator (selected by the question's `type`) checks the answer
@@ -326,7 +424,7 @@ content-filter block.
 - **Model under test:** `openai/gpt-5.2`. **Grader (LLM-judge tags only):**
   `anthropic/claude-sonnet-4-5` — the eval default; deterministic tags
   (`seqqa2`, `cloning`) use no grader.
-- **Eval version:** `1-A`. **Dataset:** `EdisonScientific/labbench2`, split
+- **Eval version:** `2-A`. **Dataset:** `EdisonScientific/labbench2`, split
   `train`, pinned to revision `27d12d72af24e3f70db8a99df63e567366cbdb80`.
 - **Samples:** each row runs its full set of mode-compatible samples (the `N`
   column); `seqqa2` `retrieve` is the retrieve-compatible subset (~200 of 400).
@@ -353,6 +451,25 @@ uv run inspect eval lab_bench_2 -T tags=protocolqa2 -T mode=file -T solver=agent
 ```
 
 ## Changelog
+
+### [2-B] - 2026-08-27
+
+- Accept bare or quoted cloning-protocol filenames when they resolve to exact
+  files inside the sample directory.
+- Add a concrete cloning DSL example to the prompt distinguishing filenames
+  from quoted primer and enzyme strings.
+- Preserve the original strict verdict and explanation when rescoring stored
+  traces under the syntax-normalized policy.
+
+### [2-A] - 2026-08-27
+
+- Add candidate-aware Golden Gate simulation with multi-fragment assembly.
+- Correct Gibson candidate enumeration and fragment identity tracking.
+- Correct sticky-end assembly when self-ligation competes with insert ligation.
+- Add circular-origin PCR recovery and efficient circular sequence comparison.
+- Score every plausible top-level cloning product while rejecting ambiguous
+  intermediates.
+- Preserve archived access to the pinned upstream simulator behavior.
 
 ### [1-A] - 2026-06-05
 

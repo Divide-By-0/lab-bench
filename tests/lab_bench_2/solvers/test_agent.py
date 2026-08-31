@@ -7,12 +7,14 @@ from inspect_ai import Task, eval
 from inspect_ai.dataset import Sample
 from inspect_ai.model import ChatMessage, ModelName, ModelOutput, get_model
 from inspect_ai.solver import Generate, Solver, TaskState
+from inspect_ai.util import LimitExceededError
 
 import lab_bench_2.solvers.agent as agent_module
 from lab_bench_2.solvers.agent import (
     FINAL_WARNING_MESSAGE,
     agent_with_final_warning,
     agentic,
+    agentic_web,
     build_sandbox_prompt,
     copy_files_to_sandbox,
 )
@@ -20,6 +22,10 @@ from lab_bench_2.solvers.agent import (
 
 def test_agentic_returns_solver() -> None:
     assert isinstance(agentic(), Solver)
+
+
+def test_agentic_web_returns_solver() -> None:
+    assert isinstance(agentic_web(), Solver)
 
 
 @pytest.mark.parametrize("web_search", [True, False])
@@ -31,6 +37,14 @@ def test_sandbox_prompt_advertises_pdf_libraries(web_search: bool) -> None:
     assert "pymupdf" in prompt
     assert "fitz" in prompt
     assert "pdfplumber" in prompt
+
+
+def test_open_web_prompt_allows_source_discovery_and_downloads() -> None:
+    prompt = build_sandbox_prompt(web_search=True, open_web_research=True)
+
+    assert "open-source-discovery task" in prompt
+    assert "download and inspect exact public sequence files" in prompt
+    assert "Do not search for a worked answer" in prompt
 
 
 def _never_submit_until_warned(
@@ -56,8 +70,14 @@ def _never_submit_until_warned(
     )
 
 
-def test_final_warning_recovers_answer_when_model_never_submits() -> None:
+def test_final_warning_recovers_answer_when_model_never_submits(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     # given a model that only submits once the final-warning prompt is injected
+    # (executing that recovered submit would be unsafe after a sample limit has
+    # fired, so the wrapper must extract it directly)
+    execute_tools = AsyncMock(side_effect=AssertionError("submit was re-executed"))
+    monkeypatch.setattr(agent_module, "execute_tools", execute_tools)
     model = get_model("mockllm/model", custom_outputs=_never_submit_until_warned)
     task = Task(
         dataset=[Sample(input="What is the answer?", target="RECOVERED")],
@@ -69,8 +89,49 @@ def test_final_warning_recovers_answer_when_model_never_submits() -> None:
     assert log.status == "success"
     assert log.samples is not None
     assert log.samples[0].output.completion == "RECOVERED"
+    execute_tools.assert_not_awaited()
     # and the warning was actually injected into the conversation
     assert any(FINAL_WARNING_MESSAGE in m.text for m in log.samples[0].messages)
+
+
+async def test_final_warning_can_use_a_reserved_cost_ceiling(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def research_solver(state: TaskState, generate: Generate) -> TaskState:
+        raise LimitExceededError("cost", value=0.13, limit=0.13)
+
+    final_model = MagicMock()
+    final_model.generate = AsyncMock(
+        return_value=ModelOutput.for_tool_call(
+            model="mockllm/model",
+            tool_name="submit",
+            tool_arguments={"answer": "RESERVED"},
+        )
+    )
+    monkeypatch.setattr(agent_module, "basic_agent", lambda **kwargs: research_solver)
+    monkeypatch.setattr(agent_module, "get_model", lambda: final_model)
+    monkeypatch.setattr(
+        agent_module,
+        "execute_tools",
+        AsyncMock(side_effect=AssertionError("submit was re-executed")),
+    )
+    state = TaskState(
+        model=ModelName("mockllm/model"),
+        sample_id="reserved-cost",
+        epoch=0,
+        input="q",
+        messages=[],
+        output=ModelOutput.from_content(model="mockllm/model", content="research"),
+        cost_limit=0.13,
+    )
+
+    result = await agent_with_final_warning(
+        warning_limit=4, final_warning_cost_limit=0.2
+    )(state, cast(Generate, AsyncMock()))
+
+    assert result.cost_limit == 0.2
+    assert result.output is not None
+    assert result.output.completion == "RESERVED"
 
 
 def _dangling_submit(

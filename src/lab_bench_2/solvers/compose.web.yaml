@@ -1,0 +1,11 @@
+services:
+  default:
+    build:
+      context: "."
+      dockerfile: "Dockerfile"
+    command: "tail -f /dev/null"
+    init: true
+    # Opt-in only: open-source-discovery tasks need to download the exact public
+    # sequence records found with OpenAI's server-side web-search tool. The
+    # standard compose.yaml remains network-isolated for public benchmark tasks.
+    stop_grace_period: 1s

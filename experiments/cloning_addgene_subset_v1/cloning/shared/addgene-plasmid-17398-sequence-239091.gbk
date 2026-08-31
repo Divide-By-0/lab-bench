@@ -1,0 +1,115 @@
+LOCUS       sequence-239091-        2294 bp    DNA     circular SYN 15-DEC-2025
+DEFINITION  Gateway entry 1A vector, no ccDB gene.
+ACCESSION   .
+VERSION     .
+KEYWORDS    .
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2294)
+  AUTHORS   Campeau E, Ruhl VE, Rodier F, Smith CL, Rahmberg BL, Fuss JO, 
+            Campisi J, Yaswen P, Cooper PK, Kaufman PD.
+  TITLE     A versatile viral system for expression and depletion of proteins in
+            mammalian cells.
+  JOURNAL   PLoS One. 2009 Aug 6;4(8):e6529.
+  PUBMED    19657394
+REFERENCE   2  (bases 1 to 2294)
+  AUTHORS   .
+  TITLE     Direct Submission
+  JOURNAL   Exported Dec 15, 2025 from SnapGene Server 8.0.1
+            https://www.snapgene.com
+COMMENT     SGRef: number: 1; type: "Journal Article"; journalName: "PLoS One.";
+            date: "2009-08-6"; volume: "4(8)"; pages: "e6529"
+COMMENT     Sequence Label: pENTR1A no ccDB (w48-1)
+FEATURES             Location/Qualifiers
+     source          1..2294
+                     /mol_type="other DNA"
+                     /organism="synthetic DNA construct"
+     terminator      103..189
+                     /gene="Escherichia coli rrnB"
+                     /label=rrnB T1 terminator
+                     /note="transcription terminator T1 from the E. coli rrnB 
+                     gene"
+     terminator      281..308
+                     /label=rrnB T2 terminator
+                     /note="transcription terminator T2 from the E. coli rrnB 
+                     gene"
+     primer_bind     316..339
+                     /label=pENTR-F
+                     /note="pENTR vectors, forward primer"
+     protein_bind    358..457
+                     /gene="mutant version of attL"
+                     /label=attL1
+                     /bound_moiety="LR Clonase(TM)"
+                     /note="recombination site for the Gateway(R) LR reaction"
+     protein_bind    complement(523..622)
+                     /gene="mutant version of attL"
+                     /label=attL2
+                     /bound_moiety="LR Clonase(TM)"
+                     /note="recombination site for the Gateway(R) LR reaction"
+     primer_bind     complement(734..753)
+                     /label=pENTR-R
+                     /note="pENTR vectors, reverse primer"
+     CDS             745..1554
+                     /codon_start=1
+                     /gene="aph(3')-Ia"
+                     /product="aminoglycoside phosphotransferase"
+                     /label=KanR
+                     /note="confers resistance to kanamycin in bacteria or G418 
+                     (Geneticin(R)) in eukaryotes"
+                     /translation="MSHIQRETSRPRLNSNMDADLYGYKWARDNVGQSGATIYRLYGKP
+                     DAPELFLKHGKGSVANDVTDEMVRLNWLTEFMPLPTIKHFIRTPDDAWLLTTAIPGKTA
+                     FQVLEEYPDSGENIVDALAVSLRRLHSIPVCNCPFNSDRVFRLAQAQSRMNNGLVDASD
+                     FDDERNGWPVEQVWKEMHKLLPFSPDSVVTHGDFSLDNLIFDEGKLIGCIDVGRVGIAD
+                     RYQDLAILWNCLGEFSPSLQKRLFQKYGIDNPDMNKLQFHLMLDEFF"
+     primer_bind     complement(812..831)
+                     /label=Kan-R
+                     /note="Kanamycin resistance gene, reverse primer"
+     rep_origin      1644..2232
+                     /direction=RIGHT
+                     /label=ori
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     primer_bind     2133..2152
+                     /label=pBR322ori-F
+                     /note="pBR322 origin, forward primer"
+ORIGIN
+        1 ctttcctgcg ttatcccctg attctgtgga taaccgtatt accgctagca tggatctcgg
+       61 ggacgtctaa ctactaagcg agagtaggga actgccaggc atcaaataaa acgaaaggct
+      121 cagtcggaag actgggcctt tcgttttatc tgttgtttgt cggtgaacgc tctcctgagt
+      181 aggacaaatc cgccgggagc ggatttgaac gttgtgaagc aacggcccgg agggtggcgg
+      241 gcaggacgcc cgccataaac tgccaggcat caaactaagc agaaggccat cctgacggat
+      301 ggcctttttg cgtttctaca aactcttcct gttagttagt tacttaagct cgggccccaa
+      361 ataatgattt tattttgact gatagtgacc tgttcgttgc aacaaattga taagcaatgc
+      421 ttttttataa tgccaacttt gtacaaaaaa gcaggcttta aaggaaccaa ttcagtcgac
+      481 tggatccggt accgaattcg cggccgcact cgagatatct agacccagct ttcttgtaca
+      541 aagttggcat tataagaaag cattgcttat caatttgttg caacgaacag gtcactatca
+      601 gtcaaaataa aatcattatt tgccatccag ctgcagctct ggcccgtgtc tcaaaatctc
+      661 tgatgttaca ttgcacaaga taaaaatata tcatcatgaa caataaaact gtctgcttac
+      721 ataaacagta atacaagggg tgttatgagc catattcaac gggaaacgtc gaggccgcga
+      781 ttaaattcca acatggatgc tgatttatat gggtataaat gggctcgcga taatgtcggg
+      841 caatcaggtg cgacaatcta tcgcttgtat gggaagcccg atgcgccaga gttgtttctg
+      901 aaacatggca aaggtagcgt tgccaatgat gttacagatg agatggtcag actaaactgg
+      961 ctgacggaat ttatgcctct tccgaccatc aagcatttta tccgtactcc tgatgatgca
+     1021 tggttactca ccactgcgat ccccggaaaa acagcattcc aggtattaga agaatatcct
+     1081 gattcaggtg aaaatattgt tgatgcgctg gcagtgtccc tgcgccggtt gcattcgatt
+     1141 cctgtttgta attgtccttt taacagcgat cgcgtatttc gtctcgctca ggcgcaatca
+     1201 cgaatgaata acggtttggt tgatgcgagt gattttgatg acgagcgtaa tggctggcct
+     1261 gttgaacaag tctggaaaga aatgcataaa cttttgccat tctcaccgga ttcagtcgtc
+     1321 actcatggtg atttctcact tgataacctt atttttgacg aggggaaatt aataggttgt
+     1381 attgatgttg gacgagtcgg aatcgcagac cgataccagg atcttgccat cctatggaac
+     1441 tgcctcggtg agttttctcc ttcattacag aaacggcttt ttcaaaaata tggtattgat
+     1501 aatcctgata tgaataaatt gcagtttcat ttgatgctcg atgagttttt ctaatcagaa
+     1561 ttggttaatt ggttgtaaca ttattcagat tgggccccgt tccactgagc gtcagacccc
+     1621 gtagaaaaga tcaaaggatc ttcttgagat cctttttttc tgcgcgtaat ctgctgcttg
+     1681 caaacaaaaa aaccaccgct accagcggtg gtttgtttgc cggatcaaga gctaccaact
+     1741 ctttttccga aggtaactgg cttcagcaga gcgcagatac caaatactgt tcttctagtg
+     1801 tagccgtagt taggccacca cttcaagaac tctgtagcac cgcctacata cctcgctctg
+     1861 ctaatcctgt taccagtggc tgctgccagt ggcgataagt cgtgtcttac cgggttggac
+     1921 tcaagacgat agttaccgga taaggcgcag cggtcgggct gaacgggggg ttcgtgcaca
+     1981 cagcccagct tggagcgaac gacctacacc gaactgagat acctacagcg tgagctatga
+     2041 gaaagcgcca cgcttcccga agggagaaag gcggacaggt atccggtaag cggcagggtc
+     2101 ggaacaggag agcgcacgag ggagcttcca gggggaaacg cctggtatct ttatagtcct
+     2161 gtcgggtttc gccacctctg acttgagcgt cgatttttgt gatgctcgtc aggggggcgg
+     2221 agcctatgga aaaacgccag caacgcggcc tttttacggt tcctggcctt ttgctggcct
+     2281 tttgctcaca tgtt
+//

@@ -6,13 +6,14 @@ import logging
 import os
 from typing import Literal
 
-from inspect_ai.tool import Tool, bash, python, web_search
+from inspect_ai.tool import Tool, bash, web_search
 
-# External web-search providers, in priority order. Internal providers (openai,
-# anthropic, gemini) use the model's built-in search but cannot coexist with
-# other tools like python() and bash() (Gemini raises "does not yet support
-# native web search concurrently with other tools"), so we use external-only
-# providers, which work alongside code execution for every model.
+from lab_bench_2.solvers.stateful_python import python_session
+
+# External web-search providers used by the standard agentic solver, in priority
+# order. The open-source-discovery solver opts into OpenAI's native provider
+# explicitly; keeping that choice out of the default path prevents accidental
+# web access during ordinary benchmark runs.
 _WEB_SEARCH_PROVIDERS_BY_KEY: dict[str, Literal["tavily", "exa", "google"]] = {
     "TAVILY_API_KEY": "tavily",
     "EXA_API_KEY": "exa",
@@ -35,18 +36,28 @@ def _build_web_search() -> Tool | None:
     return None
 
 
-def sandbox_tools(timeout: int = 180) -> list[Tool]:
+def sandbox_tools(
+    timeout: int = 180,
+    *,
+    openai_web_search: bool = False,
+) -> list[Tool]:
     """Return the sandboxed client-side tool set (python, bash, optionally web_search).
 
     web_search is included when an external provider key is configured
-    (TAVILY_API_KEY, EXA_API_KEY, or GOOGLE_CSE_API_KEY).
+    (TAVILY_API_KEY, EXA_API_KEY, or GOOGLE_CSE_API_KEY). For an explicitly
+    OpenAI-only exploratory run, ``openai_web_search=True`` instead registers
+    OpenAI's server-side search tool. Container network policy is controlled
+    separately by the Compose file selected for the solver.
     """
-    tools: list[Tool] = [python(timeout=timeout), bash(timeout=timeout)]
-    ws = _build_web_search()
+    # REASON: python_session, not the stock python(), because the stock tool loses all
+    # state between calls -- 94 of 125 observed tool errors were NameError from exactly
+    # that. See stateful_python.py.
+    tools: list[Tool] = [python_session(timeout=timeout), bash(timeout=timeout)]
+    ws = web_search("openai") if openai_web_search else _build_web_search()
     if ws is not None:
         tools.append(ws)
     else:
-        logger.warn(
+        logger.warning(
             "No search provider api key found, so no web search tool is given to the agent"
         )
     return tools

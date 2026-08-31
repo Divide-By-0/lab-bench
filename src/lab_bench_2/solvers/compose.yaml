@@ -5,4 +5,11 @@ services:
       dockerfile: "Dockerfile"
     command: "tail -f /dev/null"
     init: true
+    # REASON: the container had outbound network. Agents used raw urllib to run web
+    # searches instead of computing (one run spent 18 of its last 22 tool calls on
+    # DuckDuckGo and then hit the token limit). More importantly the LAB-Bench 2
+    # dataset -- including its `ideal` answers -- is public on HuggingFace, so egress
+    # plus pip is a direct path to the answer key. Nothing was exfiltrated in our runs,
+    # but they were clean by luck rather than construction.
+    network_mode: "none"
     stop_grace_period: 1s

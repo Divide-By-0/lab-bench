@@ -1,0 +1,24 @@
+LOCUS       BBa_J428020              642 bp    DNA     linear   SYN 17-JUN-2022
+DEFINITION  SrpR.
+ACCESSION   BBa_J428020
+VERSION     BBa_J428020
+KEYWORDS    .
+FEATURES             Location/Qualifiers
+     source          1..642
+                     /mol_type="genomic DNA"
+     CDS             1..642
+                     /label="CDS"
+                     /note="SO:0000316 CDS"
+ORIGIN
+        1 atggcacgta aaaccgcagc agaagcagaa gaaacccgtc agcgtattat tgatgcagca
+       61 ctggaagttt ttgttgcaca gggtgttagt gatgcaaccc tggatcagat tgcacgtaaa
+      121 gccggtgtta cccgtggtgc agtttattgg cattttaatg gtaaactgga agttctgcag
+      181 gcagttctgg caagccgtca gcatccgctg gaactggatt ttacaccgga tctgggtatt
+      241 gaacgtagct gggaagcagt tgttgttgca atgctggatg cagttcatag tccgcagagc
+      301 aaacagttta gcgaaattct gatttatcag ggtctggatg aaagcggtct gattcataat
+      361 cgtatggttc aggcaagcga tcgttttctg cagtatattc atcaggttct gcgtcatgca
+      421 gttacccagg gtgaactgcc gattaatctg gatctgcaga ccagcattgg tgtttttaaa
+      481 ggtctgatta ccggtctgct gtatgaaggt ctgcgtagca aagatcagca ggcacagatt
+      541 atcaaagttg cactgggtag cttttgggca ctgctgcgtg aaccgcctcg ttttctgctg
+      601 tgtgaagaag cacagattaa acaggtgaaa tccttcgaat aa
+//

@@ -114,7 +114,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 # Test files import these helpers via runtime sys.path manipulation, so
 # mypy can't resolve them statically. Treat them as untyped.
-module = ["add_readme_section", "generate_readmes"]
+module = [
+    "add_readme_section",
+    "download_igem_distribution",
+    "download_igem_parts",
+    "enrich_cloning_traces",
+    "generate_readmes",
+    "rescore_cloning_traces_v3",
+]
 ignore_missing_imports = true
 
 [project]
@@ -160,7 +167,13 @@ lab_bench_2 = "lab_bench_2"
 # Reference implementation's deterministic scoring code (CC BY-SA 4.0), scoped to
 # this eval rather than core. Pulled as a dependency rather than vendored; source
 # + pin in [tool.uv.sources]. See src/lab_bench_2/README.md.
-lab_bench_2 = ["labbench2"]
+lab_bench_2 = [
+    "edlib>=1.3.9.post1,<2",
+    "labbench2",
+    "networkx>=3,<4",
+    "pillow>=11.0",
+    "pydna>=5.5.16,<6",
+]
 test = []
 
 [dependency-groups]
