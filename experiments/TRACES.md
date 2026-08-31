@@ -29,6 +29,7 @@ Common config unless noted: `-T tags=<tag> -T mode=retrieve -T solver=agentic`,
 | `gpt56sol_addgene_subset_55tasks.eval` | 55 Addgene-subset CDS-swap drafts, `gpt-5.6-sol` max, 100k novel-token cap | **38/55** raw (3 edlib score errors, 4 bio_policy) |
 | `gpt56sol_addgene_subset_55tasks_edlib_rescored.eval` | same answers, host edlib installed | **41/55**; three iGABASnFR samples now pass |
 | `gemini25pro_addgene_sol_fail14.eval` | Gemini 2.5 Pro, 500k novel cap, the 14 Sol non-passes | **4/14**; recovered both VSV-G bio_policy items plus 20298-7266 and 26973-6236 |
+| `gemini37flash_addgene_subset_55tasks_1M_high_cancelled32.eval` | Gemini 3.7 Flash, high reasoning, 55 queued, `--cost-limit 1.0` | **28/32** scored then AI Studio monthly spend cap (`429`); 23 unrun. Recovers 12260 and 42230 vs Sol/2.5 Pro |
 | `gpt56sol_8tasks_method_blind_constraint_v3_reviewed.eval` | same method-blind answers, constraint verifier v3-B | **8/8** |
 | `gpt56sol_cloning_pilot_3tasks_constraint_v3_reviewed.eval` | same pilot answers, constraint verifier v3-B | **3/3** |
 | `gpt56sol_smoke_2tasks_hinted_constraint_v3_reviewed.eval` | same smoke answers, constraint verifier v3-B | **2/2** |
