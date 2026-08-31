@@ -52,8 +52,12 @@ def register_from_env() -> list[str]:
         return []
     done: list[str] = []
     try:
-        from inspect_ai.model import ModelCost
-        from inspect_ai.model._model_info import set_model_cost
+        from inspect_ai.model import ModelCost, ModelInfo
+        from inspect_ai.model._model_info import (
+            get_model_info,
+            set_model_cost,
+            set_model_info,
+        )
 
         priced = ModelCost(
             input=float(os.environ.get("LABBENCH2_COST_INPUT", "1.0")),
@@ -68,7 +72,26 @@ def register_from_env() -> list[str]:
         )
         for model, cost in [(m, priced) for m in metered] + [(m, zero) for m in free]:
             try:
-                set_model_cost(model, cost)
+                # REASON: Inspect's --model-cost-config calls set_model_cost, which
+                # refuses names that are not already in its model database.
+                # gemini-3.7-flash is a valid generate() target but missing from
+                # that DB, so --cost-limit never applies unless we register a
+                # ModelInfo first. Removing this block reintroduces a silent
+                # no-cap run that looks like a 1M novel-token budget.
+                if get_model_info(model) is None:
+                    set_model_info(
+                        model,
+                        ModelInfo(
+                            organization=model.split("/", 1)[0],
+                            model=model.split("/", 1)[-1],
+                            context_length=1_048_576,
+                            output_tokens=65_536,
+                            reasoning=True,
+                            cost=cost,
+                        ),
+                    )
+                else:
+                    set_model_cost(model, cost)
                 done.append(model)
             except Exception as exc:
                 logger.warning(f"could not register cost for {model}: {exc}")
